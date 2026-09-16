@@ -248,6 +248,18 @@ header {
   background: var(--red);
 }
 
+#nexus-btn {
+  flex: 0.85;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+#nexus-btn:not(:disabled):hover {
+  color: var(--text);
+  border-color: var(--muted);
+}
+
 button:disabled {
   opacity: 0.3;
   cursor: not-allowed;
@@ -387,16 +399,19 @@ button:disabled {
 }
 
 .delete-btn {
-  background: none;
-  border: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
   color: var(--muted);
-  padding: 0.2rem 0.4rem;
-  font-size: 0.75rem;
+  padding: 0.2rem 0.45rem;
+  font-size: 0.7rem;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .delete-btn:hover {
   color: var(--red);
+  border-color: var(--red);
 }
 
 .empty {

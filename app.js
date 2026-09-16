@@ -30,6 +30,7 @@ const POST_END_PROMPTS = {
           ],
         },
       },
+      { label: "Discard", kind: "discard" },
     ],
   },
   "fungal-cavern": {
@@ -60,6 +61,7 @@ const timerEl = document.getElementById("timer");
 const statusEl = document.getElementById("status");
 const startBtn = document.getElementById("start-btn");
 const endBtn = document.getElementById("end-btn");
+const nexusBtn = document.getElementById("nexus-btn");
 const runsBody = document.getElementById("runs-body");
 const averagesList = document.getElementById("averages-list");
 const pageTimer = document.getElementById("page-timer");
@@ -412,11 +414,11 @@ function renderRunsTable() {
       <td class="when">${when}</td>
       <td class="dungeon-cell"><img class="table-icon" alt="" /><span>${run.dungeonName}</span></td>
       <td class="time">${formatDuration(run.durationSeconds)}</td>
-      <td><button type="button" class="delete-btn">×</button></td>
+      <td class="delete-cell"><button type="button" class="delete-btn" aria-label="Delete run">Delete</button></td>
     `;
     if (dungeon) setDungeonIcon(row.querySelector(".table-icon"), dungeon);
     row.querySelector(".delete-btn").addEventListener("click", () => {
-      saveRuns(loadRuns().filter((r) => r.id !== run.id));
+      deleteRun(run.id);
       renderTimesPage();
     });
     runsBody.appendChild(row);
