@@ -10,7 +10,7 @@ Simple localhost web app to log dungeon clear times.
 3. **End** when the boss dies — counts as **Complete** (clears only, for averages)
 4. **Nexus** or **Died** if you fail mid-run — logged for **success rate**, not averaged
 
-**Times tab:** overall success % plus complete / nexus / died breakdown. Per-dungeon rate on the average rows. Delete bad rows anytime.
+**Times tab:** success %, complete / nexus / died counts, and **clear · avg** times (boss-clear average vs all-attempt average). Per-dungeon breakdown too. Delete bad rows anytime.
 
 On **Lost Halls**, **Discard** on the branch prompt drops a pending run without saving.
 

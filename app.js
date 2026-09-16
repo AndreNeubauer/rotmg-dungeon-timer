@@ -191,24 +191,71 @@ function successRate(counts) {
   return Math.round((counts.complete / counts.total) * 100);
 }
 
+function emptyTiming() {
+  return { attemptDuration: 0, clearDuration: 0, clearCount: 0 };
+}
+
 function computeStats() {
   const runs = loadRuns();
-  const overall = emptyOutcomeCounts();
+  const overall = { ...emptyOutcomeCounts(), ...emptyTiming() };
   const byDungeon = new Map();
 
   for (const run of runs) {
     addOutcome(overall, run.outcome);
+    overall.attemptDuration += run.durationSeconds;
+    if (run.outcome === "complete") {
+      overall.clearDuration += run.durationSeconds;
+      overall.clearCount += 1;
+    }
+
     if (!byDungeon.has(run.dungeonId)) {
       byDungeon.set(run.dungeonId, {
         ...emptyOutcomeCounts(),
+        ...emptyTiming(),
         name: run.dungeonName,
         id: run.dungeonId,
       });
     }
-    addOutcome(byDungeon.get(run.dungeonId), run.outcome);
+    const entry = byDungeon.get(run.dungeonId);
+    addOutcome(entry, run.outcome);
+    entry.attemptDuration += run.durationSeconds;
+    if (run.outcome === "complete") {
+      entry.clearDuration += run.durationSeconds;
+      entry.clearCount += 1;
+    }
   }
 
   return { overall, byDungeon };
+}
+
+function avgDuration(total, count) {
+  return count > 0 ? total / count : null;
+}
+
+function getDungeonSummaries() {
+  const { byDungeon } = computeStats();
+  return [...byDungeon.values()]
+    .map((entry) => ({
+      id: entry.id,
+      name: entry.name,
+      dungeon: getDungeon(entry.id),
+      stats: {
+        complete: entry.complete,
+        nexus: entry.nexus,
+        died: entry.died,
+        total: entry.total,
+      },
+      avgClear: avgDuration(entry.clearDuration, entry.clearCount),
+      avgAttempt: avgDuration(entry.attemptDuration, entry.total),
+      clearCount: entry.clearCount,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function formatTimePair(avgClear, avgAttempt) {
+  const clear = avgClear != null ? formatDuration(avgClear) : "—";
+  const attempt = avgAttempt != null ? formatDuration(avgAttempt) : "—";
+  return `<span class="time-clear" title="Average clear">${clear}</span><span class="time-sep"> · </span><span class="time-attempt" title="Average attempt">${attempt}</span>`;
 }
 
 function selectedDungeon() {
@@ -392,34 +439,6 @@ function updateSelectedDisplay() {
   if (!isRunning()) statusEl.textContent = "";
 }
 
-function computeAverages() {
-  const runs = loadRuns().filter((run) => run.outcome === "complete");
-  const byDungeon = new Map();
-  for (const run of runs) {
-    const key = run.dungeonName;
-    if (!byDungeon.has(key)) {
-      byDungeon.set(key, { total: 0, count: 0, name: run.dungeonName, id: run.dungeonId });
-    }
-    const entry = byDungeon.get(key);
-    entry.total += run.durationSeconds;
-    entry.count += 1;
-  }
-
-  const { byDungeon: statsByDungeon } = computeStats();
-
-  return [...byDungeon.entries()]
-    .map(([key, { total, count, name, id }]) => ({
-      id,
-      key,
-      name,
-      avg: total / count,
-      count,
-      dungeon: getDungeon(id),
-      stats: statsByDungeon.get(id) || emptyOutcomeCounts(),
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name));
-}
-
 function renderStatsSummary() {
   const { overall } = computeStats();
   statsSummary.innerHTML = "";
@@ -430,30 +449,44 @@ function renderStatsSummary() {
   }
 
   const rate = successRate(overall);
+  const avgClear = avgDuration(overall.clearDuration, overall.clearCount);
+  const avgAttempt = avgDuration(overall.attemptDuration, overall.total);
   const card = document.createElement("div");
   card.className = "stats-card";
   card.innerHTML = `
     <div class="stats-rate">${rate}%</div>
-    <div class="stats-detail">
-      <span class="outcome-pill complete">${overall.complete} complete</span>
-      <span class="outcome-pill nexus">${overall.nexus} nexus</span>
-      <span class="outcome-pill died">${overall.died} died</span>
-      <span class="stats-total">${overall.total} attempts</span>
+    <div class="stats-body">
+      <div class="stats-detail">
+        <span class="outcome-pill complete">${overall.complete} complete</span>
+        <span class="outcome-pill nexus">${overall.nexus} nexus</span>
+        <span class="outcome-pill died">${overall.died} died</span>
+        <span class="stats-total">${overall.total} attempts</span>
+      </div>
+      <div class="stats-times">${formatTimePair(avgClear, avgAttempt)}<span class="time-legend">clear · avg</span></div>
     </div>
   `;
   statsSummary.appendChild(card);
 }
 
 function renderAverages() {
-  const averages = computeAverages();
+  const summaries = getDungeonSummaries();
   averagesList.innerHTML = "";
 
-  if (averages.length === 0) {
-    averagesList.innerHTML = `<p class="empty">No completed clears yet.</p>`;
+  if (summaries.length === 0) {
+    averagesList.innerHTML = `<p class="empty">No attempts yet.</p>`;
     return;
   }
 
-  for (const { name, avg, count, dungeon, stats } of averages) {
+  const header = document.createElement("div");
+  header.className = "averages-header";
+  header.innerHTML = `
+    <span>Dungeon</span>
+    <span>Rate</span>
+    <span class="averages-header-times">Clear · avg</span>
+  `;
+  averagesList.appendChild(header);
+
+  for (const { name, avgClear, avgAttempt, clearCount, dungeon, stats } of summaries) {
     const row = document.createElement("div");
     row.className = "average-row";
     const img = document.createElement("img");
@@ -467,13 +500,13 @@ function renderAverages() {
     const statsCell = document.createElement("span");
     statsCell.className = "average-row-stats";
     statsCell.textContent =
-      stats.total > count ? `${rate}% · ${stats.complete}/${stats.total}` : `${count}×`;
+      stats.total > clearCount ? `${rate}% · ${stats.complete}/${stats.total}` : `${stats.total}×`;
 
-    row.append(
-      nameCell,
-      statsCell,
-      Object.assign(document.createElement("span"), { className: "average-row-time", textContent: formatDuration(avg) })
-    );
+    const timeCell = document.createElement("span");
+    timeCell.className = "average-row-times";
+    timeCell.innerHTML = formatTimePair(avgClear, avgAttempt);
+
+    row.append(nameCell, statsCell, timeCell);
     averagesList.appendChild(row);
   }
 }

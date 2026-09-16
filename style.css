@@ -322,10 +322,15 @@ button:disabled {
 
 .stats-card {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
   padding: 0.85rem 0;
   border-bottom: 1px solid var(--border);
+}
+
+.stats-body {
+  flex: 1;
+  min-width: 0;
 }
 
 .stats-rate {
@@ -344,6 +349,30 @@ button:disabled {
 
 .stats-total {
   font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.stats-times {
+  margin-top: 0.45rem;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+}
+
+.time-legend {
+  margin-left: 0.35rem;
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+.time-clear {
+  font-weight: 500;
+}
+
+.time-attempt {
+  color: var(--muted);
+}
+
+.time-sep {
   color: var(--muted);
 }
 
