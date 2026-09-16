@@ -3,79 +3,50 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RotMG Dungeon Timer</title>
+  <meta name="color-scheme" content="dark" />
+  <title>RotMG Timer</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main>
     <header>
-      <h1>RotMG Dungeon Timer</h1>
-      <nav class="tabs" aria-label="Pages">
+      <h1>RotMG Timer</h1>
+      <nav class="tabs">
         <button type="button" class="tab active" data-page="timer">Timer</button>
         <button type="button" class="tab" data-page="times">Times</button>
       </nav>
     </header>
 
-    <!-- Timer page -->
     <div id="page-timer" class="page">
-      <p class="subtitle">Start when you enter. End when the boss dies.</p>
-
-      <section class="exalt-section">
-        <h2>Exalt dungeons</h2>
-        <div id="exalt-grid" class="dungeon-grid" role="listbox" aria-label="Exalt dungeons"></div>
-      </section>
+      <div id="exalt-grid" class="dungeon-grid"></div>
 
       <details class="accordion" id="all-dungeons-accordion">
-        <summary>See all dungeons</summary>
-        <div class="accordion-body">
-          <input type="search" id="dungeon-search" placeholder="Search…" autocomplete="off" />
-          <div id="all-dungeon-list" class="all-dungeon-list"></div>
-        </div>
+        <summary>All dungeons</summary>
+        <input type="search" id="dungeon-search" placeholder="Search" autocomplete="off" />
+        <div id="all-dungeon-list"></div>
       </details>
 
-      <section class="timer-section">
-        <div class="selected-dungeon" id="selected-dungeon">
-          <img id="dungeon-icon" alt="" width="48" height="48" />
-          <div>
-            <div class="dungeon-name" id="dungeon-name">—</div>
-            <div class="dungeon-meta" id="dungeon-meta"></div>
-          </div>
-        </div>
-
+      <section class="timer-block">
+        <p class="dungeon-name" id="dungeon-name">Lost Halls complex</p>
         <div class="timer" id="timer">—</div>
-        <p class="status" id="status">Pick a dungeon, then Start.</p>
-
+        <p class="status" id="status"></p>
         <div class="buttons">
-          <button type="button" id="start-btn" class="start">Start</button>
-          <button type="button" id="end-btn" class="end" disabled>End</button>
+          <button type="button" id="start-btn">Start</button>
+          <button type="button" id="end-btn" disabled>End</button>
         </div>
       </section>
     </div>
 
-    <!-- Times page -->
     <div id="page-times" class="page hidden">
-      <section class="averages-section">
-        <h2>Averages</h2>
-        <p class="section-hint">Per dungeon — only dungeons with logged runs.</p>
-        <div id="averages-grid" class="averages-grid"></div>
-      </section>
-
-      <section class="history-section">
-        <h2>All runs</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>When</th>
-              <th>Dungeon</th>
-              <th>Time</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="runs-body"></tbody>
-        </table>
-      </section>
+      <div id="averages-list" class="averages-list"></div>
+      <table class="runs-table">
+        <tbody id="runs-body"></tbody>
+      </table>
     </div>
   </main>
+
+  <img id="dungeon-icon" alt="" hidden />
+  <span id="dungeon-meta" hidden></span>
   <script src="app.js"></script>
 </body>
 </html>

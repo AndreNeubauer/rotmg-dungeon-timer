@@ -21,7 +21,7 @@ const statusEl = document.getElementById("status");
 const startBtn = document.getElementById("start-btn");
 const endBtn = document.getElementById("end-btn");
 const runsBody = document.getElementById("runs-body");
-const averagesGrid = document.getElementById("averages-grid");
+const averagesList = document.getElementById("averages-list");
 const pageTimer = document.getElementById("page-timer");
 const pageTimes = document.getElementById("page-times");
 const tabs = document.querySelectorAll(".tab");
@@ -178,17 +178,11 @@ function updateSelectedDisplay() {
   const dungeon = selectedDungeon();
   if (!dungeon) {
     dungeonName.textContent = "—";
-    dungeonMeta.textContent = "";
-    dungeonIcon.removeAttribute("src");
     return;
   }
   setDungeonIcon(dungeonIcon, dungeon);
-  dungeonIcon.alt = dungeon.name;
   dungeonName.textContent = dungeon.name;
-  const bits = [];
-  if (dungeon.difficulty != null) bits.push(`Difficulty ${dungeon.difficulty}`);
-  if (dungeon.note) bits.push(dungeon.note);
-  dungeonMeta.textContent = bits.join(" · ");
+  if (!isRunning()) statusEl.textContent = "";
 }
 
 function computeAverages() {
@@ -216,33 +210,28 @@ function computeAverages() {
 
 function renderAverages() {
   const averages = computeAverages();
-  averagesGrid.innerHTML = "";
+  averagesList.innerHTML = "";
 
   if (averages.length === 0) {
-    averagesGrid.innerHTML = `<p class="empty">No runs logged yet.</p>`;
+    averagesList.innerHTML = `<p class="empty">No runs yet.</p>`;
     return;
   }
 
-  for (const { id, name, avg, count, dungeon } of averages) {
-    const card = document.createElement("div");
-    card.className = "average-card";
+  for (const { name, avg, count, dungeon } of averages) {
+    const row = document.createElement("div");
+    row.className = "average-row";
     const img = document.createElement("img");
-    img.width = 32;
-    img.height = 32;
     img.alt = "";
     if (dungeon) setDungeonIcon(img, dungeon);
-
-    card.innerHTML = `
-      <div class="average-card-top"></div>
-      <div class="average-time">${formatDuration(avg)}</div>
-      <div class="average-meta">${count} run${count === 1 ? "" : "s"}</div>
-    `;
-    const top = card.querySelector(".average-card-top");
-    top.append(img);
-    const nameEl = document.createElement("span");
-    nameEl.textContent = name;
-    top.append(nameEl);
-    averagesGrid.appendChild(card);
+    const nameCell = document.createElement("span");
+    nameCell.className = "average-row-name";
+    nameCell.append(img, name);
+    row.append(
+      nameCell,
+      Object.assign(document.createElement("span"), { className: "average-row-count", textContent: `${count}×` }),
+      Object.assign(document.createElement("span"), { className: "average-row-time", textContent: formatDuration(avg) })
+    );
+    averagesList.appendChild(row);
   }
 }
 
@@ -259,17 +248,16 @@ function renderRunsTable() {
     const dungeon = getDungeon(run.dungeonId);
     const row = document.createElement("tr");
     const when = new Date(run.startedAt).toLocaleString(undefined, {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
+      month: "short",
+      day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
     row.innerHTML = `
-      <td>${when}</td>
-      <td class="dungeon-cell"><img class="table-icon" alt="" width="24" height="24" /><span>${run.dungeonName}</span></td>
+      <td class="when">${when}</td>
+      <td class="dungeon-cell"><img class="table-icon" alt="" /><span>${run.dungeonName}</span></td>
       <td class="time">${formatDuration(run.durationSeconds)}</td>
-      <td><button type="button" class="delete-btn" data-id="${run.id}">Delete</button></td>
+      <td><button type="button" class="delete-btn">×</button></td>
     `;
     if (dungeon) setDungeonIcon(row.querySelector(".table-icon"), dungeon);
     row.querySelector(".delete-btn").addEventListener("click", () => {
@@ -307,7 +295,7 @@ function onStart() {
   if (!dungeon) return;
   startTime = Date.now();
   setRunning(true);
-  statusEl.textContent = `Running — ${dungeon.name}`;
+  statusEl.textContent = "Running";
   timerEl.textContent = "0:00";
   tickInterval = setInterval(tick, 200);
 }
@@ -335,7 +323,7 @@ function onEnd() {
 
   setRunning(false);
   timerEl.textContent = formatDuration(durationSeconds);
-  statusEl.textContent = `Saved — ${formatDuration(durationSeconds)}`;
+  statusEl.textContent = formatDuration(durationSeconds);
   statusEl.classList.add("saved");
 }
 
