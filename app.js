@@ -62,8 +62,16 @@ const statusEl = document.getElementById("status");
 const startBtn = document.getElementById("start-btn");
 const endBtn = document.getElementById("end-btn");
 const nexusBtn = document.getElementById("nexus-btn");
+const diedBtn = document.getElementById("died-btn");
 const runsBody = document.getElementById("runs-body");
+const statsSummary = document.getElementById("stats-summary");
 const averagesList = document.getElementById("averages-list");
+
+const OUTCOMES = {
+  complete: { label: "Complete", short: "✓" },
+  nexus: { label: "Nexus", short: "Nexus" },
+  died: { label: "Died", short: "Died" },
+};
 const pageTimer = document.getElementById("page-timer");
 const pageTimes = document.getElementById("page-times");
 const tabs = document.querySelectorAll(".tab");
@@ -254,6 +262,13 @@ function handlePostEndAction(action) {
     return;
   }
 
+  if (action.kind === "discard") {
+    pendingEndRun = null;
+    hidePostEndPrompt();
+    resetToStartPage();
+    return;
+  }
+
   hidePostEndPrompt();
 
   if (action.kind === "next" && action.nextId) {
@@ -433,6 +448,7 @@ function renderTimesPage() {
 function setRunning(running) {
   startBtn.disabled = running;
   endBtn.disabled = !running;
+  nexusBtn.disabled = !running;
   searchInput.disabled = running;
   for (const btn of postEndActions.querySelectorAll("button")) {
     btn.disabled = running;
@@ -461,6 +477,19 @@ function onStart() {
   statusEl.textContent = "Running";
   timerEl.textContent = "0:00";
   tickInterval = setInterval(tick, 200);
+}
+
+function onNexus() {
+  if (!startTime) return;
+  clearInterval(tickInterval);
+  tickInterval = null;
+  startTime = null;
+  pendingEndRun = null;
+  setRunning(false);
+  timerEl.textContent = "—";
+  statusEl.textContent = "Nexused — not saved";
+  statusEl.classList.remove("running", "saved");
+  hidePostEndPrompt();
 }
 
 function onEnd() {
@@ -518,6 +547,7 @@ async function init() {
   searchInput.addEventListener("input", () => renderAllDungeonList(searchInput.value));
   startBtn.addEventListener("click", onStart);
   endBtn.addEventListener("click", onEnd);
+  nexusBtn.addEventListener("click", onNexus);
   tabs.forEach((tab) => {
     tab.addEventListener("click", () => showPage(tab.dataset.page));
   });

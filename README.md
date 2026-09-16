@@ -7,10 +7,12 @@ Simple localhost web app to log dungeon clear times.
 **Timer tab**
 1. Pick an exalt dungeon from the grid (or **See all dungeons** accordion)
 2. **Start** when you enter the portal
-3. **End** when the boss dies — only successful clears go to Times / averages
-4. **Nexus** if you fail out mid-run (sundown, death, bail) — timer stops, **nothing saved**
+3. **End** when the boss dies — counts as **Complete** (clears only, for averages)
+4. **Nexus** or **Died** if you fail mid-run — logged for **success rate**, not averaged
 
-If you hit **End** by mistake, delete the row on the Times tab. On **Lost Halls**, **Discard** on the branch prompt drops a pending run without saving.
+**Times tab:** overall success % plus complete / nexus / died breakdown. Per-dungeon rate on the average rows. Delete bad rows anytime.
+
+On **Lost Halls**, **Discard** on the branch prompt drops a pending run without saving.
 
 **Branching / chains** after End:
 - **Lost Halls** — **→ Cult (no boss)** (logs “Lost Halls (to Cult)”, starts Cult) or **Colossus clear** (logs LH complete, then **→ Void** or **Done**). Cult path does not offer Void.

@@ -248,16 +248,24 @@ header {
   background: var(--red);
 }
 
-#nexus-btn {
-  flex: 0.85;
+.fail-buttons {
+  margin-top: 0.45rem;
+}
+
+.fail-buttons button {
   background: transparent;
   border: 1px solid var(--border);
   color: var(--muted);
 }
 
-#nexus-btn:not(:disabled):hover {
+.fail-buttons button:not(:disabled):hover {
   color: var(--text);
   border-color: var(--muted);
+}
+
+#died-btn:not(:disabled):hover {
+  color: var(--red);
+  border-color: var(--red);
 }
 
 button:disabled {
