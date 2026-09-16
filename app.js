@@ -1,4 +1,5 @@
 const STORAGE_KEY = "rotmg-dungeon-runs";
+const EXALT_CATEGORY = "pinned";
 
 const LEGACY_NAME_TO_ID = {
   "Lost Halls complex": "lost-halls-complex",
@@ -8,17 +9,22 @@ const LEGACY_NAME_TO_ID = {
   "The Shatters": "the-shatters",
 };
 
+const exaltGrid = document.getElementById("exalt-grid");
+const allDungeonList = document.getElementById("all-dungeon-list");
 const searchInput = document.getElementById("dungeon-search");
-const dungeonSelect = document.getElementById("dungeon");
+const allAccordion = document.getElementById("all-dungeons-accordion");
 const dungeonIcon = document.getElementById("dungeon-icon");
 const dungeonName = document.getElementById("dungeon-name");
 const dungeonMeta = document.getElementById("dungeon-meta");
 const timerEl = document.getElementById("timer");
 const statusEl = document.getElementById("status");
-const averageEl = document.getElementById("average");
 const startBtn = document.getElementById("start-btn");
 const endBtn = document.getElementById("end-btn");
 const runsBody = document.getElementById("runs-body");
+const averagesGrid = document.getElementById("averages-grid");
+const pageTimer = document.getElementById("page-timer");
+const pageTimes = document.getElementById("page-times");
+const tabs = document.querySelectorAll(".tab");
 
 let catalog = { iconBase: "", fallbackIcon: "Dungeon Portal.png", categories: [], dungeons: [] };
 let dungeonById = new Map();
@@ -90,7 +96,85 @@ function selectedDungeon() {
   return getDungeon(selectedDungeonId);
 }
 
-function updatePreview() {
+function isRunning() {
+  return startTime !== null;
+}
+
+function selectDungeon(id) {
+  if (isRunning()) return;
+  selectedDungeonId = id;
+  renderExaltGrid();
+  renderAllDungeonList(searchInput.value);
+  updateSelectedDisplay();
+}
+
+function createDungeonCard(dungeon, { compact = false } = {}) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = `dungeon-card${compact ? " compact" : ""}${dungeon.id === selectedDungeonId ? " selected" : ""}`;
+  btn.dataset.id = dungeon.id;
+  btn.disabled = isRunning() && dungeon.id !== selectedDungeonId;
+
+  const img = document.createElement("img");
+  img.width = compact ? 28 : 40;
+  img.height = compact ? 28 : 40;
+  img.alt = "";
+  setDungeonIcon(img, dungeon);
+
+  const label = document.createElement("span");
+  label.className = "dungeon-card-name";
+  label.textContent = dungeon.name;
+
+  btn.append(img, label);
+  btn.addEventListener("click", () => selectDungeon(dungeon.id));
+  return btn;
+}
+
+function renderExaltGrid() {
+  exaltGrid.innerHTML = "";
+  const exalt = catalog.dungeons.filter((d) => d.category === EXALT_CATEGORY);
+  for (const d of exalt) {
+    exaltGrid.appendChild(createDungeonCard(d));
+  }
+}
+
+function renderAllDungeonList(filter = "") {
+  const q = filter.trim().toLowerCase();
+  allDungeonList.innerHTML = "";
+  const categoryMap = new Map(catalog.categories.map((c) => [c.id, c.label]));
+
+  for (const category of catalog.categories) {
+    if (category.id === EXALT_CATEGORY) continue;
+
+    const matches = catalog.dungeons.filter((d) => {
+      if (d.category !== category.id) return false;
+      if (!q) return true;
+      return d.name.toLowerCase().includes(q);
+    });
+    if (matches.length === 0) continue;
+
+    const group = document.createElement("div");
+    group.className = "dungeon-group";
+
+    const heading = document.createElement("h3");
+    heading.textContent = categoryMap.get(category.id) || category.id;
+    group.appendChild(heading);
+
+    const grid = document.createElement("div");
+    grid.className = "dungeon-grid compact-grid";
+    for (const d of matches) {
+      grid.appendChild(createDungeonCard(d, { compact: true }));
+    }
+    group.appendChild(grid);
+    allDungeonList.appendChild(group);
+  }
+
+  if (allDungeonList.children.length === 0) {
+    allDungeonList.innerHTML = `<p class="empty">No dungeons match.</p>`;
+  }
+}
+
+function updateSelectedDisplay() {
   const dungeon = selectedDungeon();
   if (!dungeon) {
     dungeonName.textContent = "—";
@@ -107,59 +191,67 @@ function updatePreview() {
   dungeonMeta.textContent = bits.join(" · ");
 }
 
-function updateAverage() {
-  const dungeon = selectedDungeon();
-  if (!dungeon) return;
-  const runs = loadRuns().filter((r) => r.dungeonId === dungeon.id);
-  if (runs.length === 0) {
-    averageEl.textContent = `No runs logged for ${dungeon.name} yet.`;
+function computeAverages() {
+  const runs = loadRuns();
+  const byDungeon = new Map();
+  for (const run of runs) {
+    if (!byDungeon.has(run.dungeonId)) {
+      byDungeon.set(run.dungeonId, { total: 0, count: 0, name: run.dungeonName });
+    }
+    const entry = byDungeon.get(run.dungeonId);
+    entry.total += run.durationSeconds;
+    entry.count += 1;
+  }
+
+  return [...byDungeon.entries()]
+    .map(([id, { total, count, name }]) => ({
+      id,
+      name,
+      avg: total / count,
+      count,
+      dungeon: getDungeon(id),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function renderAverages() {
+  const averages = computeAverages();
+  averagesGrid.innerHTML = "";
+
+  if (averages.length === 0) {
+    averagesGrid.innerHTML = `<p class="empty">No runs logged yet.</p>`;
     return;
   }
-  const avg = runs.reduce((sum, r) => sum + r.durationSeconds, 0) / runs.length;
-  averageEl.textContent = `${dungeon.name}: avg ${formatDuration(avg)} over ${runs.length} run${runs.length === 1 ? "" : "s"}`;
+
+  for (const { id, name, avg, count, dungeon } of averages) {
+    const card = document.createElement("div");
+    card.className = "average-card";
+    const img = document.createElement("img");
+    img.width = 32;
+    img.height = 32;
+    img.alt = "";
+    if (dungeon) setDungeonIcon(img, dungeon);
+
+    card.innerHTML = `
+      <div class="average-card-top"></div>
+      <div class="average-time">${formatDuration(avg)}</div>
+      <div class="average-meta">${count} run${count === 1 ? "" : "s"}</div>
+    `;
+    const top = card.querySelector(".average-card-top");
+    top.append(img);
+    const nameEl = document.createElement("span");
+    nameEl.textContent = name;
+    top.append(nameEl);
+    averagesGrid.appendChild(card);
+  }
 }
 
-function renderDungeonOptions(filter = "") {
-  const q = filter.trim().toLowerCase();
-  dungeonSelect.innerHTML = "";
-  const categoryMap = new Map(catalog.categories.map((c) => [c.id, c.label]));
-
-  for (const category of catalog.categories) {
-    const matches = catalog.dungeons.filter((d) => {
-      if (d.category !== category.id) return false;
-      if (!q) return true;
-      return d.name.toLowerCase().includes(q);
-    });
-    if (matches.length === 0) continue;
-
-    const group = document.createElement("optgroup");
-    group.label = categoryMap.get(category.id) || category.id;
-    for (const d of matches) {
-      const option = document.createElement("option");
-      option.value = d.id;
-      option.textContent = d.difficulty != null ? `${d.name} (${d.difficulty})` : d.name;
-      option.selected = d.id === selectedDungeonId;
-      group.appendChild(option);
-    }
-    dungeonSelect.appendChild(group);
-  }
-
-  if (!dungeonSelect.querySelector(`option[value="${selectedDungeonId}"]`) && dungeonSelect.options.length > 0) {
-    selectedDungeonId = dungeonSelect.options[0].value;
-  }
-  updatePreview();
-  updateAverage();
-}
-
-function renderTable() {
+function renderRunsTable() {
   const runs = loadRuns().slice().reverse();
   runsBody.innerHTML = "";
 
   if (runs.length === 0) {
-    const row = document.createElement("tr");
-    row.innerHTML = `<td colspan="4" class="empty">No runs yet.</td>`;
-    runsBody.appendChild(row);
-    updateAverage();
+    runsBody.innerHTML = `<tr><td colspan="4" class="empty">No runs yet.</td></tr>`;
     return;
   }
 
@@ -181,29 +273,32 @@ function renderTable() {
     `;
     if (dungeon) setDungeonIcon(row.querySelector(".table-icon"), dungeon);
     row.querySelector(".delete-btn").addEventListener("click", () => {
-      const next = loadRuns().filter((r) => r.id !== run.id);
-      saveRuns(next);
-      renderTable();
+      saveRuns(loadRuns().filter((r) => r.id !== run.id));
+      renderTimesPage();
     });
     runsBody.appendChild(row);
   }
+}
 
-  updateAverage();
+function renderTimesPage() {
+  renderAverages();
+  renderRunsTable();
 }
 
 function setRunning(running) {
-  searchInput.disabled = running;
-  dungeonSelect.disabled = running;
   startBtn.disabled = running;
   endBtn.disabled = !running;
+  searchInput.disabled = running;
+  if (running) allAccordion.open = false;
   statusEl.classList.toggle("running", running);
   statusEl.classList.toggle("saved", false);
+  renderExaltGrid();
+  renderAllDungeonList(searchInput.value);
 }
 
 function tick() {
   if (!startTime) return;
-  const elapsed = (Date.now() - startTime) / 1000;
-  timerEl.textContent = formatDuration(elapsed);
+  timerEl.textContent = formatDuration((Date.now() - startTime) / 1000);
 }
 
 function onStart() {
@@ -221,28 +316,35 @@ function onEnd() {
   if (!startTime) return;
   const dungeon = selectedDungeon();
   if (!dungeon) return;
+  const startedAt = new Date(startTime).toISOString();
   const durationSeconds = (Date.now() - startTime) / 1000;
-  const run = {
-    id: crypto.randomUUID(),
-    dungeonId: dungeon.id,
-    dungeonName: dungeon.name,
-    startedAt: new Date(startTime).toISOString(),
-    durationSeconds,
-  };
 
   clearInterval(tickInterval);
   tickInterval = null;
   startTime = null;
 
   const runs = loadRuns();
-  runs.push(run);
+  runs.push({
+    id: crypto.randomUUID(),
+    dungeonId: dungeon.id,
+    dungeonName: dungeon.name,
+    startedAt,
+    durationSeconds,
+  });
   saveRuns(runs);
 
   setRunning(false);
   timerEl.textContent = formatDuration(durationSeconds);
   statusEl.textContent = `Saved — ${formatDuration(durationSeconds)}`;
   statusEl.classList.add("saved");
-  renderTable();
+}
+
+function showPage(name) {
+  const isTimer = name === "timer";
+  pageTimer.classList.toggle("hidden", !isTimer);
+  pageTimes.classList.toggle("hidden", isTimer);
+  tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.page === name));
+  if (!isTimer) renderTimesPage();
 }
 
 async function init() {
@@ -250,17 +352,16 @@ async function init() {
   catalog = await res.json();
   dungeonById = new Map(catalog.dungeons.map((d) => [d.id, d]));
 
-  searchInput.addEventListener("input", () => renderDungeonOptions(searchInput.value));
-  dungeonSelect.addEventListener("change", () => {
-    selectedDungeonId = dungeonSelect.value;
-    updatePreview();
-    updateAverage();
-  });
+  searchInput.addEventListener("input", () => renderAllDungeonList(searchInput.value));
   startBtn.addEventListener("click", onStart);
   endBtn.addEventListener("click", onEnd);
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => showPage(tab.dataset.page));
+  });
 
-  renderDungeonOptions();
-  renderTable();
+  renderExaltGrid();
+  renderAllDungeonList();
+  updateSelectedDisplay();
 }
 
 init();

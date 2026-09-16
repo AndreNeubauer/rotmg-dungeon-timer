@@ -13,77 +13,216 @@ body {
 main {
   max-width: 760px;
   margin: 0 auto;
-  padding: 2rem 1.25rem 3rem;
+  padding: 1.5rem 1.25rem 3rem;
 }
 
 h1 {
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.75rem;
   font-size: 1.5rem;
 }
 
 h2 {
-  margin: 0 0 0.75rem;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.subtitle {
-  margin: 0 0 1.5rem;
-  color: #9aa0a6;
+  margin: 0 0 0.5rem;
   font-size: 0.95rem;
-}
-
-label {
-  display: block;
-  margin-bottom: 0.35rem;
-  font-size: 0.85rem;
+  font-weight: 600;
   color: #9aa0a6;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-input[type="search"],
-select {
+.subtitle,
+.section-hint {
+  margin: 0 0 1rem;
+  color: #9aa0a6;
+  font-size: 0.9rem;
+}
+
+.page.hidden {
+  display: none;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.tab {
+  background: #1e1e1e;
+  color: #9aa0a6;
+  border: 1px solid #3c4043;
+  border-radius: 8px;
+  padding: 0.45rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #2d2f31;
+  color: #e8e8e8;
+  border-color: #5f6368;
+}
+
+/* Exalt grid — front and center */
+.exalt-section {
+  margin-bottom: 1rem;
+}
+
+.dungeon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.6rem;
+}
+
+.compact-grid {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+
+.dungeon-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 0.5rem;
+  border: 2px solid #3c4043;
+  border-radius: 10px;
+  background: #1a1a1a;
+  color: inherit;
+  cursor: pointer;
+  text-align: center;
+  min-height: 96px;
+}
+
+.dungeon-card.compact {
+  flex-direction: row;
+  min-height: auto;
+  padding: 0.5rem 0.65rem;
+  text-align: left;
+  gap: 0.5rem;
+}
+
+.dungeon-card:hover:not(:disabled) {
+  border-color: #5f6368;
+  background: #222;
+}
+
+.dungeon-card.selected {
+  border-color: #8ab4f8;
+  background: #1a2332;
+  box-shadow: 0 0 0 1px #8ab4f844;
+}
+
+.dungeon-card:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dungeon-card img {
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.dungeon-card-name {
+  font-size: 0.78rem;
+  line-height: 1.25;
+  font-weight: 500;
+}
+
+.dungeon-card.compact .dungeon-card-name {
+  font-size: 0.85rem;
+}
+
+/* Accordion */
+.accordion {
+  margin-bottom: 1.5rem;
+  border: 1px solid #3c4043;
+  border-radius: 10px;
+  background: #161616;
+}
+
+.accordion summary {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #9aa0a6;
+  list-style: none;
+  user-select: none;
+}
+
+.accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.accordion summary::before {
+  content: "▸ ";
+  display: inline-block;
+  transition: transform 0.15s;
+}
+
+.accordion[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.accordion-body {
+  padding: 0 1rem 1rem;
+  border-top: 1px solid #3c4043;
+}
+
+.accordion input[type="search"] {
   width: 100%;
+  margin: 0.75rem 0;
   padding: 0.55rem 0.65rem;
   border: 1px solid #3c4043;
   border-radius: 8px;
   background: #1e1e1e;
   color: inherit;
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
-input[type="search"] {
-  max-width: 100%;
-  margin-bottom: 0.75rem;
-}
-
-select {
+.dungeon-group {
   margin-bottom: 1rem;
-  font-size: 0.92rem;
 }
 
-select:disabled,
-input:disabled {
-  opacity: 0.6;
+.dungeon-group h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6f7378;
 }
 
-.dungeon-preview {
-  display: flex;
+.all-dungeon-list .empty {
+  margin: 0.5rem 0 0;
+}
+
+/* Timer section */
+.timer-section {
+  text-align: center;
+  padding-top: 0.5rem;
+  border-top: 1px solid #3c4043;
+}
+
+.selected-dungeon {
+  display: inline-flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 0.75rem;
-  padding: 0.65rem 0.75rem;
+  margin-bottom: 0.5rem;
+  padding: 0.65rem 1rem;
   border: 1px solid #3c4043;
-  border-radius: 8px;
+  border-radius: 10px;
   background: #1a1a1a;
+  text-align: left;
 }
 
-.dungeon-preview img {
+.selected-dungeon img {
   image-rendering: pixelated;
-  flex-shrink: 0;
 }
 
 .dungeon-name {
   font-weight: 600;
+  font-size: 1.05rem;
 }
 
 .dungeon-meta {
@@ -92,27 +231,15 @@ input:disabled {
   margin-top: 0.15rem;
 }
 
-.controls {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.controls label,
-.controls input[type="search"],
-.controls select {
-  text-align: left;
-}
-
 .timer {
-  margin: 1.25rem 0 0.5rem;
+  margin: 1rem 0 0.35rem;
   font-size: 3.5rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
 }
 
 .status {
-  margin: 0;
+  margin: 0 0 1rem;
   color: #9aa0a6;
 }
 
@@ -124,22 +251,28 @@ input:disabled {
   color: #8ab4f8;
 }
 
-.average {
-  margin: 0.5rem 0 1rem;
-  color: #9aa0a6;
-  font-size: 0.9rem;
-}
-
 .buttons {
   display: flex;
   gap: 0.75rem;
   justify-content: center;
 }
 
-button {
+button.start {
+  background: #188038;
   border: none;
   border-radius: 8px;
-  padding: 0.65rem 1.5rem;
+  padding: 0.65rem 1.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #fff;
+}
+
+button.end {
+  background: #c5221f;
+  border: none;
+  border-radius: 8px;
+  padding: 0.65rem 1.75rem;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -151,12 +284,49 @@ button:disabled {
   cursor: not-allowed;
 }
 
-button.start {
-  background: #188038;
+/* Times page */
+.averages-section {
+  margin-bottom: 2rem;
 }
 
-button.end {
-  background: #c5221f;
+.averages-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.65rem;
+}
+
+.average-card {
+  padding: 0.75rem;
+  border: 1px solid #3c4043;
+  border-radius: 10px;
+  background: #1a1a1a;
+}
+
+.average-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.average-card-top img {
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.average-time {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.average-meta {
+  font-size: 0.8rem;
+  color: #9aa0a6;
+  margin-top: 0.15rem;
 }
 
 table {
@@ -196,10 +366,11 @@ td.time {
 
 .delete-btn {
   background: transparent;
+  border: none;
   color: #9aa0a6;
   padding: 0.25rem 0.5rem;
   font-size: 0.85rem;
-  font-weight: 400;
+  cursor: pointer;
 }
 
 .delete-btn:hover:not(:disabled) {
@@ -209,4 +380,8 @@ td.time {
 .empty {
   color: #9aa0a6;
   font-style: italic;
+}
+
+input:disabled {
+  opacity: 0.6;
 }

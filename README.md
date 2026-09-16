@@ -4,14 +4,16 @@ Simple localhost web app to log dungeon clear times.
 
 ## Use
 
-1. Start the server (see below)
-2. Pick a dungeon
-3. **Start** when you enter the portal
-4. **End** when the boss dies
+**Timer tab**
+1. Pick an exalt dungeon from the grid (or **See all dungeons** accordion)
+2. **Start** when you enter the portal
+3. **End** when the boss dies
 
-Runs are saved in your browser (`localStorage`). Average shows for the selected dungeon.
+**Times tab**
+- Averages per dungeon (only dungeons with logged runs)
+- Full list of all runs with delete
 
-Dungeon list and portal icons come from `dungeons.json` (RealmEye wiki names + drips.pw portal sprites where available). Search to filter; exalt-route dungeons are pinned at the top.
+Runs are saved in your browser (`localStorage`). Exalt dungeons are front and center; everything else is in the accordion.
 
 ## Run
 
