@@ -284,12 +284,12 @@ button:disabled {
   cursor: pointer;
 }
 
-#chain-next-btn {
+.post-end-action.primary {
   background: var(--green);
   color: #fff;
 }
 
-#chain-done-btn {
+.post-end-action.secondary {
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--border);

@@ -1,15 +1,44 @@
 const STORAGE_KEY = "rotmg-dungeon-runs";
 const EXALT_CATEGORY = "exalt";
 
-/** Next dungeon in a fixed chain (LH → Cultist → Void; Fungal → Crystal). */
-const CHAIN_NEXT = {
-  "lost-halls": "cultist-hideout",
-  "cultist-hideout": "the-void",
-  "fungal-cavern": "crystal-cavern",
+/**
+ * After End — optional follow-ups.
+ * LH: cult path (no Colossus) vs boss clear; they do not chain automatically.
+ * Cult → Void (vial run into void). Fungal → Crystal always.
+ */
+const POST_END_PROMPTS = {
+  "lost-halls": {
+    hint: "Cult path (no Colossus) or boss clear?",
+    deferSave: true,
+    actions: [
+      {
+        label: "→ Cult (no boss)",
+        kind: "next",
+        nextId: "cultist-hideout",
+        runName: "Lost Halls (to Cult)",
+        primary: true,
+      },
+      { label: "Colossus clear", kind: "done", runName: "Lost Halls" },
+    ],
+  },
+  "cultist-hideout": {
+    hint: "Continue to Void?",
+    actions: [
+      { label: "→ Void", kind: "next", nextId: "the-void", primary: true },
+      { label: "Done", kind: "done" },
+    ],
+  },
+  "fungal-cavern": {
+    actions: [
+      { label: "→ Crystal Cavern", kind: "next", nextId: "crystal-cavern", primary: true },
+      { label: "Done", kind: "done" },
+    ],
+  },
 };
 
 const LEGACY_NAME_TO_ID = {
   "Lost Halls complex": "lost-halls",
+  "Lost Halls (to Cult)": "lost-halls",
   "Kogbold Steamworks": "kogbold-steamworks",
   "Moonlight Village": "moonlight-village",
   Shatters: "the-shatters",
@@ -32,10 +61,9 @@ const averagesList = document.getElementById("averages-list");
 const pageTimer = document.getElementById("page-timer");
 const pageTimes = document.getElementById("page-times");
 const tabs = document.querySelectorAll(".tab");
-const chainPrompt = document.getElementById("chain-prompt");
-const chainPromptLabel = document.getElementById("chain-prompt-label");
-const chainNextBtn = document.getElementById("chain-next-btn");
-const chainDoneBtn = document.getElementById("chain-done-btn");
+const postEndPrompt = document.getElementById("post-end-prompt");
+const postEndLabel = document.getElementById("post-end-label");
+const postEndActions = document.getElementById("post-end-actions");
 const timerBlock = document.querySelector(".timer-block");
 
 let catalog = { iconBase: "", fallbackIcon: "Dungeon Portal.png", categories: [], dungeons: [] };
@@ -43,7 +71,8 @@ let dungeonById = new Map();
 let startTime = null;
 let tickInterval = null;
 let selectedDungeonId = "lost-halls";
-let pendingChainNextId = null;
+/** Run waiting for LH branch choice before save. */
+let pendingEndRun = null;
 
 function formatDuration(seconds) {
   const total = Math.round(seconds);
@@ -94,7 +123,7 @@ function normalizeRun(run) {
   return {
     ...run,
     dungeonId: dungeon?.id || id,
-    dungeonName: dungeon?.name || run.dungeon || id,
+    dungeonName: dungeon?.name || run.dungeonName || run.dungeon || id,
   };
 }
 
@@ -110,6 +139,18 @@ function saveRuns(runs) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(runs));
 }
 
+function commitRun({ dungeonId, dungeonName, startedAt, durationSeconds }) {
+  const runs = loadRuns();
+  runs.push({
+    id: crypto.randomUUID(),
+    dungeonId,
+    dungeonName,
+    startedAt,
+    durationSeconds,
+  });
+  saveRuns(runs);
+}
+
 function selectedDungeon() {
   return getDungeon(selectedDungeonId);
 }
@@ -120,20 +161,21 @@ function isRunning() {
 
 function selectDungeon(id) {
   if (isRunning()) return;
-  hideChainPrompt();
+  hidePostEndPrompt();
   selectedDungeonId = id;
   renderExaltGrid();
   renderAllDungeonList(searchInput.value);
   updateSelectedDisplay();
 }
 
-function hideChainPrompt() {
-  pendingChainNextId = null;
-  chainPrompt.classList.add("hidden");
+function hidePostEndPrompt() {
+  pendingEndRun = null;
+  postEndPrompt.classList.add("hidden");
+  postEndActions.innerHTML = "";
 }
 
 function resetToStartPage() {
-  hideChainPrompt();
+  hidePostEndPrompt();
   timerEl.textContent = "—";
   statusEl.textContent = "";
   statusEl.classList.remove("running", "saved");
@@ -142,25 +184,56 @@ function resetToStartPage() {
   exaltGrid.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-function showChainPrompt(nextId, savedDuration) {
-  const next = getDungeon(nextId);
-  if (!next) {
+function showSavedDuration(durationSeconds) {
+  timerEl.textContent = formatDuration(durationSeconds);
+  statusEl.textContent = formatDuration(durationSeconds);
+  statusEl.classList.add("saved");
+}
+
+function showPostEndPrompt(dungeonId, durationSeconds) {
+  const config = POST_END_PROMPTS[dungeonId];
+  if (!config) {
     resetToStartPage();
     return;
   }
-  pendingChainNextId = nextId;
-  chainPromptLabel.textContent = `Saved ${formatDuration(savedDuration)} · next: ${next.name}`;
-  chainNextBtn.textContent = `Start ${next.name}`;
-  chainPrompt.classList.remove("hidden");
+
+  const hint = config.hint ? `${config.hint} ` : "";
+  postEndLabel.textContent = `Saved ${formatDuration(durationSeconds)} · ${hint}`.trim();
+  postEndActions.innerHTML = "";
+
+  for (const action of config.actions) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `post-end-action ${action.primary ? "primary" : "secondary"}`;
+    btn.textContent = action.label;
+    btn.addEventListener("click", () => handlePostEndAction(action));
+    postEndActions.appendChild(btn);
+  }
+
+  postEndPrompt.classList.remove("hidden");
   timerBlock.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
-function startChainNext() {
-  if (!pendingChainNextId || isRunning()) return;
-  const nextId = pendingChainNextId;
-  hideChainPrompt();
-  selectDungeon(nextId);
-  onStart();
+function handlePostEndAction(action) {
+  if (pendingEndRun) {
+    commitRun({
+      dungeonId: pendingEndRun.dungeon.id,
+      dungeonName: action.runName || pendingEndRun.dungeon.name,
+      startedAt: pendingEndRun.startedAt,
+      durationSeconds: pendingEndRun.durationSeconds,
+    });
+    pendingEndRun = null;
+  }
+
+  hidePostEndPrompt();
+
+  if (action.kind === "next" && action.nextId) {
+    selectDungeon(action.nextId);
+    onStart();
+    return;
+  }
+
+  resetToStartPage();
 }
 
 function createDungeonCard(dungeon, { compact = false } = {}) {
@@ -242,17 +315,19 @@ function computeAverages() {
   const runs = loadRuns();
   const byDungeon = new Map();
   for (const run of runs) {
-    if (!byDungeon.has(run.dungeonId)) {
-      byDungeon.set(run.dungeonId, { total: 0, count: 0, name: run.dungeonName });
+    const key = run.dungeonName;
+    if (!byDungeon.has(key)) {
+      byDungeon.set(key, { total: 0, count: 0, name: run.dungeonName, id: run.dungeonId });
     }
-    const entry = byDungeon.get(run.dungeonId);
+    const entry = byDungeon.get(key);
     entry.total += run.durationSeconds;
     entry.count += 1;
   }
 
   return [...byDungeon.entries()]
-    .map(([id, { total, count, name }]) => ({
+    .map(([key, { total, count, name, id }]) => ({
       id,
+      key,
       name,
       avg: total / count,
       count,
@@ -330,11 +405,12 @@ function setRunning(running) {
   startBtn.disabled = running;
   endBtn.disabled = !running;
   searchInput.disabled = running;
-  chainNextBtn.disabled = running;
-  chainDoneBtn.disabled = running;
+  for (const btn of postEndActions.querySelectorAll("button")) {
+    btn.disabled = running;
+  }
   if (running) {
     allAccordion.open = false;
-    hideChainPrompt();
+    hidePostEndPrompt();
   }
   statusEl.classList.toggle("running", running);
   statusEl.classList.toggle("saved", false);
@@ -369,27 +445,32 @@ function onEnd() {
   tickInterval = null;
   startTime = null;
 
-  const runs = loadRuns();
-  runs.push({
-    id: crypto.randomUUID(),
+  setRunning(false);
+  showSavedDuration(durationSeconds);
+
+  const prompt = POST_END_PROMPTS[dungeon.id];
+  if (prompt) {
+    if (prompt.deferSave) {
+      pendingEndRun = { dungeon, startedAt, durationSeconds };
+    } else {
+      commitRun({
+        dungeonId: dungeon.id,
+        dungeonName: dungeon.name,
+        startedAt,
+        durationSeconds,
+      });
+    }
+    showPostEndPrompt(dungeon.id, durationSeconds);
+    return;
+  }
+
+  commitRun({
     dungeonId: dungeon.id,
     dungeonName: dungeon.name,
     startedAt,
     durationSeconds,
   });
-  saveRuns(runs);
-
-  setRunning(false);
-  timerEl.textContent = formatDuration(durationSeconds);
-  statusEl.textContent = formatDuration(durationSeconds);
-  statusEl.classList.add("saved");
-
-  const nextId = CHAIN_NEXT[dungeon.id];
-  if (nextId) {
-    showChainPrompt(nextId, durationSeconds);
-  } else {
-    resetToStartPage();
-  }
+  resetToStartPage();
 }
 
 function showPage(name) {
@@ -408,8 +489,6 @@ async function init() {
   searchInput.addEventListener("input", () => renderAllDungeonList(searchInput.value));
   startBtn.addEventListener("click", onStart);
   endBtn.addEventListener("click", onEnd);
-  chainNextBtn.addEventListener("click", startChainNext);
-  chainDoneBtn.addEventListener("click", resetToStartPage);
   tabs.forEach((tab) => {
     tab.addEventListener("click", () => showPage(tab.dataset.page));
   });
