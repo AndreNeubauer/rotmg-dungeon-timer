@@ -9,6 +9,7 @@ Simple localhost web app to log dungeon clear times.
 2. **Start** when you enter the portal
 3. **End** when the boss dies — counts as **Complete** (clears only, for averages)
 4. **Nexus** or **Died** if you fail mid-run — logged for **success rate**, not averaged
+5. After each saved run: **Add find time?** — **Skip** if your party had the portal ready; pick a preset or enter minutes (`5` or `5:30`) if you realm-farmed it. Not asked when chaining (LH→Cult, etc.)
 
 **Times tab:** success %, complete / nexus / died counts, and **clear · avg** times (boss-clear average vs all-attempt average). Per-dungeon breakdown too. Delete bad rows anytime.
 

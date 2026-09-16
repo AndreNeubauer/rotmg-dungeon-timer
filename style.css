@@ -291,7 +291,43 @@ button:disabled {
 
 .chain-prompt-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.find-sub {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.find-preset {
+  flex: 0 1 auto;
+  min-width: 3rem;
+}
+
+.find-custom-row {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.find-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  padding: 0.55rem 0.65rem;
+  font-size: 0.9rem;
+}
+
+.find-input:focus {
+  outline: none;
+  border-color: var(--muted);
 }
 
 .chain-prompt-buttons button {
@@ -352,10 +388,23 @@ button:disabled {
   color: var(--muted);
 }
 
-.stats-times {
+.stats-times,
+.stats-find {
   margin-top: 0.45rem;
   font-variant-numeric: tabular-nums;
   font-size: 0.9rem;
+}
+
+.stats-find {
+  color: var(--muted);
+}
+
+.find-time,
+.avg-find {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.7rem;
+  color: var(--muted);
 }
 
 .time-legend {
@@ -403,6 +452,27 @@ button:disabled {
   margin-bottom: 1.5rem;
 }
 
+.averages-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 0 0.35rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.65rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.averages-header span:first-child {
+  flex: 1;
+}
+
+.averages-header-times {
+  min-width: 6.5rem;
+  text-align: right;
+}
+
 .average-row {
   display: flex;
   align-items: center;
@@ -422,9 +492,12 @@ button:disabled {
   font-size: 0.9rem;
 }
 
-.average-row-time {
+.average-row-times {
+  min-width: 6.5rem;
+  text-align: right;
   font-variant-numeric: tabular-nums;
-  font-weight: 500;
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 .average-row-stats {

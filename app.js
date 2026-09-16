@@ -87,6 +87,13 @@ let tickInterval = null;
 let selectedDungeonId = "lost-halls";
 /** Run waiting for LH branch choice before save. */
 let pendingEndRun = null;
+/** Run id waiting for optional find-time entry. */
+let pendingFindRunId = null;
+let findTimeAfterDone = null;
+/** Run id saved on End before chain prompt (e.g. Fungal). */
+let savedRunIdForPrompt = null;
+
+const FIND_PRESETS_MIN = [3, 5, 10, 15];
 
 function formatDuration(seconds) {
   const total = Math.round(seconds);
@@ -135,12 +142,15 @@ function normalizeRun(run) {
   const id = run.dungeonId || LEGACY_NAME_TO_ID[run.dungeon] || run.dungeon;
   const dungeon = getDungeon(id);
   const outcome = run.outcome && OUTCOMES[run.outcome] ? run.outcome : "complete";
+  const findTimeSeconds =
+    run.findTimeSeconds != null && Number.isFinite(run.findTimeSeconds) ? run.findTimeSeconds : null;
   return {
     ...run,
     id: run.id || crypto.randomUUID(),
     dungeonId: dungeon?.id || id,
     dungeonName: dungeon?.name || run.dungeonName || run.dungeon || id,
     outcome,
+    findTimeSeconds,
   };
 }
 
@@ -165,16 +175,42 @@ function saveRuns(runs) {
 }
 
 function commitRun({ dungeonId, dungeonName, startedAt, durationSeconds, outcome = "complete" }) {
+  const id = crypto.randomUUID();
   const runs = loadRuns();
   runs.push({
-    id: crypto.randomUUID(),
+    id,
     dungeonId,
     dungeonName,
     startedAt,
     durationSeconds,
     outcome,
+    findTimeSeconds: null,
   });
   saveRuns(runs);
+  return id;
+}
+
+function setRunFindTime(runId, findTimeSeconds) {
+  saveRuns(
+    loadRuns().map((run) =>
+      run.id === runId ? { ...run, findTimeSeconds: Math.max(0, Math.round(findTimeSeconds)) } : run
+    )
+  );
+}
+
+function parseFindTimeInput(raw) {
+  const text = raw.trim();
+  if (!text) return null;
+  if (text.includes(":")) {
+    const [mins, secs] = text.split(":").map((part) => Number(part));
+    if (Number.isFinite(mins) && Number.isFinite(secs) && mins >= 0 && secs >= 0) {
+      return mins * 60 + secs;
+    }
+    return null;
+  }
+  const minutes = Number(text);
+  if (Number.isFinite(minutes) && minutes > 0) return Math.round(minutes * 60);
+  return null;
 }
 
 function emptyOutcomeCounts() {
@@ -192,7 +228,7 @@ function successRate(counts) {
 }
 
 function emptyTiming() {
-  return { attemptDuration: 0, clearDuration: 0, clearCount: 0 };
+  return { attemptDuration: 0, clearDuration: 0, clearCount: 0, findDuration: 0, findCount: 0 };
 }
 
 function computeStats() {
@@ -223,6 +259,12 @@ function computeStats() {
       entry.clearDuration += run.durationSeconds;
       entry.clearCount += 1;
     }
+    if (run.findTimeSeconds != null && run.findTimeSeconds > 0) {
+      overall.findDuration += run.findTimeSeconds;
+      overall.findCount += 1;
+      entry.findDuration += run.findTimeSeconds;
+      entry.findCount += 1;
+    }
   }
 
   return { overall, byDungeon };
@@ -247,6 +289,8 @@ function getDungeonSummaries() {
       },
       avgClear: avgDuration(entry.clearDuration, entry.clearCount),
       avgAttempt: avgDuration(entry.attemptDuration, entry.total),
+      avgFind: avgDuration(entry.findDuration, entry.findCount),
+      findCount: entry.findCount,
       clearCount: entry.clearCount,
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -269,6 +313,7 @@ function isRunning() {
 function selectDungeon(id, { fromPrompt = false } = {}) {
   if (isRunning()) return;
   if (pendingEndRun && !fromPrompt) return;
+  if (pendingFindRunId && !fromPrompt) return;
   hidePostEndPrompt();
   selectedDungeonId = id;
   renderExaltGrid();
@@ -278,8 +323,84 @@ function selectDungeon(id, { fromPrompt = false } = {}) {
 
 function hidePostEndPrompt() {
   pendingEndRun = null;
+  pendingFindRunId = null;
+  findTimeAfterDone = null;
+  savedRunIdForPrompt = null;
   postEndPrompt.classList.add("hidden");
   postEndActions.innerHTML = "";
+}
+
+function finishFindTime(findTimeSeconds = null) {
+  if (pendingFindRunId && findTimeSeconds != null && findTimeSeconds > 0) {
+    setRunFindTime(pendingFindRunId, findTimeSeconds);
+  }
+  const after = findTimeAfterDone;
+  pendingFindRunId = null;
+  findTimeAfterDone = null;
+  savedRunIdForPrompt = null;
+  postEndPrompt.classList.add("hidden");
+  postEndActions.innerHTML = "";
+  after?.();
+}
+
+function offerFindTime(runId, afterDone) {
+  pendingFindRunId = runId;
+  findTimeAfterDone = afterDone;
+  postEndLabel.innerHTML = `Add find time?<span class="find-sub">Realm or nexus → portal. Skip if party had it ready.</span>`;
+  postEndActions.innerHTML = "";
+
+  const skipBtn = document.createElement("button");
+  skipBtn.type = "button";
+  skipBtn.className = "post-end-action secondary";
+  skipBtn.textContent = "Skip";
+  skipBtn.addEventListener("click", () => finishFindTime());
+  postEndActions.appendChild(skipBtn);
+
+  for (const minutes of FIND_PRESETS_MIN) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "post-end-action secondary find-preset";
+    btn.textContent = `${minutes}m`;
+    btn.addEventListener("click", () => finishFindTime(minutes * 60));
+    postEndActions.appendChild(btn);
+  }
+
+  const customRow = document.createElement("div");
+  customRow.className = "find-custom-row";
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "find-input";
+  input.placeholder = "min or m:ss";
+  input.inputMode = "decimal";
+  input.autocomplete = "off";
+  const saveBtn = document.createElement("button");
+  saveBtn.type = "button";
+  saveBtn.className = "post-end-action primary";
+  saveBtn.textContent = "Add";
+  saveBtn.addEventListener("click", () => {
+    const seconds = parseFindTimeInput(input.value);
+    if (seconds == null) {
+      input.focus();
+      return;
+    }
+    finishFindTime(seconds);
+  });
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") saveBtn.click();
+  });
+  customRow.append(input, saveBtn);
+  postEndActions.appendChild(customRow);
+
+  postEndPrompt.classList.remove("hidden");
+  timerBlock.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function finishRunFlow(runId, { chain = false, afterDone = resetToStartPage } = {}) {
+  if (chain || !runId) {
+    afterDone?.();
+    return;
+  }
+  offerFindTime(runId, afterDone);
 }
 
 function resetToStartPage() {
@@ -330,9 +451,11 @@ function showPostEndPrompt(dungeonId, durationSeconds) {
 
 function handlePostEndAction(action) {
   let durationSeconds = null;
+  let runId = savedRunIdForPrompt;
+
   if (pendingEndRun) {
     durationSeconds = pendingEndRun.durationSeconds;
-    commitRun({
+    runId = commitRun({
       dungeonId: pendingEndRun.dungeon.id,
       dungeonName: action.runName || pendingEndRun.dungeon.name,
       startedAt: pendingEndRun.startedAt,
@@ -342,6 +465,7 @@ function handlePostEndAction(action) {
   }
 
   if (action.kind === "thenPrompt" && action.thenPrompt) {
+    savedRunIdForPrompt = runId;
     renderPostEndPrompt(action.thenPrompt, durationSeconds, { saved: true });
     return;
   }
@@ -353,15 +477,18 @@ function handlePostEndAction(action) {
     return;
   }
 
-  hidePostEndPrompt();
-
   if (action.kind === "next" && action.nextId) {
+    hidePostEndPrompt();
     selectDungeon(action.nextId, { fromPrompt: true });
     onStart();
     return;
   }
 
-  resetToStartPage();
+  postEndPrompt.classList.add("hidden");
+  postEndActions.innerHTML = "";
+  pendingEndRun = null;
+  savedRunIdForPrompt = null;
+  finishRunFlow(runId);
 }
 
 function createDungeonCard(dungeon, { compact = false } = {}) {
@@ -451,6 +578,11 @@ function renderStatsSummary() {
   const rate = successRate(overall);
   const avgClear = avgDuration(overall.clearDuration, overall.clearCount);
   const avgAttempt = avgDuration(overall.attemptDuration, overall.total);
+  const avgFind = avgDuration(overall.findDuration, overall.findCount);
+  const findLine =
+    avgFind != null
+      ? `<div class="stats-find">+${formatDuration(avgFind)} avg find <span class="time-legend">(${overall.findCount} logged)</span></div>`
+      : "";
   const card = document.createElement("div");
   card.className = "stats-card";
   card.innerHTML = `
@@ -463,6 +595,7 @@ function renderStatsSummary() {
         <span class="stats-total">${overall.total} attempts</span>
       </div>
       <div class="stats-times">${formatTimePair(avgClear, avgAttempt)}<span class="time-legend">clear · avg</span></div>
+      ${findLine}
     </div>
   `;
   statsSummary.appendChild(card);
@@ -486,7 +619,7 @@ function renderAverages() {
   `;
   averagesList.appendChild(header);
 
-  for (const { name, avgClear, avgAttempt, clearCount, dungeon, stats } of summaries) {
+  for (const { name, avgClear, avgAttempt, avgFind, findCount, clearCount, dungeon, stats } of summaries) {
     const row = document.createElement("div");
     row.className = "average-row";
     const img = document.createElement("img");
@@ -505,6 +638,9 @@ function renderAverages() {
     const timeCell = document.createElement("span");
     timeCell.className = "average-row-times";
     timeCell.innerHTML = formatTimePair(avgClear, avgAttempt);
+    if (findCount > 0 && avgFind != null) {
+      timeCell.innerHTML += `<span class="avg-find" title="Average find time (logged runs only)"> +${formatDuration(avgFind)} find</span>`;
+    }
 
     row.append(nameCell, statsCell, timeCell);
     averagesList.appendChild(row);
@@ -530,11 +666,15 @@ function renderRunsTable() {
       minute: "2-digit",
     });
     const outcome = OUTCOMES[run.outcome];
+    const findNote =
+      run.findTimeSeconds != null && run.findTimeSeconds > 0
+        ? `<span class="find-time">+${formatDuration(run.findTimeSeconds)} find</span>`
+        : "";
     row.innerHTML = `
       <td class="when">${when}</td>
       <td class="dungeon-cell"><img class="table-icon" alt="" /><span>${run.dungeonName}</span></td>
       <td><span class="outcome-pill ${run.outcome}">${outcome.label}</span></td>
-      <td class="time">${formatDuration(run.durationSeconds)}</td>
+      <td class="time">${formatDuration(run.durationSeconds)}${findNote}</td>
       <td class="delete-cell"><button type="button" class="delete-btn" aria-label="Delete run">Delete</button></td>
     `;
     if (dungeon) setDungeonIcon(row.querySelector(".table-icon"), dungeon);
@@ -553,7 +693,7 @@ function renderTimesPage() {
 }
 
 function setRunning(running) {
-  startBtn.disabled = running;
+  startBtn.disabled = running || pendingFindRunId != null;
   endBtn.disabled = !running;
   nexusBtn.disabled = !running;
   diedBtn.disabled = !running;
@@ -577,7 +717,7 @@ function tick() {
 }
 
 function onStart() {
-  if (startTime) return;
+  if (startTime || pendingFindRunId) return;
   const dungeon = selectedDungeon();
   if (!dungeon) return;
   startTime = Date.now();
@@ -600,7 +740,7 @@ function stopAttempt({ outcome, statusMessage }) {
   startTime = null;
   pendingEndRun = null;
 
-  commitRun({
+  const runId = commitRun({
     dungeonId: dungeon.id,
     dungeonName: dungeon.name,
     startedAt,
@@ -612,7 +752,7 @@ function stopAttempt({ outcome, statusMessage }) {
   timerEl.textContent = "—";
   statusEl.textContent = statusMessage;
   statusEl.classList.remove("running", "saved");
-  hidePostEndPrompt();
+  finishRunFlow(runId);
 }
 
 function onNexus() {
@@ -639,10 +779,11 @@ function onEnd() {
 
   const prompt = POST_END_PROMPTS[dungeon.id];
   if (prompt) {
+    savedRunIdForPrompt = null;
     if (prompt.deferSave) {
       pendingEndRun = { dungeon, startedAt, durationSeconds };
     } else {
-      commitRun({
+      savedRunIdForPrompt = commitRun({
         dungeonId: dungeon.id,
         dungeonName: dungeon.name,
         startedAt,
@@ -653,13 +794,13 @@ function onEnd() {
     return;
   }
 
-  commitRun({
+  const runId = commitRun({
     dungeonId: dungeon.id,
     dungeonName: dungeon.name,
     startedAt,
     durationSeconds,
   });
-  resetToStartPage();
+  finishRunFlow(runId);
 }
 
 function showPage(name) {
