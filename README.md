@@ -11,6 +11,8 @@ Simple localhost web app to log dungeon clear times.
 
 Runs are saved in your browser (`localStorage`). Average shows for the selected dungeon.
 
+Dungeon list and portal icons come from `dungeons.json` (RealmEye wiki names + drips.pw portal sprites where available). Search to filter; exalt-route dungeons are pinned at the top.
+
 ## Run
 
 ```bash
@@ -29,9 +31,6 @@ python3 -m http.server 8765
 
 ## Dungeons
 
-- Lost Halls complex
-- Kogbold Steamworks
-- Moonlight Village
-- Shatters
+Full wiki dungeon list in `dungeons.json` — grouped by category (Realm, Event, Advanced, Oryx, Wormholes, Special, etc.). Exalt-route dungeons pinned under **Exalt route**.
 
-Edit `DUNGEONS` in `app.js` to add more.
+To add a dungeon or fix an icon filename, edit `dungeons.json`. Icons load from `static.drips.pw` (older portals); newer dungeons use a generic portal sprite until a PNG is added under `icons/` locally.

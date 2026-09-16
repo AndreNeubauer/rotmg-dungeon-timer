@@ -14,8 +14,18 @@
     </header>
 
     <section class="controls">
-      <label for="dungeon">Dungeon</label>
-      <select id="dungeon"></select>
+      <label for="dungeon-search">Dungeon</label>
+      <input type="search" id="dungeon-search" placeholder="Search dungeons…" autocomplete="off" />
+
+      <div class="dungeon-preview" id="dungeon-preview">
+        <img id="dungeon-icon" alt="" width="40" height="40" />
+        <div>
+          <div class="dungeon-name" id="dungeon-name">—</div>
+          <div class="dungeon-meta" id="dungeon-meta"></div>
+        </div>
+      </div>
+
+      <select id="dungeon" size="8" aria-label="Dungeon list"></select>
 
       <div class="timer" id="timer">—</div>
       <p class="status" id="status">Pick a dungeon, then Start.</p>
