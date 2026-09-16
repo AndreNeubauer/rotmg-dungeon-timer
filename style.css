@@ -1,0 +1,158 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #121212;
+  color: #e8e8e8;
+}
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+}
+
+h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+}
+
+h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.subtitle {
+  margin: 0 0 1.5rem;
+  color: #9aa0a6;
+  font-size: 0.95rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.85rem;
+  color: #9aa0a6;
+}
+
+select {
+  width: 100%;
+  max-width: 320px;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #3c4043;
+  border-radius: 8px;
+  background: #1e1e1e;
+  color: inherit;
+  font-size: 1rem;
+}
+
+select:disabled {
+  opacity: 0.6;
+}
+
+.controls {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.timer {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 3.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.status {
+  margin: 0;
+  color: #9aa0a6;
+}
+
+.status.running {
+  color: #81c995;
+}
+
+.status.saved {
+  color: #8ab4f8;
+}
+
+.average {
+  margin: 0.5rem 0 1rem;
+  color: #9aa0a6;
+  font-size: 0.9rem;
+}
+
+.buttons {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+button {
+  border: none;
+  border-radius: 8px;
+  padding: 0.65rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #fff;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+button.start {
+  background: #188038;
+}
+
+button.end {
+  background: #c5221f;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+th,
+td {
+  padding: 0.6rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid #3c4043;
+}
+
+th {
+  color: #9aa0a6;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+td.time {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.delete-btn {
+  background: transparent;
+  color: #9aa0a6;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.delete-btn:hover:not(:disabled) {
+  color: #f28b82;
+}
+
+.empty {
+  color: #9aa0a6;
+  font-style: italic;
+}

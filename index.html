@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RotMG Dungeon Timer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main>
+    <header>
+      <h1>RotMG Dungeon Timer</h1>
+      <p class="subtitle">Start when you enter. End when the boss dies.</p>
+    </header>
+
+    <section class="controls">
+      <label for="dungeon">Dungeon</label>
+      <select id="dungeon"></select>
+
+      <div class="timer" id="timer">—</div>
+      <p class="status" id="status">Pick a dungeon, then Start.</p>
+      <p class="average" id="average"></p>
+
+      <div class="buttons">
+        <button type="button" id="start-btn" class="start">Start</button>
+        <button type="button" id="end-btn" class="end" disabled>End</button>
+      </div>
+    </section>
+
+    <section class="history">
+      <h2>History</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Dungeon</th>
+            <th>Time</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="runs-body"></tbody>
+      </table>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

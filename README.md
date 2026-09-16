@@ -1,30 +1,30 @@
 # RotMG Dungeon Timer
 
-Small desktop app to log how long dungeon clears take.
+Simple localhost web app to log dungeon clear times.
 
 ## Use
 
-1. Pick a dungeon
-2. **Start** when you enter the portal
-3. **End** when the boss is dead
-4. Runs save to a local table; average shows for the selected dungeon
+1. Start the server (see below)
+2. Pick a dungeon
+3. **Start** when you enter the portal
+4. **End** when the boss dies
 
-Data is stored in `times.db` next to the app (not committed to git).
+Runs are saved in your browser (`localStorage`). Average shows for the selected dungeon.
 
 ## Run
 
 ```bash
 cd apps/rotmg-dungeon-timer
-python3 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python main.py
+python3 serve.py
 ```
 
-Or with Flet CLI:
+Opens **http://127.0.0.1:8765** in your browser. No install needed.
+
+Alternative:
 
 ```bash
-flet run main.py
+python3 -m http.server 8765
+# then open http://127.0.0.1:8765
 ```
 
 ## Dungeons
@@ -34,4 +34,4 @@ flet run main.py
 - Moonlight Village
 - Shatters
 
-Edit `DUNGEONS` in `main.py` to add more.
+Edit `DUNGEONS` in `app.js` to add more.
