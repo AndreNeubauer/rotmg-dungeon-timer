@@ -453,11 +453,12 @@ function createRunTypeToggles(onChange) {
     btn.className = "toggle-check";
     btn.textContent = label;
     btn.title = title;
+    btn.dataset.runType = key;
     btn.setAttribute("aria-pressed", "false");
     btn.addEventListener("click", () => {
       selectedRunType = selectedRunType === key ? null : key;
       for (const toggle of row.querySelectorAll(".toggle-check")) {
-        const active = toggle.textContent === RUN_SOURCES[selectedRunType]?.label;
+        const active = toggle.dataset.runType === selectedRunType;
         toggle.classList.toggle("selected", active);
         toggle.setAttribute("aria-pressed", active ? "true" : "false");
       }
