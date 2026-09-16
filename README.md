@@ -37,12 +37,12 @@ Full wiki dungeon list in `dungeons.json` — grouped by category (Realm, Event,
 
 **Icons** (in order): `icons/{id}.png` → CDN filename from `dungeons.json` → generic portal.
 
-Most exalt icons are extracted from game sprite sheets:
+Fetch all portal sprites from [RealmEye dungeon list](https://www.realmeye.com/wiki/dungeons):
 
 ```bash
-python3 scripts/extract-portal-icons.py
+python3 scripts/fetch-realmeye-icons.py
 ```
 
-That script covers Lost Halls, Cultist, Void, Ice Citadel, Nest, Fungal, Crystal, Shatters. **Kogbold, Advanced Kogbold, Moonlight Village, and Plagued Nest** were added after the public drips asset dump — they show the generic portal until you drop a PNG in `icons/` (e.g. `kogbold-steamworks.png`).
+Re-run after wiki updates or when adding dungeons to `dungeons.json`. Oryx's Castle uses the Oryx's Chamber portal (wiki lists it as “No portal”).
 
 To add a dungeon or fix a CDN icon filename, edit `dungeons.json`.
