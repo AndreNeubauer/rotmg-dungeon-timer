@@ -316,6 +316,60 @@ button:disabled {
 }
 
 /* Times page */
+.stats-summary {
+  margin-bottom: 1.25rem;
+}
+
+.stats-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.stats-rate {
+  font-size: 2rem;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  min-width: 4.5rem;
+}
+
+.stats-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  align-items: center;
+}
+
+.stats-total {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.outcome-pill {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.outcome-pill.complete {
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 40%, var(--border));
+}
+
+.outcome-pill.nexus {
+  color: var(--muted);
+}
+
+.outcome-pill.died {
+  color: var(--red);
+  border-color: color-mix(in srgb, var(--red) 40%, var(--border));
+}
+
 .averages-list {
   margin-bottom: 1.5rem;
 }
@@ -344,11 +398,12 @@ button:disabled {
   font-weight: 500;
 }
 
-.average-row-count {
+.average-row-stats {
   font-size: 0.75rem;
   color: var(--muted);
-  min-width: 3rem;
+  min-width: 4.5rem;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .runs-table {

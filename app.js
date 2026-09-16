@@ -134,11 +134,13 @@ function getDungeon(idOrName) {
 function normalizeRun(run) {
   const id = run.dungeonId || LEGACY_NAME_TO_ID[run.dungeon] || run.dungeon;
   const dungeon = getDungeon(id);
+  const outcome = run.outcome && OUTCOMES[run.outcome] ? run.outcome : "complete";
   return {
     ...run,
     id: run.id || crypto.randomUUID(),
     dungeonId: dungeon?.id || id,
     dungeonName: dungeon?.name || run.dungeonName || run.dungeon || id,
+    outcome,
   };
 }
 
@@ -162,7 +164,7 @@ function saveRuns(runs) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(runs));
 }
 
-function commitRun({ dungeonId, dungeonName, startedAt, durationSeconds }) {
+function commitRun({ dungeonId, dungeonName, startedAt, durationSeconds, outcome = "complete" }) {
   const runs = loadRuns();
   runs.push({
     id: crypto.randomUUID(),
@@ -170,8 +172,43 @@ function commitRun({ dungeonId, dungeonName, startedAt, durationSeconds }) {
     dungeonName,
     startedAt,
     durationSeconds,
+    outcome,
   });
   saveRuns(runs);
+}
+
+function emptyOutcomeCounts() {
+  return { complete: 0, nexus: 0, died: 0, total: 0 };
+}
+
+function addOutcome(counts, outcome) {
+  counts[outcome] += 1;
+  counts.total += 1;
+}
+
+function successRate(counts) {
+  if (counts.total === 0) return null;
+  return Math.round((counts.complete / counts.total) * 100);
+}
+
+function computeStats() {
+  const runs = loadRuns();
+  const overall = emptyOutcomeCounts();
+  const byDungeon = new Map();
+
+  for (const run of runs) {
+    addOutcome(overall, run.outcome);
+    if (!byDungeon.has(run.dungeonId)) {
+      byDungeon.set(run.dungeonId, {
+        ...emptyOutcomeCounts(),
+        name: run.dungeonName,
+        id: run.dungeonId,
+      });
+    }
+    addOutcome(byDungeon.get(run.dungeonId), run.outcome);
+  }
+
+  return { overall, byDungeon };
 }
 
 function selectedDungeon() {
@@ -356,7 +393,7 @@ function updateSelectedDisplay() {
 }
 
 function computeAverages() {
-  const runs = loadRuns();
+  const runs = loadRuns().filter((run) => run.outcome === "complete");
   const byDungeon = new Map();
   for (const run of runs) {
     const key = run.dungeonName;
@@ -368,6 +405,8 @@ function computeAverages() {
     entry.count += 1;
   }
 
+  const { byDungeon: statsByDungeon } = computeStats();
+
   return [...byDungeon.entries()]
     .map(([key, { total, count, name, id }]) => ({
       id,
@@ -376,8 +415,33 @@ function computeAverages() {
       avg: total / count,
       count,
       dungeon: getDungeon(id),
+      stats: statsByDungeon.get(id) || emptyOutcomeCounts(),
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function renderStatsSummary() {
+  const { overall } = computeStats();
+  statsSummary.innerHTML = "";
+
+  if (overall.total === 0) {
+    statsSummary.innerHTML = `<p class="empty">No attempts yet.</p>`;
+    return;
+  }
+
+  const rate = successRate(overall);
+  const card = document.createElement("div");
+  card.className = "stats-card";
+  card.innerHTML = `
+    <div class="stats-rate">${rate}%</div>
+    <div class="stats-detail">
+      <span class="outcome-pill complete">${overall.complete} complete</span>
+      <span class="outcome-pill nexus">${overall.nexus} nexus</span>
+      <span class="outcome-pill died">${overall.died} died</span>
+      <span class="stats-total">${overall.total} attempts</span>
+    </div>
+  `;
+  statsSummary.appendChild(card);
 }
 
 function renderAverages() {
@@ -385,11 +449,11 @@ function renderAverages() {
   averagesList.innerHTML = "";
 
   if (averages.length === 0) {
-    averagesList.innerHTML = `<p class="empty">No runs yet.</p>`;
+    averagesList.innerHTML = `<p class="empty">No completed clears yet.</p>`;
     return;
   }
 
-  for (const { name, avg, count, dungeon } of averages) {
+  for (const { name, avg, count, dungeon, stats } of averages) {
     const row = document.createElement("div");
     row.className = "average-row";
     const img = document.createElement("img");
@@ -398,9 +462,16 @@ function renderAverages() {
     const nameCell = document.createElement("span");
     nameCell.className = "average-row-name";
     nameCell.append(img, name);
+
+    const rate = successRate(stats);
+    const statsCell = document.createElement("span");
+    statsCell.className = "average-row-stats";
+    statsCell.textContent =
+      stats.total > count ? `${rate}% · ${stats.complete}/${stats.total}` : `${count}×`;
+
     row.append(
       nameCell,
-      Object.assign(document.createElement("span"), { className: "average-row-count", textContent: `${count}×` }),
+      statsCell,
       Object.assign(document.createElement("span"), { className: "average-row-time", textContent: formatDuration(avg) })
     );
     averagesList.appendChild(row);
@@ -412,7 +483,7 @@ function renderRunsTable() {
   runsBody.innerHTML = "";
 
   if (runs.length === 0) {
-    runsBody.innerHTML = `<tr><td colspan="4" class="empty">No runs yet.</td></tr>`;
+    runsBody.innerHTML = `<tr><td colspan="5" class="empty">No attempts yet.</td></tr>`;
     return;
   }
 
@@ -425,9 +496,11 @@ function renderRunsTable() {
       hour: "2-digit",
       minute: "2-digit",
     });
+    const outcome = OUTCOMES[run.outcome];
     row.innerHTML = `
       <td class="when">${when}</td>
       <td class="dungeon-cell"><img class="table-icon" alt="" /><span>${run.dungeonName}</span></td>
+      <td><span class="outcome-pill ${run.outcome}">${outcome.label}</span></td>
       <td class="time">${formatDuration(run.durationSeconds)}</td>
       <td class="delete-cell"><button type="button" class="delete-btn" aria-label="Delete run">Delete</button></td>
     `;
@@ -441,6 +514,7 @@ function renderRunsTable() {
 }
 
 function renderTimesPage() {
+  renderStatsSummary();
   renderAverages();
   renderRunsTable();
 }
@@ -449,6 +523,7 @@ function setRunning(running) {
   startBtn.disabled = running;
   endBtn.disabled = !running;
   nexusBtn.disabled = !running;
+  diedBtn.disabled = !running;
   searchInput.disabled = running;
   for (const btn of postEndActions.querySelectorAll("button")) {
     btn.disabled = running;
@@ -479,17 +554,40 @@ function onStart() {
   tickInterval = setInterval(tick, 200);
 }
 
-function onNexus() {
+function stopAttempt({ outcome, statusMessage }) {
   if (!startTime) return;
+  const dungeon = selectedDungeon();
+  if (!dungeon) return;
+
+  const startedAt = new Date(startTime).toISOString();
+  const durationSeconds = (Date.now() - startTime) / 1000;
+
   clearInterval(tickInterval);
   tickInterval = null;
   startTime = null;
   pendingEndRun = null;
+
+  commitRun({
+    dungeonId: dungeon.id,
+    dungeonName: dungeon.name,
+    startedAt,
+    durationSeconds,
+    outcome,
+  });
+
   setRunning(false);
   timerEl.textContent = "—";
-  statusEl.textContent = "Nexused — not saved";
+  statusEl.textContent = statusMessage;
   statusEl.classList.remove("running", "saved");
   hidePostEndPrompt();
+}
+
+function onNexus() {
+  stopAttempt({ outcome: "nexus", statusMessage: "Nexus — logged" });
+}
+
+function onDied() {
+  stopAttempt({ outcome: "died", statusMessage: "Died — logged" });
 }
 
 function onEnd() {
@@ -548,6 +646,7 @@ async function init() {
   startBtn.addEventListener("click", onStart);
   endBtn.addEventListener("click", onEnd);
   nexusBtn.addEventListener("click", onNexus);
+  diedBtn.addEventListener("click", onDied);
   tabs.forEach((tab) => {
     tab.addEventListener("click", () => showPage(tab.dataset.page));
   });
