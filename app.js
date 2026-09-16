@@ -126,6 +126,7 @@ function normalizeRun(run) {
   const dungeon = getDungeon(id);
   return {
     ...run,
+    id: run.id || crypto.randomUUID(),
     dungeonId: dungeon?.id || id,
     dungeonName: dungeon?.name || run.dungeonName || run.dungeon || id,
   };
@@ -133,10 +134,18 @@ function normalizeRun(run) {
 
 function loadRuns() {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]").map(normalizeRun);
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    const needsId = raw.some((run) => !run.id);
+    const runs = raw.map(normalizeRun);
+    if (needsId) saveRuns(runs);
+    return runs;
   } catch {
     return [];
   }
+}
+
+function deleteRun(runId) {
+  saveRuns(loadRuns().filter((r) => r.id !== runId));
 }
 
 function saveRuns(runs) {
