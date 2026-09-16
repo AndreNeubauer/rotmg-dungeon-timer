@@ -9,6 +9,12 @@ Simple localhost web app to log dungeon clear times.
 2. **Start** when you enter the portal
 3. **End** when the boss dies
 
+**Dungeon chains** — after End, if the next dungeon is always chained:
+- Lost Halls → Cultist Hideout → The Void
+- Fungal Cavern → Crystal Cavern
+
+You get **Start next** (auto-starts the timer) or **Done** (back to the picker). Any other dungeon returns to the picker immediately after End.
+
 **Times tab**
 - Averages per dungeon (only dungeons with logged runs)
 - Full list of all runs with delete
