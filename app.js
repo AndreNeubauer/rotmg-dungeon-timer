@@ -94,6 +94,10 @@ let findTimeAfterDone = null;
 let savedRunIdForPrompt = null;
 
 const FIND_PRESETS_MIN = [3, 5, 10, 15];
+/** Spawn from another dungeon — no find-time prompt (Void, Crystal). */
+const CHAIN_SPAWN_NO_FIND = new Set(["the-void", "crystal-cavern"]);
+/** True when this run started via LH/Fungal chain (→ Cult, → Void, → Crystal). */
+let currentRunChained = false;
 
 function formatDuration(seconds) {
   const total = Math.round(seconds);
@@ -313,21 +317,50 @@ function isRunning() {
 function selectDungeon(id, { fromPrompt = false } = {}) {
   if (isRunning()) return;
   if (pendingEndRun && !fromPrompt) return;
-  if (pendingFindRunId && !fromPrompt) return;
-  hidePostEndPrompt();
+  if (pendingFindRunId) dismissFindTimePrompt();
+  hideChainPrompt();
   selectedDungeonId = id;
   renderExaltGrid();
   renderAllDungeonList(searchInput.value);
   updateSelectedDisplay();
 }
 
-function hidePostEndPrompt() {
+function hideChainPrompt() {
   pendingEndRun = null;
-  pendingFindRunId = null;
-  findTimeAfterDone = null;
   savedRunIdForPrompt = null;
   postEndPrompt.classList.add("hidden");
   postEndActions.innerHTML = "";
+}
+
+function dismissFindTimePrompt() {
+  pendingFindRunId = null;
+  findTimeAfterDone = null;
+  postEndPrompt.classList.add("hidden");
+  postEndActions.innerHTML = "";
+  refreshIdleControls();
+}
+
+function hidePostEndPrompt() {
+  hideChainPrompt();
+  dismissFindTimePrompt();
+}
+
+function readyForNextRun() {
+  timerEl.textContent = "—";
+  statusEl.textContent = "";
+  statusEl.classList.remove("running", "saved");
+}
+
+function refreshIdleControls() {
+  startBtn.disabled = startTime != null;
+  renderExaltGrid();
+  renderAllDungeonList(searchInput.value);
+}
+
+function shouldOfferFindTime(runId) {
+  if (!runId || currentRunChained) return false;
+  const run = loadRuns().find((entry) => entry.id === runId);
+  return Boolean(run && !CHAIN_SPAWN_NO_FIND.has(run.dungeonId));
 }
 
 function finishFindTime(findTimeSeconds = null) {

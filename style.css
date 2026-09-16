@@ -295,12 +295,22 @@ button:disabled {
   gap: 0.5rem;
 }
 
+.find-optional {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 400;
+}
+
 .find-sub {
   display: block;
   margin-top: 0.25rem;
   font-size: 0.75rem;
   color: var(--muted);
   font-weight: 400;
+}
+
+.find-skip {
+  flex: 1 1 100%;
 }
 
 .find-preset {
