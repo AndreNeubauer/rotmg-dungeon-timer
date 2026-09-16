@@ -3,8 +3,8 @@ const EXALT_CATEGORY = "exalt";
 
 /**
  * After End — optional follow-ups.
- * LH: cult path (no Colossus) vs boss clear; they do not chain automatically.
- * Cult → Void (vial run into void). Fungal → Crystal always.
+ * LH: cult path (no Colossus) vs boss clear; LH does not go to Void.
+ * Fungal → Crystal always. Void is picked manually from the grid.
  */
 const POST_END_PROMPTS = {
   "lost-halls": {
@@ -19,13 +19,6 @@ const POST_END_PROMPTS = {
         primary: true,
       },
       { label: "Colossus clear", kind: "done", runName: "Lost Halls" },
-    ],
-  },
-  "cultist-hideout": {
-    hint: "Continue to Void?",
-    actions: [
-      { label: "→ Void", kind: "next", nextId: "the-void", primary: true },
-      { label: "Done", kind: "done" },
     ],
   },
   "fungal-cavern": {
