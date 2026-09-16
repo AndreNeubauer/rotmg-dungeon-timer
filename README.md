@@ -10,10 +10,10 @@ Simple localhost web app to log dungeon clear times.
 3. **End** when the boss dies
 
 **Branching / chains** after End:
-- **Lost Halls** — choose **→ Cult (no boss)** (logs as “Lost Halls (to Cult)”, starts Cult timer) or **Colossus clear** (logs LH complete, back to picker). LH does not go straight to Void.
+- **Lost Halls** — **→ Cult (no boss)** (logs “Lost Halls (to Cult)”, starts Cult) or **Colossus clear** (logs LH complete, then **→ Void** or **Done**). Cult path does not offer Void.
 - **Fungal Cavern** — **→ Crystal Cavern** or **Done**
 
-Cult and Void are timed separately from the grid (no auto-chain after Cult).
+Cult is timed separately from the grid (no auto-chain after Cult).
 
 Any other dungeon saves and returns to the picker immediately.
 

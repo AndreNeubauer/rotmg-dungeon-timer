@@ -3,8 +3,8 @@ const EXALT_CATEGORY = "exalt";
 
 /**
  * After End — optional follow-ups.
- * LH: cult path (no Colossus) vs boss clear; LH does not go to Void.
- * Fungal → Crystal always. Void is picked manually from the grid.
+ * LH: cult path (no Colossus) vs boss clear; boss clear can chain to Void.
+ * Fungal → Crystal always.
  */
 const POST_END_PROMPTS = {
   "lost-halls": {
@@ -18,7 +18,18 @@ const POST_END_PROMPTS = {
         runName: "Lost Halls (to Cult)",
         primary: true,
       },
-      { label: "Colossus clear", kind: "done", runName: "Lost Halls" },
+      {
+        label: "Colossus clear",
+        kind: "thenPrompt",
+        runName: "Lost Halls",
+        thenPrompt: {
+          hint: "Chain to Void?",
+          actions: [
+            { label: "→ Void", kind: "next", nextId: "the-void", primary: true },
+            { label: "Done", kind: "done" },
+          ],
+        },
+      },
     ],
   },
   "fungal-cavern": {
@@ -184,15 +195,12 @@ function showSavedDuration(durationSeconds) {
   statusEl.classList.add("saved");
 }
 
-function showPostEndPrompt(dungeonId, durationSeconds) {
-  const config = POST_END_PROMPTS[dungeonId];
-  if (!config) {
-    resetToStartPage();
-    return;
-  }
-
+function renderPostEndPrompt(config, durationSeconds, { saved = true } = {}) {
   const hint = config.hint ? `${config.hint} ` : "";
-  postEndLabel.textContent = `Saved ${formatDuration(durationSeconds)} · ${hint}`.trim();
+  const lead = saved
+    ? `Saved ${formatDuration(durationSeconds)}`
+    : `${formatDuration(durationSeconds)} — choose:`;
+  postEndLabel.textContent = hint ? `${lead} · ${hint}`.trim() : lead;
   postEndActions.innerHTML = "";
 
   for (const action of config.actions) {
@@ -203,13 +211,24 @@ function showPostEndPrompt(dungeonId, durationSeconds) {
     btn.addEventListener("click", () => handlePostEndAction(action));
     postEndActions.appendChild(btn);
   }
+}
 
+function showPostEndPrompt(dungeonId, durationSeconds) {
+  const config = POST_END_PROMPTS[dungeonId];
+  if (!config) {
+    resetToStartPage();
+    return;
+  }
+
+  renderPostEndPrompt(config, durationSeconds, { saved: !config.deferSave });
   postEndPrompt.classList.remove("hidden");
   timerBlock.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function handlePostEndAction(action) {
+  let durationSeconds = null;
   if (pendingEndRun) {
+    durationSeconds = pendingEndRun.durationSeconds;
     commitRun({
       dungeonId: pendingEndRun.dungeon.id,
       dungeonName: action.runName || pendingEndRun.dungeon.name,
@@ -217,6 +236,11 @@ function handlePostEndAction(action) {
       durationSeconds: pendingEndRun.durationSeconds,
     });
     pendingEndRun = null;
+  }
+
+  if (action.kind === "thenPrompt" && action.thenPrompt) {
+    renderPostEndPrompt(action.thenPrompt, durationSeconds, { saved: true });
+    return;
   }
 
   hidePostEndPrompt();
