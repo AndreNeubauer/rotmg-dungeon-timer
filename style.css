@@ -68,7 +68,7 @@ header {
 /* Dungeon picker */
 .dungeon-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
   gap: 0.5rem;
   margin-bottom: 1rem;
 }

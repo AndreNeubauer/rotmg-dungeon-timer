@@ -1,8 +1,8 @@
 const STORAGE_KEY = "rotmg-dungeon-runs";
-const EXALT_CATEGORY = "pinned";
+const EXALT_CATEGORY = "exalt";
 
 const LEGACY_NAME_TO_ID = {
-  "Lost Halls complex": "lost-halls-complex",
+  "Lost Halls complex": "lost-halls",
   "Kogbold Steamworks": "kogbold-steamworks",
   "Moonlight Village": "moonlight-village",
   Shatters: "the-shatters",
@@ -30,7 +30,7 @@ let catalog = { iconBase: "", fallbackIcon: "Dungeon Portal.png", categories: []
 let dungeonById = new Map();
 let startTime = null;
 let tickInterval = null;
-let selectedDungeonId = "lost-halls-complex";
+let selectedDungeonId = "lost-halls";
 
 function formatDuration(seconds) {
   const total = Math.round(seconds);
@@ -53,10 +53,15 @@ function setDungeonIcon(img, dungeon) {
     img.removeAttribute("src");
     return;
   }
-  img.onerror = () => {
-    img.onerror = null;
-    img.src = iconUrlCdn(dungeon);
+  const fallback = iconUrlCdn({ icon: catalog.fallbackIcon });
+  const useCdn = () => {
+    img.onerror = () => {
+      img.onerror = null;
+      img.src = fallback;
+    };
+    img.src = dungeon.icon ? iconUrlCdn(dungeon) : fallback;
   };
+  img.onerror = useCdn;
   img.src = `icons/${dungeon.id}.png`;
 }
 
@@ -116,8 +121,6 @@ function createDungeonCard(dungeon, { compact = false } = {}) {
   btn.disabled = isRunning() && dungeon.id !== selectedDungeonId;
 
   const img = document.createElement("img");
-  img.width = compact ? 28 : 40;
-  img.height = compact ? 28 : 40;
   img.alt = "";
   setDungeonIcon(img, dungeon);
 

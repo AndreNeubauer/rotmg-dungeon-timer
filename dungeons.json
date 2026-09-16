@@ -2,7 +2,7 @@
   "iconBase": "https://static.drips.pw/rotmg/wiki/Environment/Portals/",
   "fallbackIcon": "Dungeon Portal.png",
   "categories": [
-    { "id": "pinned", "label": "Exalt route" },
+    { "id": "exalt", "label": "Exalt dungeons" },
     { "id": "realm-event", "label": "Realm Event Dungeons" },
     { "id": "realm", "label": "Realm Dungeons" },
     { "id": "advanced", "label": "Advanced Dungeons" },
@@ -14,19 +14,20 @@
     { "id": "other", "label": "Other" }
   ],
   "dungeons": [
-    { "id": "lost-halls-complex", "name": "Lost Halls complex", "category": "pinned", "difficulty": 8, "icon": null, "note": "LH → Cultist → Void" },
-    { "id": "lost-halls", "name": "Lost Halls", "category": "pinned", "difficulty": 8, "icon": null },
-    { "id": "cultist-hideout", "name": "Cultist Hideout", "category": "pinned", "difficulty": 7, "icon": null },
-    { "id": "the-void", "name": "The Void", "category": "pinned", "difficulty": 8.5, "icon": null },
-    { "id": "kogbold-steamworks", "name": "Kogbold Steamworks", "category": "pinned", "difficulty": 8, "icon": null },
-    { "id": "advanced-kogbold-steamworks", "name": "Advanced Kogbold Steamworks", "category": "pinned", "difficulty": 9, "icon": null },
-    { "id": "moonlight-village", "name": "Moonlight Village", "category": "pinned", "difficulty": 9, "icon": null },
-    { "id": "the-shatters", "name": "The Shatters", "category": "pinned", "difficulty": 10, "icon": "The Shatters.png" },
+    { "id": "lost-halls", "name": "Lost Halls", "category": "exalt", "difficulty": 8, "icon": null },
+    { "id": "cultist-hideout", "name": "Cultist Hideout", "category": "exalt", "difficulty": 7, "icon": null },
+    { "id": "the-void", "name": "The Void", "category": "exalt", "difficulty": 8.5, "icon": null },
+    { "id": "ice-citadel", "name": "Ice Citadel", "category": "exalt", "difficulty": 7, "icon": "Ice Cave Portal.png" },
+    { "id": "the-nest", "name": "The Nest", "category": "exalt", "difficulty": 7, "icon": null },
+    { "id": "fungal-cavern", "name": "Fungal Cavern", "category": "exalt", "difficulty": 7.5, "icon": null },
+    { "id": "crystal-cavern", "name": "Crystal Cavern", "category": "exalt", "difficulty": 7.5, "icon": null },
+    { "id": "plagued-nest", "name": "Plagued Nest", "category": "exalt", "difficulty": 8.5, "icon": null },
+    { "id": "kogbold-steamworks", "name": "Kogbold Steamworks", "category": "exalt", "difficulty": 8, "icon": null },
+    { "id": "advanced-kogbold-steamworks", "name": "Advanced Kogbold Steamworks", "category": "exalt", "difficulty": 9, "icon": null },
+    { "id": "moonlight-village", "name": "Moonlight Village", "category": "exalt", "difficulty": 9, "icon": null },
+    { "id": "the-shatters", "name": "The Shatters", "category": "exalt", "difficulty": 10, "icon": "The Shatters.png" },
 
     { "id": "beachzone", "name": "Beachzone", "category": "realm-event", "difficulty": 0, "icon": "Beachzone Portal.png" },
-    { "id": "the-nest", "name": "The Nest", "category": "realm-event", "difficulty": 7, "icon": null },
-    { "id": "fungal-cavern", "name": "Fungal Cavern", "category": "realm-event", "difficulty": 7.5, "icon": null },
-    { "id": "crystal-cavern", "name": "Crystal Cavern", "category": "realm-event", "difficulty": 7.5, "icon": null },
     { "id": "spectral-penitentiary", "name": "Spectral Penitentiary", "category": "realm-event", "difficulty": 8, "icon": null },
 
     { "id": "pirate-cave", "name": "Pirate Cave", "category": "realm", "difficulty": 1, "icon": "Pirate Cave Portal.png" },
@@ -67,11 +68,8 @@
     { "id": "lair-of-shaitan", "name": "Lair of Shaitan", "category": "realm", "difficulty": 6, "icon": "Lair of Shaitan Portal.png" },
     { "id": "secluded-thicket", "name": "Secluded Thicket", "category": "realm", "difficulty": 6.5, "icon": null },
     { "id": "high-tech-terror", "name": "High Tech Terror", "category": "realm", "difficulty": 6.5, "icon": null },
-    { "id": "ice-citadel", "name": "Ice Citadel", "category": "realm", "difficulty": 7, "icon": "Ice Cave Portal.png" },
-
     { "id": "heroic-undead-lair", "name": "Heroic Undead Lair", "category": "advanced", "difficulty": 6, "icon": null },
     { "id": "infernal-abyss-of-demons", "name": "Infernal Abyss of Demons", "category": "advanced", "difficulty": 6, "icon": null },
-    { "id": "plagued-nest", "name": "Plagued Nest", "category": "advanced", "difficulty": 8.5, "icon": null },
 
     { "id": "court-of-oryx", "name": "Court of Oryx", "category": "oryx", "difficulty": 3.5, "icon": null },
     { "id": "oryxs-castle", "name": "Oryx's Castle", "category": "oryx", "difficulty": 4.5, "icon": "Oryx's Castle Portal.png" },

@@ -33,6 +33,16 @@ python3 -m http.server 8765
 
 ## Dungeons
 
-Full wiki dungeon list in `dungeons.json` — grouped by category (Realm, Event, Advanced, Oryx, Wormholes, Special, etc.). Exalt-route dungeons pinned under **Exalt route**.
+Full wiki dungeon list in `dungeons.json` — grouped by category (Realm, Event, Advanced, Oryx, Wormholes, Special, etc.). All **12 exalt dungeons** are in the front grid.
 
-To add a dungeon or fix an icon filename, edit `dungeons.json`. Icons load from `static.drips.pw` (older portals); newer dungeons use a generic portal sprite until a PNG is added under `icons/` locally.
+**Icons** (in order): `icons/{id}.png` → CDN filename from `dungeons.json` → generic portal.
+
+Most exalt icons are extracted from game sprite sheets:
+
+```bash
+python3 scripts/extract-portal-icons.py
+```
+
+That script covers Lost Halls, Cultist, Void, Ice Citadel, Nest, Fungal, Crystal, Shatters. **Kogbold, Advanced Kogbold, Moonlight Village, and Plagued Nest** were added after the public drips asset dump — they show the generic portal until you drop a PNG in `icons/` (e.g. `kogbold-steamworks.png`).
+
+To add a dungeon or fix a CDN icon filename, edit `dungeons.json`.
