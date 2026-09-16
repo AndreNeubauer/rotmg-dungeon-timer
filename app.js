@@ -469,42 +469,48 @@ function createRunTypeToggles(onChange) {
   return row;
 }
 
-function offerRunContext(runId, afterDone) {
+function offerRunContext(runId, afterDone, { showSearchTime = true } = {}) {
   pendingFindRunId = runId;
   findTimeAfterDone = afterDone;
   selectedRunType = null;
-  postEndLabel.innerHTML = `Party or organic? <span class="find-optional">(optional)</span><span class="find-sub">Skip, pick another dungeon, or press Start anytime.</span>`;
+  const chainNote = showSearchTime
+    ? "Skip, pick another dungeon, or press Start anytime."
+    : "Chain spawn — no search time. Skip or pick Party/Organic.";
+  postEndLabel.innerHTML = `Party or organic? <span class="find-optional">(optional)</span><span class="find-sub">${chainNote}</span>`;
   postEndActions.innerHTML = "";
 
   postEndActions.appendChild(createRunTypeToggles());
 
-  const searchLabel = document.createElement("p");
-  searchLabel.className = "find-section-label";
-  searchLabel.textContent = "Search time (realm → portal)";
-  postEndActions.appendChild(searchLabel);
+  let searchInput = null;
+  if (showSearchTime) {
+    const searchLabel = document.createElement("p");
+    searchLabel.className = "find-section-label";
+    searchLabel.textContent = "Search time (realm → portal)";
+    postEndActions.appendChild(searchLabel);
 
-  const presetRow = document.createElement("div");
-  presetRow.className = "find-preset-row";
-  for (const minutes of FIND_PRESETS_MIN) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "post-end-action secondary find-preset toggle-check";
-    btn.textContent = `${minutes}m`;
-    btn.addEventListener("click", () => finishRunContext(minutes * 60));
-    presetRow.appendChild(btn);
+    const presetRow = document.createElement("div");
+    presetRow.className = "find-preset-row";
+    for (const minutes of FIND_PRESETS_MIN) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "post-end-action secondary find-preset toggle-check";
+      btn.textContent = `${minutes}m`;
+      btn.addEventListener("click", () => finishRunContext(minutes * 60));
+      presetRow.appendChild(btn);
+    }
+    postEndActions.appendChild(presetRow);
+
+    const customRow = document.createElement("div");
+    customRow.className = "find-custom-row";
+    searchInput = document.createElement("input");
+    searchInput.type = "text";
+    searchInput.className = "find-input";
+    searchInput.placeholder = "min or m:ss";
+    searchInput.inputMode = "decimal";
+    searchInput.autocomplete = "off";
+    customRow.appendChild(searchInput);
+    postEndActions.appendChild(customRow);
   }
-  postEndActions.appendChild(presetRow);
-
-  const customRow = document.createElement("div");
-  customRow.className = "find-custom-row";
-  const input = document.createElement("input");
-  input.type = "text";
-  input.className = "find-input";
-  input.placeholder = "min or m:ss";
-  input.inputMode = "decimal";
-  input.autocomplete = "off";
-  customRow.appendChild(input);
-  postEndActions.appendChild(customRow);
 
   const actionRow = document.createElement("div");
   actionRow.className = "find-action-row";
@@ -518,12 +524,14 @@ function offerRunContext(runId, afterDone) {
   doneBtn.className = "post-end-action primary";
   doneBtn.textContent = "Done";
   doneBtn.addEventListener("click", () => {
-    const seconds = parseFindTimeInput(input.value);
+    const seconds = searchInput ? parseFindTimeInput(searchInput.value) : null;
     finishRunContext(seconds);
   });
-  input.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") doneBtn.click();
-  });
+  if (searchInput) {
+    searchInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") doneBtn.click();
+    });
+  }
   actionRow.append(skipBtn, doneBtn);
   postEndActions.appendChild(actionRow);
 
@@ -532,13 +540,13 @@ function offerRunContext(runId, afterDone) {
 }
 
 function finishRunFlow(runId, { afterDone = readyForNextRun } = {}) {
-  const offerContext = shouldOfferFindTime(runId);
+  const chained = currentRunChained;
   currentRunChained = false;
-  if (!offerContext) {
+  if (!runId) {
     afterDone?.();
     return;
   }
-  offerRunContext(runId, afterDone);
+  offerRunContext(runId, afterDone, { showSearchTime: shouldOfferSearchTime(runId, { chained }) });
 }
 
 function resetToStartPage() {
