@@ -87,9 +87,15 @@ let tickInterval = null;
 let selectedDungeonId = "lost-halls";
 /** Run waiting for LH branch choice before save. */
 let pendingEndRun = null;
-/** Run id waiting for optional find-time entry. */
+/** Run id waiting for optional party/organic + find-time entry. */
 let pendingFindRunId = null;
 let findTimeAfterDone = null;
+let selectedRunType = null;
+
+const RUN_SOURCES = {
+  party: { label: "Party", title: "Organised run — portal ready" },
+  organic: { label: "Organic", title: "Realm / nexus search" },
+};
 /** Run id saved on End before chain prompt (e.g. Fungal). */
 let savedRunIdForPrompt = null;
 
@@ -148,6 +154,7 @@ function normalizeRun(run) {
   const outcome = run.outcome && OUTCOMES[run.outcome] ? run.outcome : "complete";
   const findTimeSeconds =
     run.findTimeSeconds != null && Number.isFinite(run.findTimeSeconds) ? run.findTimeSeconds : null;
+  const runType = run.runType && RUN_SOURCES[run.runType] ? run.runType : null;
   return {
     ...run,
     id: run.id || crypto.randomUUID(),
@@ -155,6 +162,7 @@ function normalizeRun(run) {
     dungeonName: dungeon?.name || run.dungeonName || run.dungeon || id,
     outcome,
     findTimeSeconds,
+    runType,
   };
 }
 
@@ -379,12 +387,12 @@ function finishFindTime(findTimeSeconds = null) {
 function offerFindTime(runId, afterDone) {
   pendingFindRunId = runId;
   findTimeAfterDone = afterDone;
-  postEndLabel.innerHTML = `Add find time?<span class="find-sub">Realm or nexus → portal. Skip if party had it ready.</span>`;
+  postEndLabel.innerHTML = `Add find time? <span class="find-optional">(optional)</span><span class="find-sub">Realm or nexus → portal. Skip, pick another dungeon, or press Start.</span>`;
   postEndActions.innerHTML = "";
 
   const skipBtn = document.createElement("button");
   skipBtn.type = "button";
-  skipBtn.className = "post-end-action secondary";
+  skipBtn.className = "post-end-action primary find-skip";
   skipBtn.textContent = "Skip";
   skipBtn.addEventListener("click", () => finishFindTime());
   postEndActions.appendChild(skipBtn);
@@ -428,8 +436,10 @@ function offerFindTime(runId, afterDone) {
   timerBlock.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
-function finishRunFlow(runId, { chain = false, afterDone = resetToStartPage } = {}) {
-  if (chain || !runId) {
+function finishRunFlow(runId, { afterDone = readyForNextRun } = {}) {
+  const offerFind = shouldOfferFindTime(runId);
+  currentRunChained = false;
+  if (!offerFind) {
     afterDone?.();
     return;
   }
@@ -511,9 +521,9 @@ function handlePostEndAction(action) {
   }
 
   if (action.kind === "next" && action.nextId) {
-    hidePostEndPrompt();
+    hideChainPrompt();
     selectDungeon(action.nextId, { fromPrompt: true });
-    onStart();
+    onStart({ chained: true });
     return;
   }
 
@@ -726,7 +736,7 @@ function renderTimesPage() {
 }
 
 function setRunning(running) {
-  startBtn.disabled = running || pendingFindRunId != null;
+  startBtn.disabled = running;
   endBtn.disabled = !running;
   nexusBtn.disabled = !running;
   diedBtn.disabled = !running;
@@ -749,10 +759,12 @@ function tick() {
   timerEl.textContent = formatDuration((Date.now() - startTime) / 1000);
 }
 
-function onStart() {
-  if (startTime || pendingFindRunId) return;
+function onStart({ chained = false } = {}) {
+  if (startTime) return;
+  if (pendingFindRunId) dismissFindTimePrompt();
   const dungeon = selectedDungeon();
   if (!dungeon) return;
+  currentRunChained = chained;
   startTime = Date.now();
   setRunning(true);
   statusEl.textContent = "Running";

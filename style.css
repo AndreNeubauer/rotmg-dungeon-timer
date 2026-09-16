@@ -309,8 +309,81 @@ button:disabled {
   font-weight: 400;
 }
 
-.find-skip {
-  flex: 1 1 100%;
+.toggle-row,
+.find-preset-row,
+.find-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.toggle-check {
+  flex: 1;
+  min-width: 5.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  padding: 0.55rem 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.toggle-check.selected {
+  color: var(--text);
+  border-color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--text);
+}
+
+.toggle-check.selected[title*="Organised"],
+.find-preset.toggle-check.selected {
+  border-color: var(--green);
+  color: var(--green);
+  box-shadow: inset 0 0 0 1px var(--green);
+}
+
+.toggle-check.selected[title*="Realm"] {
+  border-color: #8a8a3a;
+  color: #c4c46a;
+  box-shadow: inset 0 0 0 1px #8a8a3a;
+}
+
+.find-section-label {
+  width: 100%;
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.find-action-row .post-end-action {
+  flex: 1;
+}
+
+.stats-source,
+.avg-source {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.7rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.source-compare {
+  display: block;
+}
+
+.outcome-pill.source-party {
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 40%, var(--border));
+  margin-right: 0.25rem;
+}
+
+.outcome-pill.source-organic {
+  color: #c4c46a;
+  border-color: color-mix(in srgb, #8a8a3a 50%, var(--border));
+  margin-right: 0.25rem;
 }
 
 .find-preset {
