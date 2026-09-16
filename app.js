@@ -159,8 +159,9 @@ function isRunning() {
   return startTime !== null;
 }
 
-function selectDungeon(id) {
+function selectDungeon(id, { fromPrompt = false } = {}) {
   if (isRunning()) return;
+  if (pendingEndRun && !fromPrompt) return;
   hidePostEndPrompt();
   selectedDungeonId = id;
   renderExaltGrid();
@@ -228,7 +229,7 @@ function handlePostEndAction(action) {
   hidePostEndPrompt();
 
   if (action.kind === "next" && action.nextId) {
-    selectDungeon(action.nextId);
+    selectDungeon(action.nextId, { fromPrompt: true });
     onStart();
     return;
   }
