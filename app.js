@@ -197,16 +197,26 @@ function commitRun({ dungeonId, dungeonName, startedAt, durationSeconds, outcome
     durationSeconds,
     outcome,
     findTimeSeconds: null,
+    runType: null,
   });
   saveRuns(runs);
   return id;
 }
 
-function setRunFindTime(runId, findTimeSeconds) {
+function setRunMeta(runId, { runType, findTimeSeconds } = {}) {
   saveRuns(
-    loadRuns().map((run) =>
-      run.id === runId ? { ...run, findTimeSeconds: Math.max(0, Math.round(findTimeSeconds)) } : run
-    )
+    loadRuns().map((run) => {
+      if (run.id !== runId) return run;
+      const next = { ...run };
+      if (runType !== undefined) {
+        next.runType = runType && RUN_SOURCES[runType] ? runType : null;
+      }
+      if (findTimeSeconds !== undefined) {
+        next.findTimeSeconds =
+          findTimeSeconds != null && findTimeSeconds > 0 ? Math.round(findTimeSeconds) : null;
+      }
+      return next;
+    })
   );
 }
 
@@ -243,9 +253,25 @@ function emptyTiming() {
   return { attemptDuration: 0, clearDuration: 0, clearCount: 0, findDuration: 0, findCount: 0 };
 }
 
+function emptySourceBuckets() {
+  return { party: emptyTiming(), organic: emptyTiming() };
+}
+
+function addRunToSourceBucket(bucket, run) {
+  bucket.attemptDuration += run.durationSeconds;
+  if (run.outcome === "complete") {
+    bucket.clearDuration += run.durationSeconds;
+    bucket.clearCount += 1;
+  }
+  if (run.findTimeSeconds != null && run.findTimeSeconds > 0) {
+    bucket.findDuration += run.findTimeSeconds;
+    bucket.findCount += 1;
+  }
+}
+
 function computeStats() {
   const runs = loadRuns();
-  const overall = { ...emptyOutcomeCounts(), ...emptyTiming() };
+  const overall = { ...emptyOutcomeCounts(), ...emptyTiming(), bySource: emptySourceBuckets() };
   const byDungeon = new Map();
 
   for (const run of runs) {
@@ -260,6 +286,7 @@ function computeStats() {
       byDungeon.set(run.dungeonId, {
         ...emptyOutcomeCounts(),
         ...emptyTiming(),
+        bySource: emptySourceBuckets(),
         name: run.dungeonName,
         id: run.dungeonId,
       });
@@ -276,6 +303,10 @@ function computeStats() {
       overall.findCount += 1;
       entry.findDuration += run.findTimeSeconds;
       entry.findCount += 1;
+    }
+    if (run.runType === "party" || run.runType === "organic") {
+      addRunToSourceBucket(overall.bySource[run.runType], run);
+      addRunToSourceBucket(entry.bySource[run.runType], run);
     }
   }
 
@@ -304,6 +335,7 @@ function getDungeonSummaries() {
       avgFind: avgDuration(entry.findDuration, entry.findCount),
       findCount: entry.findCount,
       clearCount: entry.clearCount,
+      bySource: entry.bySource,
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -312,6 +344,26 @@ function formatTimePair(avgClear, avgAttempt) {
   const clear = avgClear != null ? formatDuration(avgClear) : "—";
   const attempt = avgAttempt != null ? formatDuration(avgAttempt) : "—";
   return `<span class="time-clear" title="Average clear">${clear}</span><span class="time-sep"> · </span><span class="time-attempt" title="Average attempt">${attempt}</span>`;
+}
+
+function formatSourceCompare(bySource) {
+  const partyClear = avgDuration(bySource.party.clearDuration, bySource.party.clearCount);
+  const organicClear = avgDuration(bySource.organic.clearDuration, bySource.organic.clearCount);
+  const partyFind = avgDuration(bySource.party.findDuration, bySource.party.findCount);
+  const organicFind = avgDuration(bySource.organic.findDuration, bySource.organic.findCount);
+
+  const lines = [];
+  if (partyClear != null || organicClear != null) {
+    const party = partyClear != null ? formatDuration(partyClear) : "—";
+    const organic = organicClear != null ? formatDuration(organicClear) : "—";
+    lines.push(`<span class="source-compare">Clear: Party ${party} · Organic ${organic}</span>`);
+  }
+  if (partyFind != null || organicFind != null) {
+    const party = partyFind != null ? `+${formatDuration(partyFind)}` : "—";
+    const organic = organicFind != null ? `+${formatDuration(organicFind)}` : "—";
+    lines.push(`<span class="source-compare">Search: Party ${party} · Organic ${organic}</span>`);
+  }
+  return lines.join("");
 }
 
 function selectedDungeon() {
@@ -343,6 +395,7 @@ function hideChainPrompt() {
 function dismissFindTimePrompt() {
   pendingFindRunId = null;
   findTimeAfterDone = null;
+  selectedRunType = null;
   postEndPrompt.classList.add("hidden");
   postEndActions.innerHTML = "";
   refreshIdleControls();
@@ -371,40 +424,75 @@ function shouldOfferFindTime(runId) {
   return Boolean(run && !CHAIN_SPAWN_NO_FIND.has(run.dungeonId));
 }
 
-function finishFindTime(findTimeSeconds = null) {
-  if (pendingFindRunId && findTimeSeconds != null && findTimeSeconds > 0) {
-    setRunFindTime(pendingFindRunId, findTimeSeconds);
+function finishRunContext(findTimeSeconds = null) {
+  if (pendingFindRunId) {
+    setRunMeta(pendingFindRunId, {
+      runType: selectedRunType,
+      findTimeSeconds: findTimeSeconds != null && findTimeSeconds > 0 ? findTimeSeconds : null,
+    });
   }
   const after = findTimeAfterDone;
   pendingFindRunId = null;
   findTimeAfterDone = null;
+  selectedRunType = null;
   savedRunIdForPrompt = null;
   postEndPrompt.classList.add("hidden");
   postEndActions.innerHTML = "";
   after?.();
 }
 
-function offerFindTime(runId, afterDone) {
+function createRunTypeToggles(onChange) {
+  const row = document.createElement("div");
+  row.className = "toggle-row";
+  row.setAttribute("role", "group");
+  row.setAttribute("aria-label", "Run type");
+
+  for (const [key, { label, title }] of Object.entries(RUN_SOURCES)) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "toggle-check";
+    btn.textContent = label;
+    btn.title = title;
+    btn.setAttribute("aria-pressed", "false");
+    btn.addEventListener("click", () => {
+      selectedRunType = selectedRunType === key ? null : key;
+      for (const toggle of row.querySelectorAll(".toggle-check")) {
+        const active = toggle.textContent === RUN_SOURCES[selectedRunType]?.label;
+        toggle.classList.toggle("selected", active);
+        toggle.setAttribute("aria-pressed", active ? "true" : "false");
+      }
+      onChange?.(selectedRunType);
+    });
+    row.appendChild(btn);
+  }
+  return row;
+}
+
+function offerRunContext(runId, afterDone) {
   pendingFindRunId = runId;
   findTimeAfterDone = afterDone;
-  postEndLabel.innerHTML = `Add find time? <span class="find-optional">(optional)</span><span class="find-sub">Realm or nexus → portal. Skip, pick another dungeon, or press Start.</span>`;
+  selectedRunType = null;
+  postEndLabel.innerHTML = `Party or organic? <span class="find-optional">(optional)</span><span class="find-sub">Skip, pick another dungeon, or press Start anytime.</span>`;
   postEndActions.innerHTML = "";
 
-  const skipBtn = document.createElement("button");
-  skipBtn.type = "button";
-  skipBtn.className = "post-end-action primary find-skip";
-  skipBtn.textContent = "Skip";
-  skipBtn.addEventListener("click", () => finishFindTime());
-  postEndActions.appendChild(skipBtn);
+  postEndActions.appendChild(createRunTypeToggles());
 
+  const searchLabel = document.createElement("p");
+  searchLabel.className = "find-section-label";
+  searchLabel.textContent = "Search time (realm → portal)";
+  postEndActions.appendChild(searchLabel);
+
+  const presetRow = document.createElement("div");
+  presetRow.className = "find-preset-row";
   for (const minutes of FIND_PRESETS_MIN) {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "post-end-action secondary find-preset";
+    btn.className = "post-end-action secondary find-preset toggle-check";
     btn.textContent = `${minutes}m`;
-    btn.addEventListener("click", () => finishFindTime(minutes * 60));
-    postEndActions.appendChild(btn);
+    btn.addEventListener("click", () => finishRunContext(minutes * 60));
+    presetRow.appendChild(btn);
   }
+  postEndActions.appendChild(presetRow);
 
   const customRow = document.createElement("div");
   customRow.className = "find-custom-row";
@@ -414,36 +502,42 @@ function offerFindTime(runId, afterDone) {
   input.placeholder = "min or m:ss";
   input.inputMode = "decimal";
   input.autocomplete = "off";
-  const saveBtn = document.createElement("button");
-  saveBtn.type = "button";
-  saveBtn.className = "post-end-action primary";
-  saveBtn.textContent = "Add";
-  saveBtn.addEventListener("click", () => {
+  customRow.appendChild(input);
+  postEndActions.appendChild(customRow);
+
+  const actionRow = document.createElement("div");
+  actionRow.className = "find-action-row";
+  const skipBtn = document.createElement("button");
+  skipBtn.type = "button";
+  skipBtn.className = "post-end-action secondary";
+  skipBtn.textContent = "Skip";
+  skipBtn.addEventListener("click", () => finishRunContext());
+  const doneBtn = document.createElement("button");
+  doneBtn.type = "button";
+  doneBtn.className = "post-end-action primary";
+  doneBtn.textContent = "Done";
+  doneBtn.addEventListener("click", () => {
     const seconds = parseFindTimeInput(input.value);
-    if (seconds == null) {
-      input.focus();
-      return;
-    }
-    finishFindTime(seconds);
+    finishRunContext(seconds);
   });
   input.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") saveBtn.click();
+    if (event.key === "Enter") doneBtn.click();
   });
-  customRow.append(input, saveBtn);
-  postEndActions.appendChild(customRow);
+  actionRow.append(skipBtn, doneBtn);
+  postEndActions.appendChild(actionRow);
 
   postEndPrompt.classList.remove("hidden");
   timerBlock.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function finishRunFlow(runId, { afterDone = readyForNextRun } = {}) {
-  const offerFind = shouldOfferFindTime(runId);
+  const offerContext = shouldOfferFindTime(runId);
   currentRunChained = false;
-  if (!offerFind) {
+  if (!offerContext) {
     afterDone?.();
     return;
   }
-  offerFindTime(runId, afterDone);
+  offerRunContext(runId, afterDone);
 }
 
 function resetToStartPage() {
@@ -624,8 +718,9 @@ function renderStatsSummary() {
   const avgFind = avgDuration(overall.findDuration, overall.findCount);
   const findLine =
     avgFind != null
-      ? `<div class="stats-find">+${formatDuration(avgFind)} avg find <span class="time-legend">(${overall.findCount} logged)</span></div>`
+      ? `<div class="stats-find">+${formatDuration(avgFind)} avg search <span class="time-legend">(${overall.findCount} logged)</span></div>`
       : "";
+  const sourceLine = formatSourceCompare(overall.bySource);
   const card = document.createElement("div");
   card.className = "stats-card";
   card.innerHTML = `
@@ -639,6 +734,7 @@ function renderStatsSummary() {
       </div>
       <div class="stats-times">${formatTimePair(avgClear, avgAttempt)}<span class="time-legend">clear · avg</span></div>
       ${findLine}
+      ${sourceLine ? `<div class="stats-source">${sourceLine}</div>` : ""}
     </div>
   `;
   statsSummary.appendChild(card);
@@ -662,7 +758,7 @@ function renderAverages() {
   `;
   averagesList.appendChild(header);
 
-  for (const { name, avgClear, avgAttempt, avgFind, findCount, clearCount, dungeon, stats } of summaries) {
+  for (const { name, avgClear, avgAttempt, avgFind, findCount, clearCount, dungeon, stats, bySource } of summaries) {
     const row = document.createElement("div");
     row.className = "average-row";
     const img = document.createElement("img");
@@ -682,7 +778,11 @@ function renderAverages() {
     timeCell.className = "average-row-times";
     timeCell.innerHTML = formatTimePair(avgClear, avgAttempt);
     if (findCount > 0 && avgFind != null) {
-      timeCell.innerHTML += `<span class="avg-find" title="Average find time (logged runs only)"> +${formatDuration(avgFind)} find</span>`;
+      timeCell.innerHTML += `<span class="avg-find" title="Average search time (logged runs only)"> +${formatDuration(avgFind)} search</span>`;
+    }
+    const sourceCompare = formatSourceCompare(bySource);
+    if (sourceCompare) {
+      timeCell.innerHTML += `<span class="avg-source">${sourceCompare}</span>`;
     }
 
     row.append(nameCell, statsCell, timeCell);
@@ -709,14 +809,17 @@ function renderRunsTable() {
       minute: "2-digit",
     });
     const outcome = OUTCOMES[run.outcome];
+    const sourcePill = run.runType
+      ? `<span class="outcome-pill source-${run.runType}">${RUN_SOURCES[run.runType].label}</span>`
+      : "";
     const findNote =
       run.findTimeSeconds != null && run.findTimeSeconds > 0
-        ? `<span class="find-time">+${formatDuration(run.findTimeSeconds)} find</span>`
+        ? `<span class="find-time">+${formatDuration(run.findTimeSeconds)} search</span>`
         : "";
     row.innerHTML = `
       <td class="when">${when}</td>
       <td class="dungeon-cell"><img class="table-icon" alt="" /><span>${run.dungeonName}</span></td>
-      <td><span class="outcome-pill ${run.outcome}">${outcome.label}</span></td>
+      <td>${sourcePill}<span class="outcome-pill ${run.outcome}">${outcome.label}</span></td>
       <td class="time">${formatDuration(run.durationSeconds)}${findNote}</td>
       <td class="delete-cell"><button type="button" class="delete-btn" aria-label="Delete run">Delete</button></td>
     `;
