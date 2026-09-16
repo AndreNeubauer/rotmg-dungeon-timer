@@ -1,6 +1,13 @@
 const STORAGE_KEY = "rotmg-dungeon-runs";
 const EXALT_CATEGORY = "exalt";
 
+/** Next dungeon in a fixed chain (LH → Cultist → Void; Fungal → Crystal). */
+const CHAIN_NEXT = {
+  "lost-halls": "cultist-hideout",
+  "cultist-hideout": "the-void",
+  "fungal-cavern": "crystal-cavern",
+};
+
 const LEGACY_NAME_TO_ID = {
   "Lost Halls complex": "lost-halls",
   "Kogbold Steamworks": "kogbold-steamworks",
@@ -25,12 +32,18 @@ const averagesList = document.getElementById("averages-list");
 const pageTimer = document.getElementById("page-timer");
 const pageTimes = document.getElementById("page-times");
 const tabs = document.querySelectorAll(".tab");
+const chainPrompt = document.getElementById("chain-prompt");
+const chainPromptLabel = document.getElementById("chain-prompt-label");
+const chainNextBtn = document.getElementById("chain-next-btn");
+const chainDoneBtn = document.getElementById("chain-done-btn");
+const timerBlock = document.querySelector(".timer-block");
 
 let catalog = { iconBase: "", fallbackIcon: "Dungeon Portal.png", categories: [], dungeons: [] };
 let dungeonById = new Map();
 let startTime = null;
 let tickInterval = null;
 let selectedDungeonId = "lost-halls";
+let pendingChainNextId = null;
 
 function formatDuration(seconds) {
   const total = Math.round(seconds);
@@ -107,10 +120,47 @@ function isRunning() {
 
 function selectDungeon(id) {
   if (isRunning()) return;
+  hideChainPrompt();
   selectedDungeonId = id;
   renderExaltGrid();
   renderAllDungeonList(searchInput.value);
   updateSelectedDisplay();
+}
+
+function hideChainPrompt() {
+  pendingChainNextId = null;
+  chainPrompt.classList.add("hidden");
+}
+
+function resetToStartPage() {
+  hideChainPrompt();
+  timerEl.textContent = "—";
+  statusEl.textContent = "";
+  statusEl.classList.remove("running", "saved");
+  showPage("timer");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  exaltGrid.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function showChainPrompt(nextId, savedDuration) {
+  const next = getDungeon(nextId);
+  if (!next) {
+    resetToStartPage();
+    return;
+  }
+  pendingChainNextId = nextId;
+  chainPromptLabel.textContent = `Saved ${formatDuration(savedDuration)} · next: ${next.name}`;
+  chainNextBtn.textContent = `Start ${next.name}`;
+  chainPrompt.classList.remove("hidden");
+  timerBlock.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function startChainNext() {
+  if (!pendingChainNextId || isRunning()) return;
+  const nextId = pendingChainNextId;
+  hideChainPrompt();
+  selectDungeon(nextId);
+  onStart();
 }
 
 function createDungeonCard(dungeon, { compact = false } = {}) {
@@ -280,7 +330,12 @@ function setRunning(running) {
   startBtn.disabled = running;
   endBtn.disabled = !running;
   searchInput.disabled = running;
-  if (running) allAccordion.open = false;
+  chainNextBtn.disabled = running;
+  chainDoneBtn.disabled = running;
+  if (running) {
+    allAccordion.open = false;
+    hideChainPrompt();
+  }
   statusEl.classList.toggle("running", running);
   statusEl.classList.toggle("saved", false);
   renderExaltGrid();
@@ -328,6 +383,13 @@ function onEnd() {
   timerEl.textContent = formatDuration(durationSeconds);
   statusEl.textContent = formatDuration(durationSeconds);
   statusEl.classList.add("saved");
+
+  const nextId = CHAIN_NEXT[dungeon.id];
+  if (nextId) {
+    showChainPrompt(nextId, durationSeconds);
+  } else {
+    resetToStartPage();
+  }
 }
 
 function showPage(name) {
@@ -346,6 +408,8 @@ async function init() {
   searchInput.addEventListener("input", () => renderAllDungeonList(searchInput.value));
   startBtn.addEventListener("click", onStart);
   endBtn.addEventListener("click", onEnd);
+  chainNextBtn.addEventListener("click", startChainNext);
+  chainDoneBtn.addEventListener("click", resetToStartPage);
   tabs.forEach((tab) => {
     tab.addEventListener("click", () => showPage(tab.dataset.page));
   });

@@ -253,6 +253,48 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.chain-prompt {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.chain-prompt.hidden {
+  display: none;
+}
+
+.chain-prompt-label {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.chain-prompt-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.chain-prompt-buttons button {
+  flex: 1;
+  border: none;
+  border-radius: 4px;
+  padding: 0.65rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+#chain-next-btn {
+  background: var(--green);
+  color: #fff;
+}
+
+#chain-done-btn {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
 /* Times page */
 .averages-list {
   margin-bottom: 1.5rem;
