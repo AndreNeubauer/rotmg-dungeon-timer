@@ -100,8 +100,8 @@ const RUN_SOURCES = {
 let savedRunIdForPrompt = null;
 
 const FIND_PRESETS_MIN = [3, 5, 10, 15];
-/** Spawn from another dungeon — no find-time prompt (Void, Crystal). */
-const CHAIN_SPAWN_NO_FIND = new Set(["the-void", "crystal-cavern"]);
+/** Spawn from another dungeon — no search-time field (Void, Crystal). */
+const CHAIN_SPAWN_DUNGEONS = new Set(["the-void", "crystal-cavern"]);
 /** True when this run started via LH/Fungal chain (→ Cult, → Void, → Crystal). */
 let currentRunChained = false;
 
@@ -418,10 +418,10 @@ function refreshIdleControls() {
   renderAllDungeonList(searchInput.value);
 }
 
-function shouldOfferFindTime(runId) {
-  if (!runId || currentRunChained) return false;
+function shouldOfferSearchTime(runId, { chained = false } = {}) {
+  if (!runId || chained) return false;
   const run = loadRuns().find((entry) => entry.id === runId);
-  return Boolean(run && !CHAIN_SPAWN_NO_FIND.has(run.dungeonId));
+  return Boolean(run && !CHAIN_SPAWN_DUNGEONS.has(run.dungeonId));
 }
 
 function finishRunContext(findTimeSeconds = null) {
