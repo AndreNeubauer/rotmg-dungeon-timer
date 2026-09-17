@@ -39,14 +39,12 @@ Opening **`index.html`** directly (no server) falls back to browser **`localStor
 
 Sample runs live in **`runs.json`** in the repo. When you log new times via the server, that file updates on your machine. If you clone fresh and want a blank slate, replace it with `[]` or copy from `runs.json.example`.
 
-**Anti-cheat validation** (after run details):
-- **Solo / organic 1p** — faster than [speedrun.com Solo +Pet WR](https://www.speedrun.com/rotmg/levels?h=Solo_Pet)
-- **Party or group size > 1** — [Group +Pets WR](https://www.speedrun.com/rotmg/levels?h=Group_%2BPets_%2B_Consumables) when listed; else ~55% of solo WR
-- Duplicate same dungeon + same time within 2 minutes; “time travel” overlaps
+**Validation on save** (speedrun WR checks disabled until full group WR list exists):
+- Duplicate same dungeon + same time within 2 minutes
+- “Time travel” — start overlaps a previous run still in progress
+- Runs under 3 seconds
 
-**Log group size** on group runs (Run details → group size) so the right floor applies.
-
-Refresh WR data: `python3 scripts/fetch-wr-times.py`
+Draft WR data (not enforced): `wr-times.json` via `python3 scripts/fetch-wr-times.py`
 
 ## Run
 
