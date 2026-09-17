@@ -46,10 +46,22 @@ const LEGACY_NAME_TO_ID = {
   "The Shatters": "the-shatters",
 };
 
-const exaltGrid = document.getElementById("exalt-grid");
-const allDungeonList = document.getElementById("all-dungeon-list");
+const categoryTabs = document.getElementById("category-tabs");
+const dungeonGrid = document.getElementById("dungeon-grid");
 const searchInput = document.getElementById("dungeon-search");
-const allAccordion = document.getElementById("all-dungeons-accordion");
+
+const CATEGORY_TAB_LABELS = {
+  exalt: "Exalt",
+  "realm-event": "Events",
+  realm: "Realm",
+  advanced: "Advanced",
+  oryx: "Oryx",
+  wormhole: "Wormholes",
+  "wormhole-adv": "Adv. WH",
+  special: "Special",
+  heroic: "Heroic",
+  other: "Other",
+};
 const dungeonIcon = document.getElementById("dungeon-icon");
 const dungeonName = document.getElementById("dungeon-name");
 const dungeonMeta = document.getElementById("dungeon-meta");
@@ -82,6 +94,7 @@ let dungeonById = new Map();
 let startTime = null;
 let tickInterval = null;
 let selectedDungeonId = "lost-halls";
+let selectedCategoryId = EXALT_CATEGORY;
 /** Run waiting for LH branch choice before save. */
 let pendingEndRun = null;
 /** Run id waiting for optional party/organic + find-time entry. */
@@ -431,6 +444,28 @@ function isRunning() {
   return startTime !== null;
 }
 
+function dungeonInCategory(dungeon, categoryId) {
+  if (dungeon.category === categoryId) return true;
+  return Array.isArray(dungeon.alsoIn) && dungeon.alsoIn.includes(categoryId);
+}
+
+function ensureCategoryForDungeon(dungeonId) {
+  const dungeon = getDungeon(dungeonId);
+  if (!dungeon) return;
+  if (dungeonInCategory(dungeon, selectedCategoryId)) return;
+  selectedCategoryId = dungeon.category;
+}
+
+function getDungeonsForCategory(categoryId, filter = "") {
+  const q = filter.trim().toLowerCase();
+  return catalog.dungeons.filter((dungeon) => {
+    if (!dungeonInCategory(dungeon, categoryId)) return false;
+    if (!q) return true;
+    const haystack = `${dungeon.name} ${dungeon.shortName || ""}`.toLowerCase();
+    return haystack.includes(q);
+  });
+}
+
 function selectDungeon(id, { fromPrompt = false } = {}) {
   if (isRunning()) return;
   if (pendingFindRunId) dismissFindTimePrompt();
@@ -439,8 +474,8 @@ function selectDungeon(id, { fromPrompt = false } = {}) {
     readyForNextRun();
   }
   selectedDungeonId = id;
-  renderExaltGrid();
-  renderAllDungeonList(searchInput.value);
+  ensureCategoryForDungeon(id);
+  renderDungeonPicker();
   updateSelectedDisplay();
 }
 
@@ -473,8 +508,7 @@ function readyForNextRun() {
 
 function refreshIdleControls() {
   startBtn.disabled = startTime != null;
-  renderExaltGrid();
-  renderAllDungeonList(searchInput.value);
+  renderDungeonPicker();
 }
 
 function shouldOfferSearchTime(runId, { chained = false } = {}) {
@@ -651,7 +685,7 @@ function resetToStartPage() {
   statusEl.classList.remove("running", "saved");
   showPage("timer");
   window.scrollTo({ top: 0, behavior: "smooth" });
-  exaltGrid.scrollIntoView({ behavior: "smooth", block: "start" });
+  dungeonGrid.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function showSavedDuration(durationSeconds) {
@@ -749,53 +783,44 @@ function createDungeonCard(dungeon, { compact = false } = {}) {
   return btn;
 }
 
-function getStartPageDungeons() {
-  const exalt = catalog.dungeons.filter((d) => d.category === EXALT_CATEGORY);
-  const pinned = catalog.dungeons.filter((d) => d.startPage && d.category !== EXALT_CATEGORY);
-  return [...exalt, ...pinned];
-}
-
-function renderExaltGrid() {
-  exaltGrid.innerHTML = "";
-  for (const d of getStartPageDungeons()) {
-    exaltGrid.appendChild(createDungeonCard(d));
-  }
-}
-
-function renderAllDungeonList(filter = "") {
-  const q = filter.trim().toLowerCase();
-  allDungeonList.innerHTML = "";
-  const categoryMap = new Map(catalog.categories.map((c) => [c.id, c.label]));
-
+function renderCategoryTabs() {
+  if (!categoryTabs) return;
+  categoryTabs.innerHTML = "";
   for (const category of catalog.categories) {
-    if (category.id === EXALT_CATEGORY) continue;
-
-    const matches = catalog.dungeons.filter((d) => {
-      if (d.category !== category.id) return false;
-      if (!q) return true;
-      return d.name.toLowerCase().includes(q);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `category-tab${category.id === selectedCategoryId ? " active" : ""}`;
+    btn.dataset.category = category.id;
+    btn.textContent = CATEGORY_TAB_LABELS[category.id] || category.label;
+    btn.disabled = isRunning();
+    btn.addEventListener("click", () => {
+      if (isRunning() || selectedCategoryId === category.id) return;
+      selectedCategoryId = category.id;
+      searchInput.value = "";
+      renderDungeonPicker();
     });
-    if (matches.length === 0) continue;
+    categoryTabs.appendChild(btn);
+  }
+}
 
-    const group = document.createElement("div");
-    group.className = "dungeon-group";
+function renderDungeonGrid() {
+  if (!dungeonGrid) return;
+  const matches = getDungeonsForCategory(selectedCategoryId, searchInput.value);
+  dungeonGrid.innerHTML = "";
 
-    const heading = document.createElement("h3");
-    heading.textContent = categoryMap.get(category.id) || category.id;
-    group.appendChild(heading);
-
-    const grid = document.createElement("div");
-    grid.className = "dungeon-grid compact-grid";
-    for (const d of matches) {
-      grid.appendChild(createDungeonCard(d, { compact: true }));
-    }
-    group.appendChild(grid);
-    allDungeonList.appendChild(group);
+  if (matches.length === 0) {
+    dungeonGrid.innerHTML = `<p class="empty">No dungeons match.</p>`;
+    return;
   }
 
-  if (allDungeonList.children.length === 0) {
-    allDungeonList.innerHTML = `<p class="empty">No dungeons match.</p>`;
+  for (const dungeon of matches) {
+    dungeonGrid.appendChild(createDungeonCard(dungeon));
   }
+}
+
+function renderDungeonPicker() {
+  renderCategoryTabs();
+  renderDungeonGrid();
 }
 
 function updateSelectedDisplay() {
@@ -1001,14 +1026,10 @@ function setRunning(running) {
   for (const btn of postEndActions.querySelectorAll("button")) {
     btn.disabled = running;
   }
-  if (running) {
-    allAccordion.open = false;
-    hidePostEndPrompt();
-  }
+  if (running) hidePostEndPrompt();
   statusEl.classList.toggle("running", running);
   statusEl.classList.toggle("saved", false);
-  renderExaltGrid();
-  renderAllDungeonList(searchInput.value);
+  renderDungeonPicker();
 }
 
 function tick() {
@@ -1140,7 +1161,7 @@ async function init() {
   }
   dungeonById = new Map(catalog.dungeons.map((d) => [d.id, d]));
 
-  searchInput.addEventListener("input", () => renderAllDungeonList(searchInput.value));
+  searchInput.addEventListener("input", () => renderDungeonGrid());
   startBtn.addEventListener("click", onStart);
   endBtn.addEventListener("click", onEnd);
   nexusBtn.addEventListener("click", onNexus);
@@ -1150,8 +1171,7 @@ async function init() {
   });
   timesDungeonFilter?.addEventListener("change", () => renderTimesPage());
 
-  renderExaltGrid();
-  renderAllDungeonList();
+  renderDungeonPicker();
   updateSelectedDisplay();
 }
 

@@ -145,6 +145,7 @@
       "name": "Oryx's Sanctuary",
       "shortName": "O3",
       "category": "exalt",
+      "alsoIn": ["oryx"],
       "difficulty": 9.5,
       "icon": null,
       "playerMax": 50
@@ -516,16 +517,6 @@
       "difficulty": 6,
       "icon": "Wine Cellar Portal.png",
       "playerMax": 85
-    },
-    {
-      "id": "oryxs-sanctuary",
-      "name": "Oryx's Sanctuary",
-      "shortName": "O3",
-      "startPage": true,
-      "category": "oryx",
-      "difficulty": 9.5,
-      "icon": null,
-      "playerMax": 50
     },
     {
       "id": "malogia",

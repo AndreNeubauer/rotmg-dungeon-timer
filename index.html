@@ -18,13 +18,11 @@
     </header>
 
     <div id="page-timer" class="page">
-      <div id="exalt-grid" class="dungeon-grid"></div>
-
-      <details class="accordion" id="all-dungeons-accordion">
-        <summary>All dungeons</summary>
-        <input type="search" id="dungeon-search" placeholder="Search" autocomplete="off" />
-        <div id="all-dungeon-list"></div>
-      </details>
+      <div class="dungeon-picker">
+        <nav class="category-tabs" id="category-tabs" aria-label="Dungeon categories"></nav>
+        <input type="search" id="dungeon-search" placeholder="Search this tab" autocomplete="off" />
+        <div id="dungeon-grid" class="dungeon-grid"></div>
+      </div>
 
       <section class="timer-block">
         <p class="dungeon-name" id="dungeon-name">Lost Halls</p>

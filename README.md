@@ -5,7 +5,7 @@ Simple localhost web app to log dungeon clear times.
 ## Use
 
 **Timer tab**
-1. Pick an exalt dungeon from the grid (or **See all dungeons** accordion)
+1. Pick a dungeon from the category tabs (Exalt, Oryx, Realm, …)
 2. **Start** when you enter the portal
 3. **End** when the boss dies — counts as **Complete** (clears only, for averages)
 4. **Nexus** or **Died** if you fail mid-run — logged for **success rate**, not averaged
@@ -61,7 +61,7 @@ Workflow: `.github/workflows/rotmg-timer-pages.yml`. Enable **Settings → Pages
 
 ## Dungeons
 
-Full wiki dungeon list in `dungeons.json` — grouped by category (Realm, Event, Advanced, Oryx, Wormholes, Special, etc.). Front grid: **13 exalt dungeons** (includes **O3** / Oryx's Sanctuary). Set `"startPage": true` on any non-exalt dungeon to pin it on the grid.
+Full wiki dungeon list in `dungeons.json` — grouped by category (Realm, Event, Advanced, Oryx, Wormholes, Special, etc.). **Exalt** tab: 13 dungeons (includes **O3**). **O3** also appears under **Oryx** via `"alsoIn": ["oryx"]` in `dungeons.json`.
 
 **Icons** (in order): `icons/{id}.png` → CDN filename from `dungeons.json` → generic portal.
 
