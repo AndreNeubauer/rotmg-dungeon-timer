@@ -295,6 +295,11 @@ button:disabled {
   gap: 0.5rem;
 }
 
+.chain-prompt-buttons .post-end-action {
+  flex: 1 1 calc(50% - 0.25rem);
+  min-width: 7rem;
+}
+
 .find-optional {
   font-size: 0.75rem;
   color: var(--muted);

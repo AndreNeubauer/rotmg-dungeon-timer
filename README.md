@@ -16,7 +16,7 @@ Simple localhost web app to log dungeon clear times.
 On **Lost Halls**, **Discard** on the branch prompt drops a pending run without saving.
 
 **Branching / chains** after End:
-- **Lost Halls** — **→ Cult (no boss)** (logs “Lost Halls (to Cult)”, starts Cult) or **Colossus clear** (logs LH complete, then **→ Void** or **Done**). Cult path does not offer Void.
+- **Lost Halls** — time **saves on End**. Then: **→ Cult**, **Colossus → Void**, **Colossus clear** (done), or **Discard** (removes that save).
 - **Fungal Cavern** — **→ Crystal Cavern** or **Done**
 
 Cult is timed separately from the grid (no auto-chain after Cult).

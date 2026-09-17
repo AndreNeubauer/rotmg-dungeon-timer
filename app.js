@@ -8,7 +8,7 @@ const EXALT_CATEGORY = "exalt";
  */
 const POST_END_PROMPTS = {
   "lost-halls": {
-    hint: "Cult path (no Colossus) or boss clear?",
+    hint: "Which path? Time is saved — pick below.",
     deferSave: true,
     actions: [
       {
@@ -19,17 +19,13 @@ const POST_END_PROMPTS = {
         primary: true,
       },
       {
-        label: "Colossus clear",
-        kind: "thenPrompt",
+        label: "Colossus → Void",
+        kind: "next",
+        nextId: "the-void",
         runName: "Lost Halls",
-        thenPrompt: {
-          hint: "Chain to Void?",
-          actions: [
-            { label: "→ Void", kind: "next", nextId: "the-void", primary: true },
-            { label: "Done", kind: "done" },
-          ],
-        },
+        primary: true,
       },
+      { label: "Colossus clear", kind: "done", runName: "Lost Halls" },
       { label: "Discard", kind: "discard" },
     ],
   },
@@ -201,6 +197,10 @@ function commitRun({ dungeonId, dungeonName, startedAt, durationSeconds, outcome
   });
   saveRuns(runs);
   return id;
+}
+
+function updateRun(runId, patch) {
+  saveRuns(loadRuns().map((run) => (run.id === runId ? { ...run, ...patch } : run)));
 }
 
 function setRunMeta(runId, { runType, findTimeSeconds } = {}) {
@@ -581,6 +581,9 @@ function renderPostEndPrompt(config, durationSeconds, { saved = true } = {}) {
     btn.addEventListener("click", () => handlePostEndAction(action));
     postEndActions.appendChild(btn);
   }
+
+  postEndPrompt.classList.remove("hidden");
+  timerBlock.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function showPostEndPrompt(dungeonId, durationSeconds) {
@@ -590,34 +593,28 @@ function showPostEndPrompt(dungeonId, durationSeconds) {
     return;
   }
 
-  renderPostEndPrompt(config, durationSeconds, { saved: !config.deferSave });
-  postEndPrompt.classList.remove("hidden");
-  timerBlock.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  renderPostEndPrompt(config, durationSeconds, { saved: true });
 }
 
 function handlePostEndAction(action) {
-  let durationSeconds = null;
   let runId = savedRunIdForPrompt;
 
   if (pendingEndRun) {
-    durationSeconds = pendingEndRun.durationSeconds;
-    runId = commitRun({
-      dungeonId: pendingEndRun.dungeon.id,
-      dungeonName: action.runName || pendingEndRun.dungeon.name,
-      startedAt: pendingEndRun.startedAt,
-      durationSeconds: pendingEndRun.durationSeconds,
-    });
+    runId = pendingEndRun.runId;
+    if (action.kind === "discard") {
+      deleteRun(runId);
+      pendingEndRun = null;
+      hidePostEndPrompt();
+      resetToStartPage();
+      return;
+    }
+    if (action.runName) {
+      updateRun(runId, { dungeonName: action.runName });
+    }
     pendingEndRun = null;
-  }
-
-  if (action.kind === "thenPrompt" && action.thenPrompt) {
-    savedRunIdForPrompt = runId;
-    renderPostEndPrompt(action.thenPrompt, durationSeconds, { saved: true });
-    return;
   }
 
   if (action.kind === "discard") {
-    pendingEndRun = null;
     hidePostEndPrompt();
     resetToStartPage();
     return;
@@ -632,7 +629,6 @@ function handlePostEndAction(action) {
 
   postEndPrompt.classList.add("hidden");
   postEndActions.innerHTML = "";
-  pendingEndRun = null;
   savedRunIdForPrompt = null;
   finishRunFlow(runId);
 }
@@ -938,7 +934,13 @@ function onEnd() {
   if (prompt) {
     savedRunIdForPrompt = null;
     if (prompt.deferSave) {
-      pendingEndRun = { dungeon, startedAt, durationSeconds };
+      const runId = commitRun({
+        dungeonId: dungeon.id,
+        dungeonName: dungeon.name,
+        startedAt,
+        durationSeconds,
+      });
+      pendingEndRun = { runId, dungeon, startedAt, durationSeconds };
     } else {
       savedRunIdForPrompt = commitRun({
         dungeonId: dungeon.id,
