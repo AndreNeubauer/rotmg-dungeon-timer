@@ -240,6 +240,11 @@ header {
   color: var(--text);
 }
 
+.status.rejected {
+  color: var(--red);
+  line-height: 1.35;
+}
+
 .buttons {
   display: flex;
   gap: 0.5rem;
