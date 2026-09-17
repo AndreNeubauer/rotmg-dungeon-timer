@@ -87,6 +87,7 @@ let pendingEndRun = null;
 let pendingFindRunId = null;
 let findTimeAfterDone = null;
 let selectedRunType = null;
+let selectedGroupSize = null;
 
 const RUN_SOURCES = {
   party: { label: "Party", title: "Organised run — portal ready" },

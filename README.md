@@ -9,7 +9,7 @@ Simple localhost web app to log dungeon clear times.
 2. **Start** when you enter the portal
 3. **End** when the boss dies — counts as **Complete** (clears only, for averages)
 4. **Nexus** or **Died** if you fail mid-run — logged for **success rate**, not averaged
-5. **Party / Organic (optional)** — after every saved run (including **Void** / **Crystal** from a chain). **Search time** only when the portal wasn’t a chain spawn. Chain continues (LH→Cult, etc.) skip the prompt until the segment ends.
+5. **Run details (optional)** — after saved runs: **Party / Organic**, **group size** (1–8), **search time** when not a chain spawn. Skip or pick another portal anytime.
 
 **Times tab:** success %, complete / nexus / died counts, and **clear · avg** times (boss-clear average vs all-attempt average). Per-dungeon breakdown too. Delete bad rows anytime.
 
