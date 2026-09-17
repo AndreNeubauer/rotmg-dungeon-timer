@@ -141,6 +141,15 @@
       "playerMax": 50
     },
     {
+      "id": "oryxs-sanctuary",
+      "name": "Oryx's Sanctuary",
+      "shortName": "O3",
+      "category": "exalt",
+      "difficulty": 9.5,
+      "icon": null,
+      "playerMax": 50
+    },
+    {
       "id": "beachzone",
       "name": "Beachzone",
       "category": "realm-event",

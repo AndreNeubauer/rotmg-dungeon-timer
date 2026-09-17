@@ -61,7 +61,7 @@ Workflow: `.github/workflows/rotmg-timer-pages.yml`. Enable **Settings → Pages
 
 ## Dungeons
 
-Full wiki dungeon list in `dungeons.json` — grouped by category (Realm, Event, Advanced, Oryx, Wormholes, Special, etc.). Front grid: **12 exalt dungeons** plus pinned extras (**O3** / Oryx's Sanctuary for life farming). Set `"startPage": true` on any dungeon to pin it.
+Full wiki dungeon list in `dungeons.json` — grouped by category (Realm, Event, Advanced, Oryx, Wormholes, Special, etc.). Front grid: **13 exalt dungeons** (includes **O3** / Oryx's Sanctuary). Set `"startPage": true` on any non-exalt dungeon to pin it on the grid.
 
 **Icons** (in order): `icons/{id}.png` → CDN filename from `dungeons.json` → generic portal.
 
