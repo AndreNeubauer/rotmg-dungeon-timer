@@ -1,312 +1,404 @@
 {
-  "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-  "category": "Solo +Pet",
   "fetchedAt": "2026-09-17",
-  "note": "Complete runs faster than minClearSeconds are rejected (speedrun.com WR floor).",
+  "note": "Solo WR for solo/organic 1p; group WR (or ~55% solo) for party or group size > 1.",
+  "soloCategory": "Solo +Pet",
+  "groupCategory": "Group +Pets + Consumables",
   "dungeons": [
     {
       "dungeonId": "abyss-of-demons",
       "name": "Abyss of Demons",
-      "minClearSeconds": 35.23,
-      "wrDisplay": "35s230ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/yj5gnqnm"
+      "soloMinClearSeconds": 35.23,
+      "soloWrDisplay": "35s230ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/yj5gnqnm",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "ancient-ruins",
       "name": "Ancient Ruins",
-      "minClearSeconds": 37.99,
-      "wrDisplay": "37s990ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/z53478ny"
+      "soloMinClearSeconds": 37.99,
+      "soloWrDisplay": "37s990ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/z53478ny",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
+    },
+    {
+      "dungeonId": "battle-for-the-nexus",
+      "name": "Battle for the Nexus"
+    },
+    {
+      "dungeonId": "beachzone",
+      "name": "Beachzone"
+    },
+    {
+      "dungeonId": "belladonnas-garden",
+      "name": "Belladonna's Garden"
     },
     {
       "dungeonId": "candyland-hunting-grounds",
       "name": "Candyland Hunting Grounds",
-      "minClearSeconds": 249.49,
-      "wrDisplay": "4m09s490ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/mr9pj12m"
+      "soloMinClearSeconds": 249.49,
+      "soloWrDisplay": "4m09s490ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/mr9pj12m",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "cave-of-a-thousand-treasures",
       "name": "Cave of 1000 Treasures",
-      "minClearSeconds": 27.69,
-      "wrDisplay": "27s690ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/z09ge4oz"
+      "soloMinClearSeconds": 27.69,
+      "soloWrDisplay": "27s690ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/z09ge4oz",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
+    },
+    {
+      "dungeonId": "cnidarian-reef",
+      "name": "Cnidarian Reef"
+    },
+    {
+      "dungeonId": "crystal-cavern",
+      "name": "Crystal Cavern"
+    },
+    {
+      "dungeonId": "cultist-hideout",
+      "name": "Cultist Hideout",
+      "groupMinClearSeconds": 193.3,
+      "groupWrDisplay": "3m13s300ms",
+      "groupWeblink": "https://www.speedrun.com/rotmg/runs/zgxj38dm",
+      "groupSource": "https://www.speedrun.com/rotmg/levels?h=Group_%2BPets_%2B_Consumables"
     },
     {
       "dungeonId": "cursed-library",
       "name": "Cursed Library",
-      "minClearSeconds": 34.2,
-      "wrDisplay": "34s200ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/zq4l6n1m"
+      "soloMinClearSeconds": 34.2,
+      "soloWrDisplay": "34s200ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/zq4l6n1m",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "davy-jones-locker",
       "name": "Davy Jones' Locker",
-      "minClearSeconds": 94.2,
-      "wrDisplay": "1m34s200ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/zgj1wgez"
+      "soloMinClearSeconds": 94.2,
+      "soloWrDisplay": "1m34s200ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/zgj1wgez",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
+      "groupMinClearSeconds": 62.76,
+      "groupWrDisplay": "1m02s760ms",
+      "groupWeblink": "https://www.speedrun.com/rotmg/runs/y2vgx19z",
+      "groupSource": "https://www.speedrun.com/rotmg/levels?h=Group_%2BPets_%2B_Consumables"
+    },
+    {
+      "dungeonId": "deadwater-docks",
+      "name": "Deadwater Docks"
     },
     {
       "dungeonId": "forax",
       "name": "Forax",
-      "minClearSeconds": 227.82,
-      "wrDisplay": "3m47s820ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/zxdrkxey"
+      "soloMinClearSeconds": 227.82,
+      "soloWrDisplay": "3m47s820ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/zxdrkxey",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "forbidden-jungle",
       "name": "Forbidden Jungle",
-      "minClearSeconds": 12.28,
-      "wrDisplay": "12s280ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/yv9k414z"
+      "soloMinClearSeconds": 12.28,
+      "soloWrDisplay": "12s280ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/yv9k414z",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "forest-maze",
       "name": "Forest Maze",
-      "minClearSeconds": 5.12,
-      "wrDisplay": "5s120ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/z53450gy"
+      "soloMinClearSeconds": 5.12,
+      "soloWrDisplay": "5s120ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/z53450gy",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "fungal-cavern",
-      "name": "Fungal Cavern Only",
-      "minClearSeconds": 261,
-      "wrDisplay": "4m21s000ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/m3nd5p6y"
+      "name": "Full Fungal & Crystal Cavern",
+      "soloMinClearSeconds": 261,
+      "soloWrDisplay": "4m21s000ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/m3nd5p6y",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "haunted-cemetery",
       "name": "Haunted Cemetery",
-      "minClearSeconds": 127.6,
-      "wrDisplay": "2m07s600ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/zgj1deez"
+      "soloMinClearSeconds": 127.6,
+      "soloWrDisplay": "2m07s600ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/zgj1deez",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
+    },
+    {
+      "dungeonId": "heroic-undead-lair",
+      "name": "Heroic Undead Lair"
     },
     {
       "dungeonId": "high-tech-terror",
       "name": "High Tech Terror",
-      "minClearSeconds": 244.41,
-      "wrDisplay": "4m04s410ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/ywd74w3z"
+      "soloMinClearSeconds": 244.41,
+      "soloWrDisplay": "4m04s410ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/ywd74w3z",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "ice-citadel",
       "name": "Ice Cave",
-      "minClearSeconds": 140.4,
-      "wrDisplay": "2m20s400ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/z1v05r7z"
+      "soloMinClearSeconds": 140.4,
+      "soloWrDisplay": "2m20s400ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/z1v05r7z",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
+    },
+    {
+      "dungeonId": "ice-tomb",
+      "name": "Ice Tomb"
+    },
+    {
+      "dungeonId": "infernal-abyss-of-demons",
+      "name": "Heroic Abyss of Demons"
     },
     {
       "dungeonId": "katalund",
       "name": "Katalund",
-      "minClearSeconds": 196.12,
-      "wrDisplay": "3m16s120ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/zn3lrx7y"
+      "soloMinClearSeconds": 196.12,
+      "soloWrDisplay": "3m16s120ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/zn3lrx7y",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "lair-of-draconis",
       "name": "Lair of Draconis",
-      "minClearSeconds": 540.347,
-      "wrDisplay": "9m00s347ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/y93r97ry"
+      "soloMinClearSeconds": 540.347,
+      "soloWrDisplay": "9m00s347ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/y93r97ry",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "lair-of-shaitan",
       "name": "Lair of Shaitan",
-      "minClearSeconds": 132.25,
-      "wrDisplay": "2m12s250ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/y4ed542m"
+      "soloMinClearSeconds": 132.25,
+      "soloWrDisplay": "2m12s250ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/y4ed542m",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
+    },
+    {
+      "dungeonId": "lost-halls",
+      "name": "Lost Halls"
+    },
+    {
+      "dungeonId": "mad-god-mayhem",
+      "name": "Mad God Mayhem"
     },
     {
       "dungeonId": "mad-lab",
       "name": "Mad Lab",
-      "minClearSeconds": 35.4,
-      "wrDisplay": "35s400ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/ydvpwjvy"
+      "soloMinClearSeconds": 35.4,
+      "soloWrDisplay": "35s400ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/ydvpwjvy",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "magic-woods",
       "name": "Magic Woods",
-      "minClearSeconds": 21.84,
-      "wrDisplay": "21s840ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/yv9dge8z"
+      "soloMinClearSeconds": 21.84,
+      "soloWrDisplay": "21s840ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/yv9dge8z",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "malogia",
       "name": "Malogia",
-      "minClearSeconds": 241.81,
-      "wrDisplay": "4m01s810ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/yj6v39dz"
+      "soloMinClearSeconds": 241.81,
+      "soloWrDisplay": "4m01s810ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/yj6v39dz",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "manor-of-the-immortals",
       "name": "Manor of the Immortals",
-      "minClearSeconds": 55.58,
-      "wrDisplay": "55s580ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/y2do367z"
+      "soloMinClearSeconds": 55.58,
+      "soloWrDisplay": "55s580ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/y2do367z",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "mountain-temple",
       "name": "Mountain Temple",
-      "minClearSeconds": 287.16,
-      "wrDisplay": "4m47s160ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/zpwl36gy"
+      "soloMinClearSeconds": 287.16,
+      "soloWrDisplay": "4m47s160ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/zpwl36gy",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "ocean-trench",
       "name": "Ocean Trench",
-      "minClearSeconds": 98.24,
-      "wrDisplay": "1m38s240ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/y8r4qv5m"
+      "soloMinClearSeconds": 98.24,
+      "soloWrDisplay": "1m38s240ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/y8r4qv5m",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
+    },
+    {
+      "dungeonId": "oryxs-chamber",
+      "name": "Oryx's Chamber"
+    },
+    {
+      "dungeonId": "oryxs-sanctuary",
+      "name": "Oryx's Sanctuary"
     },
     {
       "dungeonId": "parasite-chambers",
       "name": "Parasite Chambers",
-      "minClearSeconds": 82.4,
-      "wrDisplay": "1m22s400ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/m3wwgkgy"
+      "soloMinClearSeconds": 82.4,
+      "soloWrDisplay": "1m22s400ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/m3wwgkgy",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
+      "groupMinClearSeconds": 54.249,
+      "groupWrDisplay": "54s249ms",
+      "groupWeblink": "https://www.speedrun.com/rotmg/runs/zxd26xky",
+      "groupSource": "https://www.speedrun.com/rotmg/levels?h=Group_%2BPets_%2B_Consumables"
     },
     {
       "dungeonId": "pirate-cave",
       "name": "Pirate Cave",
-      "minClearSeconds": 1.11,
-      "wrDisplay": "1s110ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/ylv2gg2m"
+      "soloMinClearSeconds": 1.11,
+      "soloWrDisplay": "1s110ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/ylv2gg2m",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "puppet-masters-encore",
       "name": "Puppet Master\u2019s Encore",
-      "minClearSeconds": 81,
-      "wrDisplay": "1m21s000ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/zpkv2wxy"
+      "soloMinClearSeconds": 81,
+      "soloWrDisplay": "1m21s000ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/zpkv2wxy",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "puppet-masters-theatre",
       "name": "Puppet Master's Theater",
-      "minClearSeconds": 62.47,
-      "wrDisplay": "1m02s470ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/mk864nlm"
+      "soloMinClearSeconds": 62.47,
+      "soloWrDisplay": "1m02s470ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/mk864nlm",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
+    },
+    {
+      "dungeonId": "rainbow-road",
+      "name": "Rainbow Road"
+    },
+    {
+      "dungeonId": "secluded-thicket",
+      "name": "Secluded Thicket"
     },
     {
       "dungeonId": "snake-pit",
       "name": "Snake Pit",
-      "minClearSeconds": 15.02,
-      "wrDisplay": "15s020ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/y6r4361y"
+      "soloMinClearSeconds": 15.02,
+      "soloWrDisplay": "15s020ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/y6r4361y",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "spider-den",
       "name": "Spider Den",
-      "minClearSeconds": 10.28,
-      "wrDisplay": "10s280ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/zxd1vpky"
+      "soloMinClearSeconds": 10.28,
+      "soloWrDisplay": "10s280ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/zxd1vpky",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "sprite-world",
       "name": "Sprite World",
-      "minClearSeconds": 4.61,
-      "wrDisplay": "4s610ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/y916eo2m"
+      "soloMinClearSeconds": 4.61,
+      "soloWrDisplay": "4s610ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/y916eo2m",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "the-crawling-depths",
       "name": "Crawling Depths",
-      "minClearSeconds": 124.07,
-      "wrDisplay": "2m04s070ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/m75k9j9z"
+      "soloMinClearSeconds": 124.07,
+      "soloWrDisplay": "2m04s070ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/m75k9j9z",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "the-hive",
       "name": "Hive",
-      "minClearSeconds": 3.57,
-      "wrDisplay": "3s570ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/yloj9r3y"
+      "soloMinClearSeconds": 3.57,
+      "soloWrDisplay": "3s570ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/yloj9r3y",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "the-machine",
       "name": "The Machine",
-      "minClearSeconds": 92.37,
-      "wrDisplay": "1m32s370ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/yo96epjy"
+      "soloMinClearSeconds": 92.37,
+      "soloWrDisplay": "1m32s370ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/yo96epjy",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
+    },
+    {
+      "dungeonId": "the-nest",
+      "name": "The Nest"
     },
     {
       "dungeonId": "the-shatters",
       "name": "Shatters",
-      "minClearSeconds": 1344.041,
-      "wrDisplay": "22m24s041ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/ywjwqknz"
+      "soloMinClearSeconds": 1344.041,
+      "soloWrDisplay": "22m24s041ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/ywjwqknz",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
+      "groupMinClearSeconds": 253.333,
+      "groupWrDisplay": "4m13s333ms",
+      "groupWeblink": "https://www.speedrun.com/rotmg/runs/z18v3kgy",
+      "groupSource": "https://www.speedrun.com/rotmg/levels?h=Group_%2BPets_%2B_Consumables"
+    },
+    {
+      "dungeonId": "the-void",
+      "name": "The Void"
     },
     {
       "dungeonId": "tomb-of-the-ancients",
       "name": "Tomb of the Ancients",
-      "minClearSeconds": 604.65,
-      "wrDisplay": "10m04s650ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/y6e7n66z"
+      "soloMinClearSeconds": 604.65,
+      "soloWrDisplay": "10m04s650ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/y6e7n66z",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "toxic-sewers",
       "name": "Toxic Sewers",
-      "minClearSeconds": 54.42,
-      "wrDisplay": "54s420ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/z53qo4jy"
+      "soloMinClearSeconds": 54.42,
+      "soloWrDisplay": "54s420ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/z53qo4jy",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "undead-lair",
       "name": "Undead Lair",
-      "minClearSeconds": 36.32,
-      "wrDisplay": "36s320ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/y6r4lepy"
+      "soloMinClearSeconds": 36.32,
+      "soloWrDisplay": "36s320ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/y6r4lepy",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     },
     {
       "dungeonId": "untaris",
       "name": "Untaris",
-      "minClearSeconds": 334.35,
-      "wrDisplay": "5m34s350ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/y2d41n5z"
+      "soloMinClearSeconds": 334.35,
+      "soloWrDisplay": "5m34s350ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/y2d41n5z",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
+    },
+    {
+      "dungeonId": "wine-cellar",
+      "name": "Wine Cellar"
     },
     {
       "dungeonId": "woodland-labyrinth",
       "name": "Woodland Labyrinth",
-      "minClearSeconds": 76.5,
-      "wrDisplay": "1m16s500ms",
-      "source": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet",
-      "weblink": "https://www.speedrun.com/rotmg/runs/y9pgl8em"
+      "soloMinClearSeconds": 76.5,
+      "soloWrDisplay": "1m16s500ms",
+      "soloWeblink": "https://www.speedrun.com/rotmg/runs/y9pgl8em",
+      "soloSource": "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
     }
   ],
   "unmappedLevels": []

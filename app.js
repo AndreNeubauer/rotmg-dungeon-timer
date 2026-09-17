@@ -4,6 +4,9 @@ const EXALT_CATEGORY = "exalt";
 const DUPLICATE_WINDOW_MS = 120_000;
 const OVERLAP_TOLERANCE_MS = 3_000;
 const GLOBAL_MIN_SECONDS = 3;
+/** When no group WR on speedrun.com — ~55% of solo WR (group clears are much faster). */
+const GROUP_SOLO_RATIO = 0.55;
+const GROUP_MIN_FLOOR = 15;
 
 /**
  * After End — optional follow-ups.
@@ -94,7 +97,8 @@ const timerBlock = document.querySelector(".timer-block");
 
 let catalog = { iconBase: "", fallbackIcon: "Dungeon Portal.png", categories: [], dungeons: [] };
 let wrTimes = { dungeons: [] };
-let minClearById = new Map();
+let soloMinClearById = new Map();
+let groupMinClearById = new Map();
 let dungeonById = new Map();
 let startTime = null;
 let tickInterval = null;
@@ -275,14 +279,50 @@ function runEndMs(run) {
   return runStartMs(run) + run.durationSeconds * 1000;
 }
 
-function getMinClearSeconds(dungeonId) {
-  if (minClearById.has(dungeonId)) return minClearById.get(dungeonId);
-  const dungeon = getDungeon(dungeonId);
-  const diff = dungeon?.difficulty ?? 5;
-  return Math.max(GLOBAL_MIN_SECONDS, diff * 10);
+function buildWrMaps() {
+  soloMinClearById = new Map();
+  groupMinClearById = new Map();
+  for (const entry of wrTimes.dungeons || []) {
+    const solo = entry.soloMinClearSeconds ?? entry.minClearSeconds;
+    if (solo != null) soloMinClearById.set(entry.dungeonId, solo);
+    if (entry.groupMinClearSeconds != null) {
+      groupMinClearById.set(entry.dungeonId, entry.groupMinClearSeconds);
+    }
+  }
 }
 
-function validateRun(run, existingRuns) {
+function isGroupRun(run) {
+  if (run.groupSize != null && run.groupSize > 1) return true;
+  if (run.runType === "party") return true;
+  return false;
+}
+
+function getMinClearSeconds(dungeonId, run) {
+  const group = isGroupRun(run);
+  if (group) {
+    if (groupMinClearById.has(dungeonId)) return groupMinClearById.get(dungeonId);
+    const solo = soloMinClearById.get(dungeonId);
+    if (solo != null) return Math.max(GROUP_MIN_FLOOR, solo * GROUP_SOLO_RATIO);
+    const dungeon = getDungeon(dungeonId);
+    return Math.max(GROUP_MIN_FLOOR, (dungeon?.difficulty ?? 5) * 4);
+  }
+  if (soloMinClearById.has(dungeonId)) return soloMinClearById.get(dungeonId);
+  const dungeon = getDungeon(dungeonId);
+  return Math.max(GLOBAL_MIN_SECONDS, (dungeon?.difficulty ?? 5) * 10);
+}
+
+function getWrFloorLabel(dungeonId, run) {
+  const entry = wrTimes.dungeons?.find((row) => row.dungeonId === dungeonId);
+  if (isGroupRun(run)) {
+    if (entry?.groupWrDisplay) return `group WR ${entry.groupWrDisplay}`;
+    return `group min ~${formatDuration(getMinClearSeconds(dungeonId, run))}`;
+  }
+  if (entry?.soloWrDisplay) return `solo WR ${entry.soloWrDisplay}`;
+  if (entry?.wrDisplay) return `solo WR ${entry.wrDisplay}`;
+  return formatDuration(getMinClearSeconds(dungeonId, run));
+}
+
+function validateRunBasic(run, existingRuns) {
   const duration = run.durationSeconds;
   if (!Number.isFinite(duration) || duration < GLOBAL_MIN_SECONDS) {
     return `Too short (${formatDuration(Math.max(0, duration))}) — not saved`;
@@ -302,15 +342,17 @@ function validateRun(run, existingRuns) {
     }
   }
 
-  if (run.outcome === "complete") {
-    const minClear = getMinClearSeconds(run.dungeonId);
-    if (duration + 0.001 < minClear) {
-      const wr = wrTimes.dungeons.find((entry) => entry.dungeonId === run.dungeonId);
-      const floor = wr ? `WR ${wr.wrDisplay}` : formatDuration(minClear);
-      return `Too fast for ${run.dungeonName} (${formatDuration(duration)} < ${floor}) — not saved`;
-    }
-  }
+  return null;
+}
 
+function validateRunWr(run) {
+  if (run.outcome !== "complete") return null;
+  const duration = run.durationSeconds;
+  const minClear = getMinClearSeconds(run.dungeonId, run);
+  if (duration + 0.001 < minClear) {
+    const floor = getWrFloorLabel(run.dungeonId, run);
+    return `Too fast for ${run.dungeonName} (${formatDuration(duration)} < ${floor}) — not saved`;
+  }
   return null;
 }
 
@@ -332,7 +374,7 @@ function commitRun({ dungeonId, dungeonName, startedAt, durationSeconds, outcome
     runType: null,
     groupSize: null,
   };
-  const rejection = validateRun(run, loadRuns());
+  const rejection = validateRunBasic(run, loadRuns());
   if (rejection) {
     showRunRejected(rejection);
     return null;
@@ -345,28 +387,38 @@ function commitRun({ dungeonId, dungeonName, startedAt, durationSeconds, outcome
   return run.id;
 }
 
-function updateRun(runId, patch) {
-  saveRuns(loadRuns().map((run) => (run.id === runId ? { ...run, ...patch } : run)));
+function finalizeRunMeta(runId, { runType, findTimeSeconds, groupSize } = {}) {
+  const runs = loadRuns();
+  const idx = runs.findIndex((run) => run.id === runId);
+  if (idx === -1) return false;
+
+  const next = normalizeRun({ ...runs[idx] });
+  if (runType !== undefined) {
+    next.runType = runType && RUN_SOURCES[runType] ? runType : null;
+  }
+  if (findTimeSeconds !== undefined) {
+    next.findTimeSeconds =
+      findTimeSeconds != null && findTimeSeconds > 0 ? Math.round(findTimeSeconds) : null;
+  }
+  if (groupSize !== undefined) {
+    next.groupSize = groupSize != null && groupSize >= 1 ? Math.round(groupSize) : null;
+  }
+
+  const rejection = validateRunWr(next);
+  if (rejection) {
+    saveRuns(runs.filter((run) => run.id !== runId));
+    showRunRejected(rejection);
+    return false;
+  }
+
+  runs[idx] = next;
+  saveRuns(runs);
+  statusEl.classList.remove("rejected");
+  return true;
 }
 
-function setRunMeta(runId, { runType, findTimeSeconds, groupSize } = {}) {
-  saveRuns(
-    loadRuns().map((run) => {
-      if (run.id !== runId) return run;
-      const next = { ...run };
-      if (runType !== undefined) {
-        next.runType = runType && RUN_SOURCES[runType] ? runType : null;
-      }
-      if (findTimeSeconds !== undefined) {
-        next.findTimeSeconds =
-          findTimeSeconds != null && findTimeSeconds > 0 ? Math.round(findTimeSeconds) : null;
-      }
-      if (groupSize !== undefined) {
-        next.groupSize = groupSize != null && groupSize >= 1 ? Math.round(groupSize) : null;
-      }
-      return next;
-    })
-  );
+function updateRun(runId, patch) {
+  saveRuns(loadRuns().map((run) => (run.id === runId ? { ...run, ...patch } : run)));
 }
 
 function getDungeonPlayerMax(dungeon) {
@@ -643,20 +695,27 @@ function shouldOfferSearchTime(runId, { chained = false } = {}) {
 }
 
 function finishRunContext({ findTimeSeconds = null, groupSize = null } = {}) {
-  if (pendingFindRunId) {
-    setRunMeta(pendingFindRunId, {
-      runType: selectedRunType,
-      findTimeSeconds: findTimeSeconds != null && findTimeSeconds > 0 ? findTimeSeconds : null,
-      groupSize,
-    });
-  }
   const after = findTimeAfterDone;
+  const runId = pendingFindRunId;
   pendingFindRunId = null;
   findTimeAfterDone = null;
+  const runType = selectedRunType;
   selectedRunType = null;
   savedRunIdForPrompt = null;
   postEndPrompt.classList.add("hidden");
   postEndActions.innerHTML = "";
+
+  if (runId) {
+    const ok = finalizeRunMeta(runId, {
+      runType,
+      findTimeSeconds: findTimeSeconds != null && findTimeSeconds > 0 ? findTimeSeconds : null,
+      groupSize,
+    });
+    if (!ok) {
+      readyForNextRun();
+      return;
+    }
+  }
   after?.();
 }
 
@@ -1317,7 +1376,7 @@ async function init() {
   }
   dungeonById = new Map(catalog.dungeons.map((d) => [d.id, d]));
   wrTimes = await loadWrTimes();
-  minClearById = new Map(wrTimes.dungeons.map((entry) => [entry.dungeonId, entry.minClearSeconds]));
+  buildWrMaps();
 
   await initRunsStorage();
 

@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Fetch Solo +Pet world records from speedrun.com and write wr-times.json."""
+"""Fetch Solo +Pet and Group WRs from speedrun.com → wr-times.json."""
 
 from __future__ import annotations
 
 import json
-import re
 import time
 import urllib.request
 from pathlib import Path
@@ -13,9 +12,10 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "wr-times.json"
 GAME = "lde4el13"
 SOLO_PET = "9d83zy72"
-SOURCE = "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
+GROUP_PETS = "xd1vzjrd"
+SOLO_SOURCE = "https://www.speedrun.com/rotmg/levels?h=Solo_Pet"
+GROUP_SOURCE = "https://www.speedrun.com/rotmg/levels?h=Group_%2BPets_%2B_Consumables"
 
-# speedrun.com level name -> dungeons.json id
 NAME_TO_ID: dict[str, str] = {
     "Pirate Cave": "pirate-cave",
     "Forest Maze": "forest-maze",
@@ -52,7 +52,6 @@ NAME_TO_ID: dict[str, str] = {
     "Cnidarian Reef": "cnidarian-reef",
     "Parasite Chambers": "parasite-chambers",
     "Lair of Shaitan": "lair-of-shaitan",
-    "Puppet Master's Encore": "puppet-masters-encore",
     "Secluded Thicket": "secluded-thicket",
     "Cursed Library": "cursed-library",
     "Ancient Ruins": "ancient-ruins",
@@ -94,58 +93,19 @@ def fetch_json(url: str) -> dict:
         return json.loads(resp.read().decode("utf-8"))
 
 
-def main() -> None:
-    levels = fetch_json(f"https://www.speedrun.com/api/v1/games/{GAME}/levels?max=200")["data"]
-    by_id: dict[str, dict] = {}
-    unmapped: list[str] = []
-
-    for i, level in enumerate(levels):
-        if i:
-            time.sleep(0.12)
-        name = level["name"]
-        dungeon_id = NAME_TO_ID.get(name)
-        if not dungeon_id:
-            unmapped.append(name)
-            continue
-        url = f"https://www.speedrun.com/api/v1/leaderboards/{GAME}/level/{level['id']}/{SOLO_PET}?top=1"
-        try:
-            lb = fetch_json(url)
-            runs = lb.get("data", {}).get("runs") or []
-            if not runs:
-                continue
-            run = runs[0]["run"]
-            seconds = run["times"]["primary_t"]
-            entry = {
-                "dungeonId": dungeon_id,
-                "name": name,
-                "minClearSeconds": round(seconds, 3),
-                "wrDisplay": format_wr(seconds),
-                "source": SOURCE,
-                "weblink": run.get("weblink"),
-            }
-            prev = by_id.get(dungeon_id)
-            if prev is None or entry["minClearSeconds"] < prev["minClearSeconds"]:
-                by_id[dungeon_id] = entry
-        except Exception as err:  # noqa: BLE001
-            print(f"skip {name}: {err}")
-
-    dungeons = sorted(by_id.values(), key=lambda x: x["dungeonId"])
-    payload = {
-        "source": SOURCE,
-        "category": "Solo +Pet",
-        "fetchedAt": time.strftime("%Y-%m-%d"),
-        "note": "Complete runs faster than minClearSeconds are rejected (speedrun.com WR floor).",
-        "dungeons": dungeons,
-        "unmappedLevels": sorted(unmapped),
+def fetch_wr(level_id: str, category_id: str) -> dict | None:
+    url = f"https://www.speedrun.com/api/v1/leaderboards/{GAME}/level/{level_id}/{category_id}?top=1"
+    lb = fetch_json(url)
+    runs = lb.get("data", {}).get("runs") or []
+    if not runs:
+        return None
+    run = runs[0]["run"]
+    seconds = run["times"]["primary_t"]
+    return {
+        "minClearSeconds": round(seconds, 3),
+        "wrDisplay": format_wr(seconds),
+        "weblink": run.get("weblink"),
     }
-    OUT.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    js_out = ROOT / "wr-times.js"
-    body = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
-    js_out.write_text(
-        f"// Auto-generated — run: python3 scripts/fetch-wr-times.py\nwindow.WR_TIMES = {body};\n",
-        encoding="utf-8",
-    )
-    print(f"Wrote {OUT.name} + {js_out.name} — {len(dungeons)} dungeons, {len(unmapped)} unmapped level names")
 
 
 def format_wr(seconds: float) -> str:
@@ -157,6 +117,58 @@ def format_wr(seconds: float) -> str:
     if ms:
         return f"{secs}s{ms:03d}ms"
     return f"{secs}s"
+
+
+def main() -> None:
+    levels = fetch_json(f"https://www.speedrun.com/api/v1/games/{GAME}/levels?max=200")["data"]
+    merged: dict[str, dict] = {}
+    unmapped: list[str] = []
+
+    for i, level in enumerate(levels):
+        if i:
+            time.sleep(0.15)
+        name = level["name"]
+        dungeon_id = NAME_TO_ID.get(name)
+        if not dungeon_id:
+            unmapped.append(name)
+            continue
+        if dungeon_id not in merged:
+            merged[dungeon_id] = {"dungeonId": dungeon_id, "name": name.split(" Only")[0].split(" +")[0]}
+
+        for key, cat_id, source in (
+            ("solo", SOLO_PET, SOLO_SOURCE),
+            ("group", GROUP_PETS, GROUP_SOURCE),
+        ):
+            try:
+                wr = fetch_wr(level["id"], cat_id)
+                if wr:
+                    merged[dungeon_id][f"{key}MinClearSeconds"] = wr["minClearSeconds"]
+                    merged[dungeon_id][f"{key}WrDisplay"] = wr["wrDisplay"]
+                    merged[dungeon_id][f"{key}Weblink"] = wr["weblink"]
+                    merged[dungeon_id][f"{key}Source"] = source
+                time.sleep(0.08)
+            except Exception as err:  # noqa: BLE001
+                print(f"skip {name} ({key}): {err}")
+
+    dungeons = sorted(merged.values(), key=lambda x: x["dungeonId"])
+    payload = {
+        "fetchedAt": time.strftime("%Y-%m-%d"),
+        "note": "Solo WR for solo/organic 1p; group WR (or ~55% solo) for party or group size > 1.",
+        "soloCategory": "Solo +Pet",
+        "groupCategory": "Group +Pets + Consumables",
+        "dungeons": dungeons,
+        "unmappedLevels": sorted(unmapped),
+    }
+    OUT.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    js_out = ROOT / "wr-times.js"
+    body = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+    js_out.write_text(
+        f"// Auto-generated — run: python3 scripts/fetch-wr-times.py\nwindow.WR_TIMES = {body};\n",
+        encoding="utf-8",
+    )
+    solo_n = sum(1 for d in dungeons if "soloMinClearSeconds" in d)
+    group_n = sum(1 for d in dungeons if "groupMinClearSeconds" in d)
+    print(f"Wrote {OUT.name} + {js_out.name} — {solo_n} solo, {group_n} group WRs")
 
 
 if __name__ == "__main__":
