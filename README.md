@@ -37,7 +37,7 @@ The app reads and writes that file on every save. It survives shutdowns and brow
 
 Opening **`index.html`** directly (no server) falls back to browser **`localStorage`** — data stays on that browser only, not in `runs.json`. On first server start, any existing `localStorage` runs are copied into `runs.json`.
 
-`runs.json` is gitignored (personal data). Copy `runs.json.example` to `runs.json` if you want an empty file before first run.
+Sample runs live in **`runs.json`** in the repo. When you log new times via the server, that file updates on your machine. If you clone fresh and want a blank slate, replace it with `[]` or copy from `runs.json.example`.
 
 ## Run
 
