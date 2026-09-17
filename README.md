@@ -61,7 +61,7 @@ Workflow: `.github/workflows/rotmg-timer-pages.yml`. Enable **Settings → Pages
 
 ## Dungeons
 
-Full wiki dungeon list in `dungeons.json` — grouped by category (Realm, Event, Advanced, Oryx, Wormholes, Special, etc.). **Exalt** tab: 13 dungeons (includes **O3**). **O3** also appears under **Oryx** via `"alsoIn": ["oryx"]` in `dungeons.json`.
+Full wiki dungeon list in `dungeons.json` — grouped by category (Realm, Event, Advanced, Oryx, Wormholes, Special, etc.). **Exalt** tab: 14 dungeons (includes **O3** and **Spectral Penitentiary**). **O3** also appears under **Oryx** via `"alsoIn": ["oryx"]` in `dungeons.json`.
 
 **Icons** (in order): `icons/{id}.png` → CDN filename from `dungeons.json` → generic portal.
 

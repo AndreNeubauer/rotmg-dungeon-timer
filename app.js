@@ -52,7 +52,6 @@ const searchInput = document.getElementById("dungeon-search");
 
 const CATEGORY_TAB_LABELS = {
   exalt: "Exalt",
-  "realm-event": "Events",
   realm: "Realm",
   advanced: "Advanced",
   oryx: "Oryx",
