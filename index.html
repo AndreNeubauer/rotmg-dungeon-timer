@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
   <title>RotMG Timer</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=5" />
 </head>
 <body>
   <main>
@@ -19,7 +19,18 @@
 
     <div id="page-timer" class="page">
       <div class="dungeon-picker">
-        <nav class="category-tabs" id="category-tabs" aria-label="Dungeon categories"></nav>
+        <nav class="category-tabs" id="category-tabs" aria-label="Dungeon categories">
+          <button type="button" class="category-tab active" data-category="exalt">Exalt</button>
+          <button type="button" class="category-tab" data-category="realm-event">Events</button>
+          <button type="button" class="category-tab" data-category="realm">Realm</button>
+          <button type="button" class="category-tab" data-category="advanced">Advanced</button>
+          <button type="button" class="category-tab" data-category="oryx">Oryx</button>
+          <button type="button" class="category-tab" data-category="wormhole">Wormholes</button>
+          <button type="button" class="category-tab" data-category="wormhole-adv">Adv. WH</button>
+          <button type="button" class="category-tab" data-category="special">Special</button>
+          <button type="button" class="category-tab" data-category="heroic">Heroic</button>
+          <button type="button" class="category-tab" data-category="other">Other</button>
+        </nav>
         <input type="search" id="dungeon-search" placeholder="Search this tab" autocomplete="off" />
         <div id="dungeon-grid" class="dungeon-grid"></div>
       </div>
@@ -69,7 +80,7 @@
 
   <img id="dungeon-icon" alt="" hidden />
   <span id="dungeon-meta" hidden></span>
-  <script src="dungeons.js"></script>
-  <script src="app.js"></script>
+  <script src="dungeons.js?v=5"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

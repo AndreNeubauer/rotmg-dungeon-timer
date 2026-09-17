@@ -149,29 +149,30 @@ header {
 
 .category-tabs {
   display: flex;
-  gap: 0.35rem;
-  overflow-x: auto;
-  margin-bottom: 0.65rem;
-  padding-bottom: 0.15rem;
-  scrollbar-width: thin;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
 }
 
 .category-tab {
   flex: 0 0 auto;
-  background: none;
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 6px;
   color: var(--muted);
-  padding: 0.3rem 0.65rem;
-  font-size: 0.75rem;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.8rem;
+  font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
+  line-height: 1.2;
 }
 
 .category-tab.active {
   color: var(--text);
-  border-color: var(--muted);
-  background: var(--surface);
+  border-color: #555;
+  background: #1f1f1f;
+  font-weight: 500;
 }
 
 .category-tab:disabled {

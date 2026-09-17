@@ -785,22 +785,25 @@ function createDungeonCard(dungeon, { compact = false } = {}) {
 
 function renderCategoryTabs() {
   if (!categoryTabs) return;
-  categoryTabs.innerHTML = "";
-  for (const category of catalog.categories) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = `category-tab${category.id === selectedCategoryId ? " active" : ""}`;
-    btn.dataset.category = category.id;
-    btn.textContent = CATEGORY_TAB_LABELS[category.id] || category.label;
-    btn.disabled = isRunning();
-    btn.addEventListener("click", () => {
-      if (isRunning() || selectedCategoryId === category.id) return;
-      selectedCategoryId = category.id;
-      searchInput.value = "";
-      renderDungeonPicker();
-    });
-    categoryTabs.appendChild(btn);
+  let buttons = categoryTabs.querySelectorAll(".category-tab");
+
+  if (buttons.length === 0 && catalog.categories?.length) {
+    categoryTabs.innerHTML = "";
+    for (const category of catalog.categories) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "category-tab";
+      btn.dataset.category = category.id;
+      btn.textContent = CATEGORY_TAB_LABELS[category.id] || category.label;
+      categoryTabs.appendChild(btn);
+    }
+    buttons = categoryTabs.querySelectorAll(".category-tab");
   }
+
+  buttons.forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.category === selectedCategoryId);
+    btn.disabled = isRunning();
+  });
 }
 
 function renderDungeonGrid() {
@@ -1161,7 +1164,16 @@ async function init() {
   }
   dungeonById = new Map(catalog.dungeons.map((d) => [d.id, d]));
 
-  searchInput.addEventListener("input", () => renderDungeonGrid());
+  searchInput?.addEventListener("input", () => renderDungeonGrid());
+  categoryTabs?.addEventListener("click", (event) => {
+    const btn = event.target.closest(".category-tab");
+    if (!btn || isRunning()) return;
+    const categoryId = btn.dataset.category;
+    if (!categoryId || categoryId === selectedCategoryId) return;
+    selectedCategoryId = categoryId;
+    if (searchInput) searchInput.value = "";
+    renderDungeonPicker();
+  });
   startBtn.addEventListener("click", onStart);
   endBtn.addEventListener("click", onEnd);
   nexusBtn.addEventListener("click", onNexus);
