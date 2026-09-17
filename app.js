@@ -62,6 +62,7 @@ const diedBtn = document.getElementById("died-btn");
 const runsBody = document.getElementById("runs-body");
 const statsSummary = document.getElementById("stats-summary");
 const averagesList = document.getElementById("averages-list");
+const timesDungeonFilter = document.getElementById("times-dungeon-filter");
 
 const OUTCOMES = {
   complete: { label: "Complete", short: "✓" },
@@ -297,8 +298,18 @@ function addRunToSourceBucket(bucket, run) {
   }
 }
 
-function computeStats() {
+function getTimesFilterId() {
+  return timesDungeonFilter?.value || "";
+}
+
+function getFilteredTimesRuns() {
+  const filterId = getTimesFilterId();
   const runs = loadRuns();
+  if (!filterId) return runs;
+  return runs.filter((run) => run.dungeonId === filterId);
+}
+
+function computeStats(runs = loadRuns()) {
   const overall = { ...emptyOutcomeCounts(), ...emptyTiming(), bySource: emptySourceBuckets() };
   const byDungeon = new Map();
 
@@ -345,8 +356,8 @@ function avgDuration(total, count) {
   return count > 0 ? total / count : null;
 }
 
-function getDungeonSummaries() {
-  const { byDungeon } = computeStats();
+function getDungeonSummaries(runs = loadRuns()) {
+  const { byDungeon } = computeStats(runs);
   return [...byDungeon.values()]
     .map((entry) => ({
       id: entry.id,
@@ -730,17 +741,23 @@ function createDungeonCard(dungeon, { compact = false } = {}) {
 
   const label = document.createElement("span");
   label.className = "dungeon-card-name";
-  label.textContent = dungeon.name;
+  label.textContent = dungeon.shortName || dungeon.name;
+  if (dungeon.shortName) label.title = dungeon.name;
 
   btn.append(img, label);
   btn.addEventListener("click", () => selectDungeon(dungeon.id));
   return btn;
 }
 
+function getStartPageDungeons() {
+  const exalt = catalog.dungeons.filter((d) => d.category === EXALT_CATEGORY);
+  const pinned = catalog.dungeons.filter((d) => d.startPage && d.category !== EXALT_CATEGORY);
+  return [...exalt, ...pinned];
+}
+
 function renderExaltGrid() {
   exaltGrid.innerHTML = "";
-  const exalt = catalog.dungeons.filter((d) => d.category === EXALT_CATEGORY);
-  for (const d of exalt) {
+  for (const d of getStartPageDungeons()) {
     exaltGrid.appendChild(createDungeonCard(d));
   }
 }
@@ -795,14 +812,20 @@ function updateSelectedDisplay() {
 }
 
 function renderStatsSummary() {
-  const { overall } = computeStats();
+  const filterId = getTimesFilterId();
+  const runs = getFilteredTimesRuns();
+  const { overall } = computeStats(runs);
   statsSummary.innerHTML = "";
 
   if (overall.total === 0) {
-    statsSummary.innerHTML = `<p class="empty">No attempts yet.</p>`;
+    statsSummary.innerHTML = `<p class="empty">${filterId ? "No attempts for this dungeon." : "No attempts yet."}</p>`;
     return;
   }
 
+  const filterDungeon = filterId ? getDungeon(filterId) : null;
+  const filterTitle = filterDungeon
+    ? filterDungeon.shortName || filterDungeon.name
+    : null;
   const rate = successRate(overall);
   const avgClear = avgDuration(overall.clearDuration, overall.clearCount);
   const avgAttempt = avgDuration(overall.attemptDuration, overall.total);
@@ -812,12 +835,13 @@ function renderStatsSummary() {
       ? `<div class="stats-find">+${formatDuration(avgFind)} avg search <span class="time-legend">(${overall.findCount} logged)</span></div>`
       : "";
   const sourceLine = formatSourceCompare(overall.bySource);
-  const groupLine = formatGroupClearStats(loadRuns());
+  const groupLine = formatGroupClearStats(runs);
   const card = document.createElement("div");
   card.className = "stats-card";
   card.innerHTML = `
     <div class="stats-rate">${rate}%</div>
     <div class="stats-body">
+      ${filterTitle ? `<div class="stats-filter-name">${filterTitle}</div>` : ""}
       <div class="stats-detail">
         <span class="outcome-pill complete">${overall.complete} complete</span>
         <span class="outcome-pill nexus">${overall.nexus} nexus</span>
@@ -833,7 +857,38 @@ function renderStatsSummary() {
   statsSummary.appendChild(card);
 }
 
+function renderTimesFilter() {
+  if (!timesDungeonFilter) return;
+  const current = timesDungeonFilter.value;
+  const byId = new Map();
+  for (const run of loadRuns()) {
+    if (!byId.has(run.dungeonId)) {
+      const dungeon = getDungeon(run.dungeonId);
+      byId.set(run.dungeonId, dungeon?.shortName || dungeon?.name || run.dungeonName);
+    }
+  }
+
+  timesDungeonFilter.innerHTML = `<option value="">All dungeons</option>`;
+  for (const [id, name] of [...byId.entries()].sort((a, b) => a[1].localeCompare(b[1]))) {
+    const option = document.createElement("option");
+    option.value = id;
+    option.textContent = name;
+    timesDungeonFilter.appendChild(option);
+  }
+
+  const valid = current === "" || byId.has(current);
+  timesDungeonFilter.value = valid ? current : "";
+}
+
 function renderAverages() {
+  const filterId = getTimesFilterId();
+  if (filterId) {
+    averagesList.innerHTML = "";
+    averagesList.classList.add("hidden");
+    return;
+  }
+  averagesList.classList.remove("hidden");
+
   const summaries = getDungeonSummaries();
   averagesList.innerHTML = "";
 
@@ -884,11 +939,12 @@ function renderAverages() {
 }
 
 function renderRunsTable() {
-  const runs = loadRuns().slice().reverse();
+  const filterId = getTimesFilterId();
+  const runs = getFilteredTimesRuns().slice().reverse();
   runsBody.innerHTML = "";
 
   if (runs.length === 0) {
-    runsBody.innerHTML = `<tr><td colspan="5" class="empty">No attempts yet.</td></tr>`;
+    runsBody.innerHTML = `<tr><td colspan="5" class="empty">${filterId ? "No attempts for this dungeon." : "No attempts yet."}</td></tr>`;
     return;
   }
 
@@ -930,6 +986,7 @@ function renderRunsTable() {
 }
 
 function renderTimesPage() {
+  renderTimesFilter();
   renderStatsSummary();
   renderAverages();
   renderRunsTable();
@@ -1091,6 +1148,7 @@ async function init() {
   tabs.forEach((tab) => {
     tab.addEventListener("click", () => showPage(tab.dataset.page));
   });
+  timesDungeonFilter?.addEventListener("change", () => renderTimesPage());
 
   renderExaltGrid();
   renderAllDungeonList();

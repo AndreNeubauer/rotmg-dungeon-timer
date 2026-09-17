@@ -511,6 +511,8 @@
     {
       "id": "oryxs-sanctuary",
       "name": "Oryx's Sanctuary",
+      "shortName": "O3",
+      "startPage": true,
       "category": "oryx",
       "difficulty": 9.5,
       "icon": null,

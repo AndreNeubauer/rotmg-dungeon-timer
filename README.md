@@ -11,7 +11,7 @@ Simple localhost web app to log dungeon clear times.
 4. **Nexus** or **Died** if you fail mid-run — logged for **success rate**, not averaged
 5. **Run details (optional)** — **Party / Organic**, **group size** (text field, max per dungeon from RealmEye — usually 50, up to 85 for Oryx’s Castle / Stromwell), **search time** when not a chain spawn.
 
-**Times tab:** success %, complete / nexus / died counts, and **clear · avg** times (boss-clear average vs all-attempt average). Per-dungeon breakdown too. Delete bad rows anytime.
+**Times tab:** filter by dungeon; success %, complete / nexus / died counts, and **clear · avg** times (boss-clear average vs all-attempt average). Per-dungeon breakdown when showing all. Delete bad rows anytime.
 
 On **Lost Halls**, **Discard** on the branch prompt drops a pending run without saving.
 
@@ -61,7 +61,7 @@ Workflow: `.github/workflows/rotmg-timer-pages.yml`. Enable **Settings → Pages
 
 ## Dungeons
 
-Full wiki dungeon list in `dungeons.json` — grouped by category (Realm, Event, Advanced, Oryx, Wormholes, Special, etc.). All **12 exalt dungeons** are in the front grid.
+Full wiki dungeon list in `dungeons.json` — grouped by category (Realm, Event, Advanced, Oryx, Wormholes, Special, etc.). Front grid: **12 exalt dungeons** plus pinned extras (**O3** / Oryx's Sanctuary for life farming). Set `"startPage": true` on any dungeon to pin it.
 
 **Icons** (in order): `icons/{id}.png` → CDN filename from `dungeons.json` → generic portal.
 

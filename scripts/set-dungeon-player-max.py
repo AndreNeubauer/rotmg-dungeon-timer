@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -54,8 +56,6 @@ def main() -> None:
     print(f"Updated playerMax for {len(data['dungeons'])} dungeons")
     build = ROOT / "scripts" / "build-catalog-js.py"
     if build.exists():
-        import subprocess
-
         subprocess.run([sys.executable, str(build)], check=True)
 
 
