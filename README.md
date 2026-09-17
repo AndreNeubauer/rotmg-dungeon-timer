@@ -9,7 +9,7 @@ Simple localhost web app to log dungeon clear times.
 2. **Start** when you enter the portal
 3. **End** when the boss dies — counts as **Complete** (clears only, for averages)
 4. **Nexus** or **Died** if you fail mid-run — logged for **success rate**, not averaged
-5. **Run details (optional)** — after saved runs: **Party / Organic**, **group size** (1–8), **search time** when not a chain spawn. Skip or pick another portal anytime.
+5. **Run details (optional)** — **Party / Organic**, **group size** (text field, max per dungeon from RealmEye — usually 50, up to 85 for Oryx’s Castle / Stromwell), **search time** when not a chain spawn.
 
 **Times tab:** success %, complete / nexus / died counts, and **clear · avg** times (boss-clear average vs all-attempt average). Per-dungeon breakdown too. Delete bad rows anytime.
 
@@ -58,5 +58,11 @@ python3 scripts/fetch-realmeye-icons.py
 ```
 
 Re-run after wiki updates or when adding dungeons to `dungeons.json`. Oryx's Castle uses the Oryx's Chamber portal (wiki lists it as “No portal”).
+
+Player limits per dungeon (RealmEye wiki):
+
+```bash
+python3 scripts/set-dungeon-player-max.py
+```
 
 To add a dungeon or fix a CDN icon filename, edit `dungeons.json`.

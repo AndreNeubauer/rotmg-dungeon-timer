@@ -87,7 +87,6 @@ let pendingEndRun = null;
 let pendingFindRunId = null;
 let findTimeAfterDone = null;
 let selectedRunType = null;
-let selectedGroupSize = null;
 
 const RUN_SOURCES = {
   party: { label: "Party", title: "Organised run — portal ready" },
@@ -97,8 +96,7 @@ const RUN_SOURCES = {
 let savedRunIdForPrompt = null;
 
 const FIND_PRESETS_MIN = [3, 5, 10, 15];
-const GROUP_SIZE_MIN = 1;
-const GROUP_SIZE_MAX = 8;
+const DEFAULT_PLAYER_MAX = 50;
 /** Spawn from another dungeon — no search-time field (Void, Crystal). */
 const CHAIN_SPAWN_DUNGEONS = new Set(["the-void", "crystal-cavern"]);
 /** True when this run started via LH/Fungal chain (→ Cult, → Void, → Crystal). */
@@ -155,10 +153,7 @@ function normalizeRun(run) {
     run.findTimeSeconds != null && Number.isFinite(run.findTimeSeconds) ? run.findTimeSeconds : null;
   const runType = run.runType && RUN_SOURCES[run.runType] ? run.runType : null;
   const groupSize =
-    run.groupSize != null &&
-    Number.isFinite(run.groupSize) &&
-    run.groupSize >= GROUP_SIZE_MIN &&
-    run.groupSize <= GROUP_SIZE_MAX
+    run.groupSize != null && Number.isFinite(run.groupSize) && run.groupSize >= 1
       ? Math.round(run.groupSize)
       : null;
   return {
@@ -228,14 +223,29 @@ function setRunMeta(runId, { runType, findTimeSeconds, groupSize } = {}) {
           findTimeSeconds != null && findTimeSeconds > 0 ? Math.round(findTimeSeconds) : null;
       }
       if (groupSize !== undefined) {
-        next.groupSize =
-          groupSize != null && groupSize >= GROUP_SIZE_MIN && groupSize <= GROUP_SIZE_MAX
-            ? Math.round(groupSize)
-            : null;
+        next.groupSize = groupSize != null && groupSize >= 1 ? Math.round(groupSize) : null;
       }
       return next;
     })
   );
+}
+
+function getDungeonPlayerMax(dungeon) {
+  const max = dungeon?.playerMax;
+  return Number.isFinite(max) && max >= 1 ? Math.round(max) : DEFAULT_PLAYER_MAX;
+}
+
+function getRunPlayerMax(runId) {
+  const run = loadRuns().find((entry) => entry.id === runId);
+  return run ? getDungeonPlayerMax(getDungeon(run.dungeonId)) : DEFAULT_PLAYER_MAX;
+}
+
+function parseGroupSizeInput(raw, maxPlayers) {
+  const text = raw.trim();
+  if (!text) return null;
+  const size = Math.round(Number(text));
+  if (!Number.isFinite(size) || size < 1 || size > maxPlayers) return null;
+  return size;
 }
 
 function parseFindTimeInput(raw) {
@@ -434,7 +444,6 @@ function dismissFindTimePrompt() {
   pendingFindRunId = null;
   findTimeAfterDone = null;
   selectedRunType = null;
-  selectedGroupSize = null;
   postEndPrompt.classList.add("hidden");
   postEndActions.innerHTML = "";
   refreshIdleControls();
@@ -463,19 +472,18 @@ function shouldOfferSearchTime(runId, { chained = false } = {}) {
   return Boolean(run && !CHAIN_SPAWN_DUNGEONS.has(run.dungeonId));
 }
 
-function finishRunContext(findTimeSeconds = null) {
+function finishRunContext({ findTimeSeconds = null, groupSize = null } = {}) {
   if (pendingFindRunId) {
     setRunMeta(pendingFindRunId, {
       runType: selectedRunType,
       findTimeSeconds: findTimeSeconds != null && findTimeSeconds > 0 ? findTimeSeconds : null,
-      groupSize: selectedGroupSize,
+      groupSize,
     });
   }
   const after = findTimeAfterDone;
   pendingFindRunId = null;
   findTimeAfterDone = null;
   selectedRunType = null;
-  selectedGroupSize = null;
   savedRunIdForPrompt = null;
   postEndPrompt.classList.add("hidden");
   postEndActions.innerHTML = "";
@@ -510,38 +518,18 @@ function createRunTypeToggles(onChange) {
   return row;
 }
 
-function createGroupSizeToggles() {
-  const row = document.createElement("div");
-  row.className = "toggle-row group-size-row";
-  row.setAttribute("role", "group");
-  row.setAttribute("aria-label", "Group size");
-
-  for (let size = GROUP_SIZE_MIN; size <= GROUP_SIZE_MAX; size += 1) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "toggle-check group-size-btn";
-    btn.textContent = String(size);
-    btn.title = size === 1 ? "Solo" : `${size} players`;
-    btn.dataset.groupSize = String(size);
-    btn.setAttribute("aria-pressed", "false");
-    btn.addEventListener("click", () => {
-      selectedGroupSize = selectedGroupSize === size ? null : size;
-      for (const toggle of row.querySelectorAll(".group-size-btn")) {
-        const active = Number(toggle.dataset.groupSize) === selectedGroupSize;
-        toggle.classList.toggle("selected", active);
-        toggle.setAttribute("aria-pressed", active ? "true" : "false");
-      }
-    });
-    row.appendChild(btn);
-  }
-  return row;
+function readRunContextInputs(groupInput, searchInput, playerMax) {
+  return {
+    groupSize: groupInput ? parseGroupSizeInput(groupInput.value, playerMax) : null,
+    findTimeSeconds: searchInput ? parseFindTimeInput(searchInput.value) : null,
+  };
 }
 
 function offerRunContext(runId, afterDone, { showSearchTime = true } = {}) {
   pendingFindRunId = runId;
   findTimeAfterDone = afterDone;
   selectedRunType = null;
-  selectedGroupSize = null;
+  const playerMax = getRunPlayerMax(runId);
   const chainNote = showSearchTime
     ? "Skip, pick another dungeon, or press Start anytime."
     : "Chain spawn — no search time.";
@@ -556,9 +544,19 @@ function offerRunContext(runId, afterDone, { showSearchTime = true } = {}) {
 
   const groupLabel = document.createElement("p");
   groupLabel.className = "find-section-label";
-  groupLabel.textContent = "Group size";
+  groupLabel.textContent = `Group size (1–${playerMax} players)`;
   postEndActions.appendChild(groupLabel);
-  postEndActions.appendChild(createGroupSizeToggles());
+
+  const groupRow = document.createElement("div");
+  groupRow.className = "find-custom-row";
+  const groupInput = document.createElement("input");
+  groupInput.type = "text";
+  groupInput.className = "find-input";
+  groupInput.placeholder = `e.g. 6 · max ${playerMax}`;
+  groupInput.inputMode = "numeric";
+  groupInput.autocomplete = "off";
+  groupRow.appendChild(groupInput);
+  postEndActions.appendChild(groupRow);
 
   let searchInput = null;
   if (showSearchTime) {
@@ -574,7 +572,12 @@ function offerRunContext(runId, afterDone, { showSearchTime = true } = {}) {
       btn.type = "button";
       btn.className = "post-end-action secondary find-preset toggle-check";
       btn.textContent = `${minutes}m`;
-      btn.addEventListener("click", () => finishRunContext(minutes * 60));
+      btn.addEventListener("click", () =>
+        finishRunContext({
+          ...readRunContextInputs(groupInput, searchInput, playerMax),
+          findTimeSeconds: minutes * 60,
+        })
+      );
       presetRow.appendChild(btn);
     }
     postEndActions.appendChild(presetRow);
@@ -603,8 +606,10 @@ function offerRunContext(runId, afterDone, { showSearchTime = true } = {}) {
   doneBtn.className = "post-end-action primary";
   doneBtn.textContent = "Done";
   doneBtn.addEventListener("click", () => {
-    const seconds = searchInput ? parseFindTimeInput(searchInput.value) : null;
-    finishRunContext(seconds);
+    finishRunContext(readRunContextInputs(groupInput, searchInput, playerMax));
+  });
+  groupInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") doneBtn.click();
   });
   if (searchInput) {
     searchInput.addEventListener("keydown", (event) => {
