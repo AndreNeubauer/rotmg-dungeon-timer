@@ -27,7 +27,17 @@ Any other dungeon saves and returns to the picker immediately.
 - Averages per dungeon (only dungeons with logged runs)
 - Full list of all runs with delete
 
-Runs are saved in your browser (`localStorage`). Exalt dungeons are front and center; everything else is in the accordion.
+## Data file
+
+When you use **`python3 serve.py`** (or `start.bat` / `start.sh`), runs are saved to:
+
+**`apps/rotmg-dungeon-timer/runs.json`**
+
+The app reads and writes that file on every save. It survives shutdowns and browser restarts as long as you start the timer via the local server.
+
+Opening **`index.html`** directly (no server) falls back to browser **`localStorage`** — data stays on that browser only, not in `runs.json`. On first server start, any existing `localStorage` runs are copied into `runs.json`.
+
+`runs.json` is gitignored (personal data). Copy `runs.json.example` to `runs.json` if you want an empty file before first run.
 
 ## Run
 
@@ -37,9 +47,9 @@ After `git pull origin main`:
 
 Open **`index.html`** in Chrome, Edge, or Firefox (double-click it in `apps/rotmg-dungeon-timer/`).
 
-No Python, no `127.0.0.1`, no terminal. Data stays in `localStorage` on that browser.
+No Python, no `127.0.0.1`, no terminal. Data stays in browser **`localStorage`** only (not `runs.json`).
 
-### Local server (optional)
+### Local server (recommended — saves to runs.json)
 
 - Windows: double-click **`start.bat`**
 - Mac/Linux: `./start.sh`

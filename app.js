@@ -1,4 +1,5 @@
 const STORAGE_KEY = "rotmg-dungeon-runs";
+const RUNS_API = "/api/runs";
 const EXALT_CATEGORY = "exalt";
 
 /**
@@ -114,6 +115,10 @@ const DEFAULT_PLAYER_MAX = 50;
 const CHAIN_SPAWN_DUNGEONS = new Set(["the-void", "crystal-cavern"]);
 /** True when this run started via LH/Fungal chain (→ Cult, → Void, → Crystal). */
 let currentRunChained = false;
+/** In-memory run list — source of truth while the app is open. */
+let runsCache = [];
+/** When true, reads/writes go to runs.json via serve.py. */
+let fileStorageReady = false;
 
 function formatDuration(seconds) {
   const total = Math.round(seconds);
@@ -181,24 +186,80 @@ function normalizeRun(run) {
   };
 }
 
-function loadRuns() {
+function loadRunsFromLocalStorage() {
   try {
     const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    const needsId = raw.some((run) => !run.id);
-    const runs = raw.map(normalizeRun);
-    if (needsId) saveRuns(runs);
-    return runs;
+    if (!Array.isArray(raw)) return [];
+    return raw.map(normalizeRun);
   } catch {
     return [];
   }
 }
 
-function deleteRun(runId) {
-  saveRuns(loadRuns().filter((r) => r.id !== runId));
+function loadRuns() {
+  return runsCache;
+}
+
+async function fetchRunsFromFile() {
+  const res = await fetch(RUNS_API, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Failed to load runs (${res.status})`);
+  const raw = await res.json();
+  if (!Array.isArray(raw)) throw new Error("runs.json must be a JSON array");
+  return raw.map(normalizeRun);
+}
+
+async function writeRunsToFile(runs) {
+  const res = await fetch(RUNS_API, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(runs),
+  });
+  if (!res.ok) throw new Error(`Failed to save runs (${res.status})`);
+}
+
+async function initRunsStorage() {
+  try {
+    let runs = await fetchRunsFromFile();
+    fileStorageReady = true;
+    const local = loadRunsFromLocalStorage();
+    if (runs.length === 0 && local.length > 0) {
+      runs = local;
+      await writeRunsToFile(runs);
+      localStorage.removeItem(STORAGE_KEY);
+    }
+    const needsId = runs.some((run) => !run.id);
+    runsCache = runs.map(normalizeRun);
+    if (needsId) await persistRuns(runsCache);
+    return;
+  } catch (_) {
+    fileStorageReady = false;
+  }
+
+  runsCache = loadRunsFromLocalStorage();
+  const needsId = runsCache.some((run) => !run.id);
+  if (needsId) persistRuns(runsCache);
+}
+
+async function persistRuns(runs) {
+  runsCache = runs.map(normalizeRun);
+  if (fileStorageReady) {
+    try {
+      await writeRunsToFile(runsCache);
+      return;
+    } catch (err) {
+      console.error(err);
+      fileStorageReady = false;
+    }
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(runsCache));
 }
 
 function saveRuns(runs) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(runs));
+  void persistRuns(runs);
+}
+
+function deleteRun(runId) {
+  saveRuns(loadRuns().filter((r) => r.id !== runId));
 }
 
 function commitRun({ dungeonId, dungeonName, startedAt, durationSeconds, outcome = "complete" }) {
@@ -1166,6 +1227,8 @@ async function init() {
     return;
   }
   dungeonById = new Map(catalog.dungeons.map((d) => [d.id, d]));
+
+  await initRunsStorage();
 
   searchInput?.addEventListener("input", () => renderDungeonGrid());
   categoryTabs?.addEventListener("click", (event) => {
