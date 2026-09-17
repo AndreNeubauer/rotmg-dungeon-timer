@@ -1,6 +1,9 @@
 const STORAGE_KEY = "rotmg-dungeon-runs";
 const RUNS_API = "/api/runs";
 const EXALT_CATEGORY = "exalt";
+const DUPLICATE_WINDOW_MS = 120_000;
+const OVERLAP_TOLERANCE_MS = 3_000;
+const GLOBAL_MIN_SECONDS = 3;
 
 /**
  * After End — optional follow-ups.
@@ -90,6 +93,8 @@ const postEndActions = document.getElementById("post-end-actions");
 const timerBlock = document.querySelector(".timer-block");
 
 let catalog = { iconBase: "", fallbackIcon: "Dungeon Portal.png", categories: [], dungeons: [] };
+let wrTimes = { dungeons: [] };
+let minClearById = new Map();
 let dungeonById = new Map();
 let startTime = null;
 let tickInterval = null;
@@ -262,11 +267,62 @@ function deleteRun(runId) {
   saveRuns(loadRuns().filter((r) => r.id !== runId));
 }
 
+function runStartMs(run) {
+  return new Date(run.startedAt).getTime();
+}
+
+function runEndMs(run) {
+  return runStartMs(run) + run.durationSeconds * 1000;
+}
+
+function getMinClearSeconds(dungeonId) {
+  if (minClearById.has(dungeonId)) return minClearById.get(dungeonId);
+  const dungeon = getDungeon(dungeonId);
+  const diff = dungeon?.difficulty ?? 5;
+  return Math.max(GLOBAL_MIN_SECONDS, diff * 10);
+}
+
+function validateRun(run, existingRuns) {
+  const duration = run.durationSeconds;
+  if (!Number.isFinite(duration) || duration < GLOBAL_MIN_SECONDS) {
+    return `Too short (${formatDuration(Math.max(0, duration))}) — not saved`;
+  }
+
+  const startMs = runStartMs(run);
+  for (const other of existingRuns) {
+    if (startMs + OVERLAP_TOLERANCE_MS < runEndMs(other) - OVERLAP_TOLERANCE_MS) {
+      return `Time travel — overlaps ${other.dungeonName} (${formatDuration(other.durationSeconds)}) — not saved`;
+    }
+    if (
+      other.dungeonId === run.dungeonId &&
+      Math.round(other.durationSeconds) === Math.round(duration) &&
+      Math.abs(startMs - runStartMs(other)) <= DUPLICATE_WINDOW_MS
+    ) {
+      return `Duplicate ${run.dungeonName} (${formatDuration(duration)}) — not saved`;
+    }
+  }
+
+  if (run.outcome === "complete") {
+    const minClear = getMinClearSeconds(run.dungeonId);
+    if (duration + 0.001 < minClear) {
+      const wr = wrTimes.dungeons.find((entry) => entry.dungeonId === run.dungeonId);
+      const floor = wr ? `WR ${wr.wrDisplay}` : formatDuration(minClear);
+      return `Too fast for ${run.dungeonName} (${formatDuration(duration)} < ${floor}) — not saved`;
+    }
+  }
+
+  return null;
+}
+
+function showRunRejected(message) {
+  statusEl.textContent = message;
+  statusEl.classList.remove("running", "saved");
+  statusEl.classList.add("rejected");
+}
+
 function commitRun({ dungeonId, dungeonName, startedAt, durationSeconds, outcome = "complete" }) {
-  const id = crypto.randomUUID();
-  const runs = loadRuns();
-  runs.push({
-    id,
+  const run = {
+    id: crypto.randomUUID(),
     dungeonId,
     dungeonName,
     startedAt,
@@ -275,9 +331,18 @@ function commitRun({ dungeonId, dungeonName, startedAt, durationSeconds, outcome
     findTimeSeconds: null,
     runType: null,
     groupSize: null,
-  });
+  };
+  const rejection = validateRun(run, loadRuns());
+  if (rejection) {
+    showRunRejected(rejection);
+    return null;
+  }
+
+  statusEl.classList.remove("rejected");
+  const runs = loadRuns();
+  runs.push(run);
   saveRuns(runs);
-  return id;
+  return run.id;
 }
 
 function updateRun(runId, patch) {
@@ -1136,8 +1201,9 @@ function stopAttempt({ outcome, statusMessage }) {
 
   setRunning(false);
   timerEl.textContent = "—";
+  if (!runId) return;
   statusEl.textContent = statusMessage;
-  statusEl.classList.remove("running", "saved");
+  statusEl.classList.remove("running", "saved", "rejected");
   finishRunFlow(runId);
 }
 
@@ -1173,6 +1239,10 @@ function onEnd() {
         startedAt,
         durationSeconds,
       });
+      if (!runId) {
+        resetToStartPage();
+        return;
+      }
       pendingEndRun = { runId, dungeon, startedAt, durationSeconds };
     } else {
       savedRunIdForPrompt = commitRun({
@@ -1181,6 +1251,10 @@ function onEnd() {
         startedAt,
         durationSeconds,
       });
+      if (!savedRunIdForPrompt) {
+        resetToStartPage();
+        return;
+      }
     }
     showPostEndPrompt(dungeon.id, durationSeconds);
     return;
@@ -1192,6 +1266,10 @@ function onEnd() {
     startedAt,
     durationSeconds,
   });
+  if (!runId) {
+    resetToStartPage();
+    return;
+  }
   finishRunFlow(runId);
 }
 
@@ -1214,6 +1292,17 @@ async function loadCatalog() {
   throw new Error("Failed to load dungeon catalog");
 }
 
+async function loadWrTimes() {
+  try {
+    const res = await fetch("wr-times.json", { cache: "no-store" });
+    if (res.ok) return res.json();
+  } catch (_) {
+    /* file:// — fetch unavailable */
+  }
+  if (window.WR_TIMES) return window.WR_TIMES;
+  return { dungeons: [] };
+}
+
 async function init() {
   try {
     catalog = await loadCatalog();
@@ -1227,6 +1316,8 @@ async function init() {
     return;
   }
   dungeonById = new Map(catalog.dungeons.map((d) => [d.id, d]));
+  wrTimes = await loadWrTimes();
+  minClearById = new Map(wrTimes.dungeons.map((entry) => [entry.dungeonId, entry.minClearSeconds]));
 
   await initRunsStorage();
 

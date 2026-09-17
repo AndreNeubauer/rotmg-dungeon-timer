@@ -39,6 +39,13 @@ Opening **`index.html`** directly (no server) falls back to browser **`localStor
 
 Sample runs live in **`runs.json`** in the repo. When you log new times via the server, that file updates on your machine. If you clone fresh and want a blank slate, replace it with `[]` or copy from `runs.json.example`.
 
+**Anti-cheat validation** (on save):
+- Complete runs faster than [speedrun.com Solo +Pet WR](https://www.speedrun.com/rotmg/levels?h=Solo_Pet) in `wr-times.json` are discarded
+- Duplicate same dungeon + same time within 2 minutes
+- “Time travel” — start time overlaps a previous run still in progress
+
+Refresh WR data: `python3 scripts/fetch-wr-times.py`
+
 ## Run
 
 After `git pull origin main`:
