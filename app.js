@@ -376,9 +376,11 @@ function isRunning() {
 
 function selectDungeon(id, { fromPrompt = false } = {}) {
   if (isRunning()) return;
-  if (pendingEndRun && !fromPrompt) return;
   if (pendingFindRunId) dismissFindTimePrompt();
-  hideChainPrompt();
+  if (!fromPrompt) {
+    hideChainPrompt();
+    readyForNextRun();
+  }
   selectedDungeonId = id;
   renderExaltGrid();
   renderAllDungeonList(searchInput.value);
@@ -705,7 +707,9 @@ function updateSelectedDisplay() {
   }
   setDungeonIcon(dungeonIcon, dungeon);
   dungeonName.textContent = dungeon.name;
-  if (!isRunning()) statusEl.textContent = "";
+  if (!isRunning() && !pendingFindRunId && !pendingEndRun) {
+    statusEl.textContent = "";
+  }
 }
 
 function renderStatsSummary() {

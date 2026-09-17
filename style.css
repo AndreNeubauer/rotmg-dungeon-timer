@@ -681,3 +681,101 @@ input:disabled {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+@media (min-width: 768px) {
+  main {
+    max-width: 760px;
+    padding: 2rem 2rem 3rem;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+  }
+
+  .tab {
+    font-size: 1rem;
+  }
+
+  .dungeon-grid {
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 0.65rem;
+  }
+
+  .dungeon-card {
+    min-height: 96px;
+    padding: 0.75rem 0.35rem;
+    border-radius: 8px;
+  }
+
+  .dungeon-card img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .dungeon-card-name {
+    font-size: 0.75rem;
+  }
+
+  .dungeon-name {
+    font-size: 1rem;
+  }
+
+  .timer {
+    font-size: 4.25rem;
+  }
+
+  .status {
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .buttons button {
+    padding: 0.85rem 1rem;
+    font-size: 1.05rem;
+    border-radius: 6px;
+  }
+
+  .chain-prompt-label {
+    font-size: 0.95rem;
+  }
+
+  .chain-prompt-buttons button,
+  .chain-prompt-buttons .post-end-action {
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+  }
+
+  .stats-rate {
+    font-size: 2.5rem;
+  }
+
+  .runs-table {
+    font-size: 0.95rem;
+  }
+
+  .runs-table th {
+    font-size: 0.8rem;
+  }
+
+  .average-row-name {
+    font-size: 1rem;
+  }
+
+  .average-row-times {
+    font-size: 0.95rem;
+  }
+}
+
+@media (min-width: 1100px) {
+  main {
+    max-width: 920px;
+  }
+
+  .dungeon-grid {
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  }
+
+  .timer {
+    font-size: 5rem;
+  }
+}
