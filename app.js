@@ -1143,10 +1143,14 @@ function showPage(name) {
 }
 
 async function loadCatalog() {
+  try {
+    const res = await fetch("dungeons.json", { cache: "no-store" });
+    if (res.ok) return res.json();
+  } catch (_) {
+    /* file:// — fetch unavailable */
+  }
   if (window.DUNGEON_CATALOG) return window.DUNGEON_CATALOG;
-  const res = await fetch("dungeons.json");
-  if (!res.ok) throw new Error(`Failed to load dungeons.json (${res.status})`);
-  return res.json();
+  throw new Error("Failed to load dungeon catalog");
 }
 
 async function init() {
