@@ -97,6 +97,8 @@ const RUN_SOURCES = {
 let savedRunIdForPrompt = null;
 
 const FIND_PRESETS_MIN = [3, 5, 10, 15];
+const GROUP_SIZE_MIN = 1;
+const GROUP_SIZE_MAX = 8;
 /** Spawn from another dungeon — no search-time field (Void, Crystal). */
 const CHAIN_SPAWN_DUNGEONS = new Set(["the-void", "crystal-cavern"]);
 /** True when this run started via LH/Fungal chain (→ Cult, → Void, → Crystal). */
@@ -152,6 +154,13 @@ function normalizeRun(run) {
   const findTimeSeconds =
     run.findTimeSeconds != null && Number.isFinite(run.findTimeSeconds) ? run.findTimeSeconds : null;
   const runType = run.runType && RUN_SOURCES[run.runType] ? run.runType : null;
+  const groupSize =
+    run.groupSize != null &&
+    Number.isFinite(run.groupSize) &&
+    run.groupSize >= GROUP_SIZE_MIN &&
+    run.groupSize <= GROUP_SIZE_MAX
+      ? Math.round(run.groupSize)
+      : null;
   return {
     ...run,
     id: run.id || crypto.randomUUID(),
@@ -160,6 +169,7 @@ function normalizeRun(run) {
     outcome,
     findTimeSeconds,
     runType,
+    groupSize,
   };
 }
 
@@ -195,6 +205,7 @@ function commitRun({ dungeonId, dungeonName, startedAt, durationSeconds, outcome
     outcome,
     findTimeSeconds: null,
     runType: null,
+    groupSize: null,
   });
   saveRuns(runs);
   return id;
@@ -204,7 +215,7 @@ function updateRun(runId, patch) {
   saveRuns(loadRuns().map((run) => (run.id === runId ? { ...run, ...patch } : run)));
 }
 
-function setRunMeta(runId, { runType, findTimeSeconds } = {}) {
+function setRunMeta(runId, { runType, findTimeSeconds, groupSize } = {}) {
   saveRuns(
     loadRuns().map((run) => {
       if (run.id !== runId) return run;
@@ -215,6 +226,12 @@ function setRunMeta(runId, { runType, findTimeSeconds } = {}) {
       if (findTimeSeconds !== undefined) {
         next.findTimeSeconds =
           findTimeSeconds != null && findTimeSeconds > 0 ? Math.round(findTimeSeconds) : null;
+      }
+      if (groupSize !== undefined) {
+        next.groupSize =
+          groupSize != null && groupSize >= GROUP_SIZE_MIN && groupSize <= GROUP_SIZE_MAX
+            ? Math.round(groupSize)
+            : null;
       }
       return next;
     })
@@ -347,6 +364,24 @@ function formatTimePair(avgClear, avgAttempt) {
   return `<span class="time-clear" title="Average clear">${clear}</span><span class="time-sep"> · </span><span class="time-attempt" title="Average attempt">${attempt}</span>`;
 }
 
+function formatGroupClearStats(runs) {
+  const bySize = new Map();
+  for (const run of runs) {
+    if (run.outcome !== "complete" || run.groupSize == null) continue;
+    if (!bySize.has(run.groupSize)) {
+      bySize.set(run.groupSize, { total: 0, count: 0 });
+    }
+    const entry = bySize.get(run.groupSize);
+    entry.total += run.durationSeconds;
+    entry.count += 1;
+  }
+  if (bySize.size === 0) return "";
+  const parts = [...bySize.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([size, { total, count }]) => `${size}p ${formatDuration(total / count)} clear (${count}×)`);
+  return `<span class="source-compare">By group: ${parts.join(" · ")}</span>`;
+}
+
 function formatSourceCompare(bySource) {
   const partyClear = avgDuration(bySource.party.clearDuration, bySource.party.clearCount);
   const organicClear = avgDuration(bySource.organic.clearDuration, bySource.organic.clearCount);
@@ -399,6 +434,7 @@ function dismissFindTimePrompt() {
   pendingFindRunId = null;
   findTimeAfterDone = null;
   selectedRunType = null;
+  selectedGroupSize = null;
   postEndPrompt.classList.add("hidden");
   postEndActions.innerHTML = "";
   refreshIdleControls();
@@ -432,12 +468,14 @@ function finishRunContext(findTimeSeconds = null) {
     setRunMeta(pendingFindRunId, {
       runType: selectedRunType,
       findTimeSeconds: findTimeSeconds != null && findTimeSeconds > 0 ? findTimeSeconds : null,
+      groupSize: selectedGroupSize,
     });
   }
   const after = findTimeAfterDone;
   pendingFindRunId = null;
   findTimeAfterDone = null;
   selectedRunType = null;
+  selectedGroupSize = null;
   savedRunIdForPrompt = null;
   postEndPrompt.classList.add("hidden");
   postEndActions.innerHTML = "";
@@ -472,17 +510,55 @@ function createRunTypeToggles(onChange) {
   return row;
 }
 
+function createGroupSizeToggles() {
+  const row = document.createElement("div");
+  row.className = "toggle-row group-size-row";
+  row.setAttribute("role", "group");
+  row.setAttribute("aria-label", "Group size");
+
+  for (let size = GROUP_SIZE_MIN; size <= GROUP_SIZE_MAX; size += 1) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "toggle-check group-size-btn";
+    btn.textContent = String(size);
+    btn.title = size === 1 ? "Solo" : `${size} players`;
+    btn.dataset.groupSize = String(size);
+    btn.setAttribute("aria-pressed", "false");
+    btn.addEventListener("click", () => {
+      selectedGroupSize = selectedGroupSize === size ? null : size;
+      for (const toggle of row.querySelectorAll(".group-size-btn")) {
+        const active = Number(toggle.dataset.groupSize) === selectedGroupSize;
+        toggle.classList.toggle("selected", active);
+        toggle.setAttribute("aria-pressed", active ? "true" : "false");
+      }
+    });
+    row.appendChild(btn);
+  }
+  return row;
+}
+
 function offerRunContext(runId, afterDone, { showSearchTime = true } = {}) {
   pendingFindRunId = runId;
   findTimeAfterDone = afterDone;
   selectedRunType = null;
+  selectedGroupSize = null;
   const chainNote = showSearchTime
     ? "Skip, pick another dungeon, or press Start anytime."
-    : "Chain spawn — no search time. Skip or pick Party/Organic.";
-  postEndLabel.innerHTML = `Party or organic? <span class="find-optional">(optional)</span><span class="find-sub">${chainNote}</span>`;
+    : "Chain spawn — no search time.";
+  postEndLabel.innerHTML = `Run details <span class="find-optional">(optional)</span><span class="find-sub">${chainNote}</span>`;
   postEndActions.innerHTML = "";
 
+  const typeLabel = document.createElement("p");
+  typeLabel.className = "find-section-label";
+  typeLabel.textContent = "Party or organic";
+  postEndActions.appendChild(typeLabel);
   postEndActions.appendChild(createRunTypeToggles());
+
+  const groupLabel = document.createElement("p");
+  groupLabel.className = "find-section-label";
+  groupLabel.textContent = "Group size";
+  postEndActions.appendChild(groupLabel);
+  postEndActions.appendChild(createGroupSizeToggles());
 
   let searchInput = null;
   if (showSearchTime) {
@@ -731,6 +807,7 @@ function renderStatsSummary() {
       ? `<div class="stats-find">+${formatDuration(avgFind)} avg search <span class="time-legend">(${overall.findCount} logged)</span></div>`
       : "";
   const sourceLine = formatSourceCompare(overall.bySource);
+  const groupLine = formatGroupClearStats(loadRuns());
   const card = document.createElement("div");
   card.className = "stats-card";
   card.innerHTML = `
@@ -745,6 +822,7 @@ function renderStatsSummary() {
       <div class="stats-times">${formatTimePair(avgClear, avgAttempt)}<span class="time-legend">clear · avg</span></div>
       ${findLine}
       ${sourceLine ? `<div class="stats-source">${sourceLine}</div>` : ""}
+      ${groupLine ? `<div class="stats-source">${groupLine}</div>` : ""}
     </div>
   `;
   statsSummary.appendChild(card);
@@ -822,6 +900,10 @@ function renderRunsTable() {
     const sourcePill = run.runType
       ? `<span class="outcome-pill source-${run.runType}">${RUN_SOURCES[run.runType].label}</span>`
       : "";
+    const groupPill =
+      run.groupSize != null
+        ? `<span class="outcome-pill group-size">${run.groupSize}p</span>`
+        : "";
     const findNote =
       run.findTimeSeconds != null && run.findTimeSeconds > 0
         ? `<span class="find-time">+${formatDuration(run.findTimeSeconds)} search</span>`
@@ -829,7 +911,7 @@ function renderRunsTable() {
     row.innerHTML = `
       <td class="when">${when}</td>
       <td class="dungeon-cell"><img class="table-icon" alt="" /><span>${run.dungeonName}</span></td>
-      <td>${sourcePill}<span class="outcome-pill ${run.outcome}">${outcome.label}</span></td>
+      <td>${sourcePill}${groupPill}<span class="outcome-pill ${run.outcome}">${outcome.label}</span></td>
       <td class="time">${formatDuration(run.durationSeconds)}${findNote}</td>
       <td class="delete-cell"><button type="button" class="delete-btn" aria-label="Delete run">Delete</button></td>
     `;
