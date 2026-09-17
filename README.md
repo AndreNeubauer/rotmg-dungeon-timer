@@ -31,35 +31,33 @@ Runs are saved in your browser (`localStorage`). Exalt dungeons are front and ce
 
 ## Run
 
-### Online (no setup)
+After `git pull origin main`:
 
-After `git pull`, open:
+### Easiest — no server
 
-**https://andreneubauer.github.io/test/**
+Open **`index.html`** in Chrome, Edge, or Firefox (double-click it in `apps/rotmg-dungeon-timer/`).
 
-Runs in the browser; data stays in `localStorage` on that device.
+No Python, no `127.0.0.1`, no terminal. Data stays in `localStorage` on that browser.
 
-### Local
+### Local server (optional)
 
-**Option A — double-click**
-
-- Windows: `start.bat`
+- Windows: double-click **`start.bat`**
 - Mac/Linux: `./start.sh`
 
-**Option B — terminal**
+Or:
 
 ```bash
 cd apps/rotmg-dungeon-timer
 python3 serve.py
 ```
 
-Opens **http://127.0.0.1:8765**. Keep the terminal open while you use the timer.
+Then open **http://127.0.0.1:8765** and keep the terminal open.
 
-**Option C — open the file**
+If `127.0.0.1` says *connection refused*, you have not started the server — use **`index.html`** instead, or run `start.bat` / `serve.py` first.
 
-Open `index.html` directly in Chrome/Edge/Firefox (dungeon list is bundled in `dungeons.js`; no server needed).
+### GitHub Pages (optional)
 
-If `127.0.0.1` says *connection refused*, nothing is listening on your machine — use the online URL or start `serve.py` / `start.bat` first.
+Workflow: `.github/workflows/rotmg-timer-pages.yml`. Enable **Settings → Pages → Build and deployment → GitHub Actions** once. Private repos need a plan that includes Pages.
 
 ## Dungeons
 
