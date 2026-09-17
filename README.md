@@ -31,19 +31,35 @@ Runs are saved in your browser (`localStorage`). Exalt dungeons are front and ce
 
 ## Run
 
+### Online (no setup)
+
+After `git pull`, open:
+
+**https://andreneubauer.github.io/test/**
+
+Runs in the browser; data stays in `localStorage` on that device.
+
+### Local
+
+**Option A — double-click**
+
+- Windows: `start.bat`
+- Mac/Linux: `./start.sh`
+
+**Option B — terminal**
+
 ```bash
 cd apps/rotmg-dungeon-timer
 python3 serve.py
 ```
 
-Opens **http://127.0.0.1:8765** in your browser. No install needed.
+Opens **http://127.0.0.1:8765**. Keep the terminal open while you use the timer.
 
-Alternative:
+**Option C — open the file**
 
-```bash
-python3 -m http.server 8765
-# then open http://127.0.0.1:8765
-```
+Open `index.html` directly in Chrome/Edge/Firefox (dungeon list is bundled in `dungeons.js`; no server needed).
+
+If `127.0.0.1` says *connection refused*, nothing is listening on your machine — use the online URL or start `serve.py` / `start.bat` first.
 
 ## Dungeons
 

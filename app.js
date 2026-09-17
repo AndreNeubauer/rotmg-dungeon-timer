@@ -1062,9 +1062,25 @@ function showPage(name) {
   if (!isTimer) renderTimesPage();
 }
 
-async function init() {
+async function loadCatalog() {
+  if (window.DUNGEON_CATALOG) return window.DUNGEON_CATALOG;
   const res = await fetch("dungeons.json");
-  catalog = await res.json();
+  if (!res.ok) throw new Error(`Failed to load dungeons.json (${res.status})`);
+  return res.json();
+}
+
+async function init() {
+  try {
+    catalog = await loadCatalog();
+  } catch (err) {
+    console.error(err);
+    document.body.innerHTML =
+      "<main style='padding:2rem;font-family:system-ui;color:#eee;background:#111;min-height:100vh'>" +
+      "<h1>RotMG Timer</h1><p>Could not load dungeon list.</p>" +
+      "<p>Open via <a href='https://andreneubauer.github.io/test/'>GitHub Pages</a> " +
+      "or run <code>python3 serve.py</code> in <code>apps/rotmg-dungeon-timer</code>.</p></main>";
+    return;
+  }
   dungeonById = new Map(catalog.dungeons.map((d) => [d.id, d]));
 
   searchInput.addEventListener("input", () => renderAllDungeonList(searchInput.value));
