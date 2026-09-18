@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
   <title>RotMG Timer</title>
-  <link rel="stylesheet" href="style.css?v=18" />
+  <link rel="stylesheet" href="style.css?v=19" />
 </head>
 <body>
   <div id="bg-layer" aria-hidden="true"></div>
@@ -40,6 +40,9 @@
       </div>
 
       <section class="timer-block">
+        <div class="buttons timer-start-row">
+          <button type="button" id="start-btn">Start</button>
+        </div>
         <div class="timer-selection">
           <img class="timer-selection-icon" id="timer-selection-icon" alt="" width="40" height="40" />
           <div class="timer-selection-text">
@@ -49,8 +52,7 @@
         </div>
         <div class="timer" id="timer">—</div>
         <p class="status" id="status"></p>
-        <div class="buttons">
-          <button type="button" id="start-btn">Start</button>
+        <div class="buttons timer-end-row">
           <button type="button" id="end-btn">End</button>
         </div>
         <div class="buttons fail-buttons">
@@ -134,7 +136,7 @@
   </footer>
 
   <span id="dungeon-meta" hidden></span>
-  <script src="dungeons.js?v=18"></script>
-  <script src="app.js?v=18"></script>
+  <script src="dungeons.js?v=19"></script>
+  <script src="app.js?v=19"></script>
 </body>
 </html>

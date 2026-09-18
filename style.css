@@ -14,6 +14,10 @@
   box-sizing: border-box;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -284,6 +288,15 @@ header {
   border-top: 1px solid var(--border);
 }
 
+.timer-start-row {
+  margin: 0 auto 0.65rem;
+  max-width: 18rem;
+}
+
+.timer-start-row #start-btn {
+  width: 100%;
+}
+
 .timer-selection {
   display: flex;
   align-items: center;
@@ -361,13 +374,21 @@ header {
   gap: 0.5rem;
 }
 
-.timer-block:not(.running) #end-btn,
+.timer-block:not(.running) .timer-end-row,
 .timer-block:not(.running) .fail-buttons {
   display: none;
 }
 
-.timer-block.running #start-btn {
+.timer-block:not(.running) .timer-start-row {
+  display: flex;
+}
+
+.timer-block.running .timer-start-row {
   display: none;
+}
+
+.timer-block.running .timer-end-row {
+  display: flex;
 }
 
 .timer-block.running .fail-buttons {
