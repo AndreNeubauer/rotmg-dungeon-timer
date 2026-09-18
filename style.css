@@ -250,6 +250,19 @@ header {
   gap: 0.5rem;
 }
 
+.timer-block:not(.running) #end-btn,
+.timer-block:not(.running) .fail-buttons {
+  display: none;
+}
+
+.timer-block.running #start-btn {
+  display: none;
+}
+
+.timer-block.running .fail-buttons {
+  display: flex;
+}
+
 .buttons button {
   flex: 1;
   border: none;

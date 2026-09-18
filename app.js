@@ -1163,10 +1163,7 @@ function renderTimesPage() {
 }
 
 function setRunning(running) {
-  startBtn.disabled = running;
-  endBtn.disabled = !running;
-  nexusBtn.disabled = !running;
-  diedBtn.disabled = !running;
+  timerBlock.classList.toggle("running", running);
   searchInput.disabled = running;
   for (const btn of postEndActions.querySelectorAll("button")) {
     btn.disabled = running;
