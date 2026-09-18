@@ -1,7 +1,8 @@
 # RotMG Dungeon Timer
 
 **Canonical repo:** [github.com/AndreNeubauer/rotmg-dungeon-timer](https://github.com/AndreNeubauer/rotmg-dungeon-timer)  
-**Live app (after Pages):** [andreneubauer.github.io/rotmg-dungeon-timer](https://andreneubauer.github.io/rotmg-dungeon-timer/)
+**Live app (after Pages):** [andreneubauer.github.io/rotmg-dungeon-timer](https://andreneubauer.github.io/rotmg-dungeon-timer/)  
+**Setup checklist:** [SETUP-TODO.md](./SETUP-TODO.md)
 
 Simple web app to log dungeon clear times.
 
