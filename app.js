@@ -1,3 +1,4 @@
+const APP_VERSION = "1.4";
 const STORAGE_KEY = "rotmg-dungeon-runs";
 const RUNS_API = "/api/runs";
 const EXALT_CATEGORY = "exalt";
@@ -92,6 +93,7 @@ const overviewHero = document.getElementById("overview-hero");
 const overviewExalt = document.getElementById("overview-exalt");
 const overviewRecent = document.getElementById("overview-recent");
 const bgLayer = document.getElementById("bg-layer");
+const appVersionEl = document.getElementById("app-version");
 const tabs = document.querySelectorAll(".tab");
 const postEndPrompt = document.getElementById("post-end-prompt");
 const postEndLabel = document.getElementById("post-end-label");
@@ -1499,6 +1501,7 @@ async function init() {
 
   await initRunsStorage();
   void initBackground();
+  if (appVersionEl) appVersionEl.textContent = `v${APP_VERSION}`;
 
   searchInput?.addEventListener("input", () => renderDungeonGrid());
   categoryTabs?.addEventListener("click", (event) => {
