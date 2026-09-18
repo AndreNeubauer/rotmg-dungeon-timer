@@ -1,4 +1,4 @@
-const APP_VERSION = "1.7";
+const APP_VERSION = "1.8";
 const STORAGE_KEY = "rotmg-dungeon-runs";
 const RUNS_API = "/api/runs";
 const EXALT_CATEGORY = "exalt";
