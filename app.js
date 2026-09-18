@@ -116,6 +116,8 @@ const FIND_PRESETS_MIN = [3, 5, 10, 15];
 const DEFAULT_PLAYER_MAX = 50;
 /** Spawn from another dungeon — no search-time field (Void, Crystal). */
 const CHAIN_SPAWN_DUNGEONS = new Set(["the-void", "crystal-cavern"]);
+/** Dungeons that offer a hard-mode checkbox after End. */
+const HARD_MODE_DUNGEONS = new Set(["the-shatters", "spectral-penitentiary"]);
 /** True when this run started via LH/Fungal chain (→ Cult, → Void, → Crystal). */
 let currentRunChained = false;
 /** In-memory run list — source of truth while the app is open. */
@@ -186,6 +188,7 @@ function normalizeRun(run) {
     findTimeSeconds,
     runType,
     groupSize,
+    hardMode: run.hardMode === true ? true : null,
   };
 }
 
@@ -313,6 +316,7 @@ function commitRun({ dungeonId, dungeonName, startedAt, durationSeconds, outcome
     findTimeSeconds: null,
     runType: null,
     groupSize: null,
+    hardMode: null,
   };
   const rejection = validateRun(run, loadRuns());
   if (rejection) {
@@ -327,7 +331,7 @@ function commitRun({ dungeonId, dungeonName, startedAt, durationSeconds, outcome
   return run.id;
 }
 
-function setRunMeta(runId, { runType, findTimeSeconds, groupSize } = {}) {
+function setRunMeta(runId, { runType, findTimeSeconds, groupSize, hardMode } = {}) {
   saveRuns(
     loadRuns().map((run) => {
       if (run.id !== runId) return run;
@@ -341,6 +345,9 @@ function setRunMeta(runId, { runType, findTimeSeconds, groupSize } = {}) {
       }
       if (groupSize !== undefined) {
         next.groupSize = groupSize != null && groupSize >= 1 ? Math.round(groupSize) : null;
+      }
+      if (hardMode !== undefined) {
+        next.hardMode = hardMode === true ? true : null;
       }
       return next;
     })
@@ -624,7 +631,7 @@ function shouldOfferSearchTime(runId, { chained = false } = {}) {
   return Boolean(run && !CHAIN_SPAWN_DUNGEONS.has(run.dungeonId));
 }
 
-function finishRunContext({ findTimeSeconds = null, groupSize = null } = {}) {
+function finishRunContext({ findTimeSeconds = null, groupSize = null, hardMode = null } = {}) {
   const after = findTimeAfterDone;
   const runId = pendingFindRunId;
   pendingFindRunId = null;
@@ -640,6 +647,7 @@ function finishRunContext({ findTimeSeconds = null, groupSize = null } = {}) {
       runType,
       findTimeSeconds: findTimeSeconds != null && findTimeSeconds > 0 ? findTimeSeconds : null,
       groupSize,
+      hardMode,
     });
   }
   after?.();
@@ -673,10 +681,11 @@ function createRunTypeToggles(onChange) {
   return row;
 }
 
-function readRunContextInputs(groupInput, searchInput, playerMax) {
+function readRunContextInputs(groupInput, searchInput, playerMax, hardModeInput = null) {
   return {
     groupSize: groupInput ? parseGroupSizeInput(groupInput.value, playerMax) : null,
     findTimeSeconds: searchInput ? parseFindTimeInput(searchInput.value) : null,
+    hardMode: hardModeInput?.checked === true ? true : null,
   };
 }
 
@@ -684,6 +693,8 @@ function offerRunContext(runId, afterDone, { showSearchTime = true } = {}) {
   pendingFindRunId = runId;
   findTimeAfterDone = afterDone;
   selectedRunType = null;
+  const run = loadRuns().find((entry) => entry.id === runId);
+  const showHardMode = Boolean(run && HARD_MODE_DUNGEONS.has(run.dungeonId));
   const playerMax = getRunPlayerMax(runId);
   const chainNote = showSearchTime
     ? "Skip, pick another dungeon, or press Start anytime."
@@ -713,6 +724,24 @@ function offerRunContext(runId, afterDone, { showSearchTime = true } = {}) {
   groupRow.appendChild(groupInput);
   postEndActions.appendChild(groupRow);
 
+  let hardModeInput = null;
+  if (showHardMode) {
+    const hardLabel = document.createElement("p");
+    hardLabel.className = "find-section-label";
+    hardLabel.textContent = "Difficulty";
+    postEndActions.appendChild(hardLabel);
+
+    const hardRow = document.createElement("label");
+    hardRow.className = "hard-mode-row";
+    hardModeInput = document.createElement("input");
+    hardModeInput.type = "checkbox";
+    hardModeInput.className = "hard-mode-check";
+    const hardText = document.createElement("span");
+    hardText.textContent = "Hard mode";
+    hardRow.append(hardModeInput, hardText);
+    postEndActions.appendChild(hardRow);
+  }
+
   let searchInput = null;
   if (showSearchTime) {
     const searchLabel = document.createElement("p");
@@ -729,7 +758,7 @@ function offerRunContext(runId, afterDone, { showSearchTime = true } = {}) {
       btn.textContent = `${minutes}m`;
       btn.addEventListener("click", () =>
         finishRunContext({
-          ...readRunContextInputs(groupInput, searchInput, playerMax),
+          ...readRunContextInputs(groupInput, searchInput, playerMax, hardModeInput),
           findTimeSeconds: minutes * 60,
         })
       );
@@ -761,7 +790,7 @@ function offerRunContext(runId, afterDone, { showSearchTime = true } = {}) {
   doneBtn.className = "post-end-action primary";
   doneBtn.textContent = "Done";
   doneBtn.addEventListener("click", () => {
-    finishRunContext(readRunContextInputs(groupInput, searchInput, playerMax));
+    finishRunContext(readRunContextInputs(groupInput, searchInput, playerMax, hardModeInput));
   });
   groupInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") doneBtn.click();
@@ -1103,6 +1132,9 @@ function renderRunsTable() {
       run.groupSize != null
         ? `<span class="outcome-pill group-size">${run.groupSize}p</span>`
         : "";
+    const hardPill = run.hardMode
+      ? `<span class="outcome-pill hard-mode">Hard</span>`
+      : "";
     const findNote =
       run.findTimeSeconds != null && run.findTimeSeconds > 0
         ? `<span class="find-time">+${formatDuration(run.findTimeSeconds)} search</span>`
@@ -1110,7 +1142,7 @@ function renderRunsTable() {
     row.innerHTML = `
       <td class="when">${when}</td>
       <td class="dungeon-cell"><img class="table-icon" alt="" /><span>${run.dungeonName}</span></td>
-      <td>${sourcePill}${groupPill}<span class="outcome-pill ${run.outcome}">${outcome.label}</span></td>
+      <td>${sourcePill}${groupPill}${hardPill}<span class="outcome-pill ${run.outcome}">${outcome.label}</span></td>
       <td class="time">${formatDuration(run.durationSeconds)}${findNote}</td>
       <td class="delete-cell"><button type="button" class="delete-btn" aria-label="Delete run">Delete</button></td>
     `;

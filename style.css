@@ -397,6 +397,35 @@ button:disabled {
   margin-right: 0.25rem;
 }
 
+.hard-mode-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  margin: 0.15rem 0 0.35rem;
+  padding: 0.55rem 0.65rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.hard-mode-check {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  accent-color: var(--green);
+  cursor: pointer;
+}
+
+.outcome-pill.hard-mode {
+  color: #e8a84a;
+  margin-right: 0.25rem;
+}
+
 .find-section-label {
   width: 100%;
   margin: 0.35rem 0 0;
