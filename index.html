@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
   <title>RotMG Timer</title>
-  <link rel="stylesheet" href="style.css?v=14" />
+  <link rel="stylesheet" href="style.css?v=15" />
 </head>
 <body>
   <div id="bg-layer" aria-hidden="true"></div>
@@ -17,6 +17,7 @@
         <button type="button" class="tab active" data-page="timer">Timer</button>
         <button type="button" class="tab" data-page="overview">Overview</button>
         <button type="button" class="tab" data-page="times">Times</button>
+        <button type="button" class="tab" data-page="about">About</button>
       </nav>
     </header>
 
@@ -65,6 +66,37 @@
       </section>
     </div>
 
+    <div id="page-about" class="page hidden">
+      <article class="about-page">
+        <h2 class="about-title">What this is</h2>
+        <p>
+          A simple dungeon timer for <strong>Realm of the Mad God</strong>, built to track how long
+          exalting and other runs actually take — not for leaderboards, just personal stats.
+        </p>
+
+        <h2 class="about-title">How to use</h2>
+        <ol class="about-list">
+          <li>Pick a dungeon on <strong>Timer</strong>, hit <strong>Start</strong> when you enter, <strong>End</strong> when you finish.</li>
+          <li>Use <strong>Nexus</strong> or <strong>Died</strong> if the run did not clear.</li>
+          <li>After a clear, optionally log party/organic, group size, and search time.</li>
+        </ol>
+
+        <h2 class="about-title">Tabs</h2>
+        <ul class="about-list">
+          <li><strong>Overview</strong> — exalt summary, best/avg times, recent runs at a glance.</li>
+          <li><strong>Times</strong> — full log with filters and per-dungeon averages.</li>
+        </ul>
+
+        <h2 class="about-title">Data</h2>
+        <p>
+          Runs are saved on this device. With the local server (<code>python3 serve.py</code>) they
+          go to <code>runs.json</code> in this folder; opening the HTML file alone uses browser storage.
+        </p>
+
+        <p class="about-credit">By MeleeOnly — for figuring out how long exalting really takes.</p>
+      </article>
+    </div>
+
     <div id="page-times" class="page hidden">
       <div class="times-toolbar">
         <label class="times-filter-label" for="times-dungeon-filter">Dungeon</label>
@@ -95,7 +127,7 @@
 
   <img id="dungeon-icon" alt="" hidden />
   <span id="dungeon-meta" hidden></span>
-  <script src="dungeons.js?v=14"></script>
-  <script src="app.js?v=14"></script>
+  <script src="dungeons.js?v=15"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>

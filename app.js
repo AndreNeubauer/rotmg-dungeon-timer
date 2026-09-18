@@ -87,6 +87,7 @@ const OUTCOMES = {
 const pageTimer = document.getElementById("page-timer");
 const pageOverview = document.getElementById("page-overview");
 const pageTimes = document.getElementById("page-times");
+const pageAbout = document.getElementById("page-about");
 const overviewHero = document.getElementById("overview-hero");
 const overviewExalt = document.getElementById("overview-exalt");
 const overviewRecent = document.getElementById("overview-recent");
@@ -1450,6 +1451,7 @@ function showPage(name) {
   pageTimer.classList.toggle("hidden", name !== "timer");
   pageOverview.classList.toggle("hidden", name !== "overview");
   pageTimes.classList.toggle("hidden", name !== "times");
+  pageAbout.classList.toggle("hidden", name !== "about");
   tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.page === name));
   if (name === "times") renderTimesPage();
   if (name === "overview") renderOverviewPage();
