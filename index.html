@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
   <title>RotMG Timer</title>
-  <link rel="stylesheet" href="style.css?v=21" />
+  <link rel="stylesheet" href="style.css?v=22" />
 </head>
 <body>
   <div id="bg-layer" aria-hidden="true"></div>
@@ -13,11 +13,20 @@
   <div id="bg-scrim" aria-hidden="true"></div>
   <main>
     <header>
-      <h1>RotMG Timer</h1>
+      <div class="header-top">
+        <h1>RotMG Timer</h1>
+        <div class="ign-profile" id="ign-profile">
+          <span class="ign-label">IGN</span>
+          <span class="ign-value" id="ign-display">—</span>
+          <button type="button" class="ign-action" id="ign-set-btn">Set IGN</button>
+          <button type="button" class="ign-action hidden" id="ign-edit-btn">Edit</button>
+        </div>
+      </div>
       <nav class="tabs">
         <button type="button" class="tab active" data-page="timer">Timer</button>
         <button type="button" class="tab" data-page="overview">Overview</button>
         <button type="button" class="tab" data-page="times">Times</button>
+        <button type="button" class="tab" data-page="leaderboard">Board</button>
         <button type="button" class="tab" data-page="about">About</button>
       </nav>
     </header>
@@ -80,7 +89,8 @@
         <h2 class="about-title">What this is</h2>
         <p>
           A simple dungeon timer for <strong>Realm of the Mad God</strong>, built to track how long
-          exalting and other runs actually take — not for leaderboards, just personal stats.
+          exalting and other runs actually take. Personal stats stay in your browser; optional shared
+          leaderboard when Supabase is configured.
         </p>
 
         <h2 class="about-title">How to use</h2>
@@ -94,6 +104,7 @@
         <ul class="about-list">
           <li><strong>Overview</strong> — exalt summary, best/avg times, recent runs at a glance.</li>
           <li><strong>Times</strong> — full log with filters and per-dungeon averages.</li>
+          <li><strong>Board</strong> — shared clears (opt-in) when the host sets up Supabase.</li>
         </ul>
 
         <h2 class="about-title">Data</h2>
@@ -108,6 +119,35 @@
 
         <p class="about-credit">By MeleeOnly with love — for figuring out how long exalting really takes.</p>
       </article>
+    </div>
+
+    <div id="page-leaderboard" class="page hidden">
+      <div class="leaderboard-toolbar">
+        <label class="leaderboard-share">
+          <input type="checkbox" id="share-leaderboard-check" />
+          Share my clears to leaderboard
+        </label>
+        <button type="button" id="leaderboard-refresh-btn" class="data-btn">Refresh</button>
+      </div>
+      <p class="leaderboard-status" id="leaderboard-status"></p>
+      <div class="times-toolbar leaderboard-filter-row">
+        <label class="times-filter-label" for="leaderboard-dungeon-filter">Dungeon</label>
+        <select id="leaderboard-dungeon-filter">
+          <option value="">All dungeons</option>
+        </select>
+      </div>
+      <table class="runs-table leaderboard-table">
+        <thead>
+          <tr>
+            <th class="col-rank">#</th>
+            <th class="col-ign">IGN</th>
+            <th class="col-dungeon">Dungeon</th>
+            <th class="col-time">Time</th>
+            <th class="col-tags">Tags</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body"></tbody>
+      </table>
     </div>
 
     <div id="page-times" class="page hidden">
@@ -146,7 +186,7 @@
   </footer>
 
   <span id="dungeon-meta" hidden></span>
-  <script src="dungeons.js?v=21"></script>
-  <script src="app.js?v=21"></script>
+  <script src="dungeons.js?v=22"></script>
+  <script src="app.js?v=22"></script>
 </body>
 </html>

@@ -120,10 +120,115 @@ h1 {
 }
 
 header {
+  margin-bottom: 1.75rem;
+}
+
+.header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.ign-profile {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+  max-width: 58%;
+  justify-content: flex-end;
+}
+
+.ign-label {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.62rem;
+}
+
+.ign-value {
+  color: var(--text);
+  font-weight: 500;
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ign-action {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.68rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.ign-action:hover {
+  border-color: var(--muted);
+}
+
+.ign-action.hidden {
+  display: none;
+}
+
+.leaderboard-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.75rem;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.leaderboard-share {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.leaderboard-share input {
+  accent-color: var(--green);
+}
+
+.leaderboard-status {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin: 0 0 0.75rem;
+  line-height: 1.4;
+}
+
+.leaderboard-status.error {
+  color: var(--red);
+}
+
+.leaderboard-filter-row {
+  margin-bottom: 0.75rem;
+}
+
+.leaderboard-table .col-rank {
+  width: 2rem;
+  text-align: right;
+  color: var(--muted);
+}
+
+.leaderboard-table .col-ign {
+  font-weight: 500;
+}
+
+.leaderboard-table .col-tags {
+  min-width: 5rem;
+}
+
+.outcome-pill.ign-tag {
+  color: #8ab4d4;
+  border-color: color-mix(in srgb, #8ab4d4 35%, var(--border));
 }
 
 .page.hidden {
@@ -133,7 +238,8 @@ header {
 /* Tabs */
 .tabs {
   display: flex;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.65rem 0.85rem;
 }
 
 .tab {

@@ -1,5 +1,8 @@
-const APP_VERSION = "1.9";
+const APP_VERSION = "2.0";
 const STORAGE_KEY = "rotmg-dungeon-runs";
+const IGN_STORAGE_KEY = "rotmg-timer-ign";
+const SHARE_LEADERBOARD_KEY = "rotmg-timer-share-leaderboard";
+const SHARED_RUN_IDS_KEY = "rotmg-timer-shared-run-ids";
 const RUNS_API = "/api/runs";
 const EXALT_CATEGORY = "exalt";
 const DUPLICATE_WINDOW_MS = 120_000;
@@ -83,6 +86,15 @@ const exportRunsBtn = document.getElementById("export-runs-btn");
 const importRunsBtn = document.getElementById("import-runs-btn");
 const importRunsInput = document.getElementById("import-runs-input");
 const storageModeEl = document.getElementById("storage-mode");
+const ignDisplay = document.getElementById("ign-display");
+const ignSetBtn = document.getElementById("ign-set-btn");
+const ignEditBtn = document.getElementById("ign-edit-btn");
+const pageLeaderboard = document.getElementById("page-leaderboard");
+const shareLeaderboardCheck = document.getElementById("share-leaderboard-check");
+const leaderboardRefreshBtn = document.getElementById("leaderboard-refresh-btn");
+const leaderboardStatus = document.getElementById("leaderboard-status");
+const leaderboardDungeonFilter = document.getElementById("leaderboard-dungeon-filter");
+const leaderboardBody = document.getElementById("leaderboard-body");
 
 const OUTCOMES = {
   complete: { label: "Complete", short: "✓" },
@@ -139,6 +151,9 @@ let runsCache = [];
 let fileStorageReady = false;
 /** Resolved icon URLs — local icons/ first, then CDN fallback. */
 const iconCache = new Map();
+/** Supabase leaderboard — loaded from leaderboard-config.json */
+let leaderboardConfig = { enabled: false, supabaseUrl: "", supabaseAnonKey: "", table: "leaderboard_runs" };
+let leaderboardRows = [];
 
 function formatDuration(seconds) {
   const total = Math.round(seconds);
@@ -235,7 +250,201 @@ function normalizeRun(run) {
     runType,
     groupSize,
     hardMode: run.hardMode === true ? true : null,
+    ign: typeof run.ign === "string" && run.ign.trim() ? run.ign.trim() : null,
   };
+}
+
+function getIgn() {
+  try {
+    const value = localStorage.getItem(IGN_STORAGE_KEY);
+    return value?.trim() || "";
+  } catch {
+    return "";
+  }
+}
+
+function setIgn(value) {
+  const trimmed = value.trim().slice(0, 32);
+  if (!trimmed) {
+    localStorage.removeItem(IGN_STORAGE_KEY);
+  } else {
+    localStorage.setItem(IGN_STORAGE_KEY, trimmed);
+  }
+  renderIgnProfile();
+}
+
+function renderIgnProfile() {
+  const ign = getIgn();
+  if (ignDisplay) ignDisplay.textContent = ign || "—";
+  if (ignSetBtn) ignSetBtn.classList.toggle("hidden", Boolean(ign));
+  if (ignEditBtn) ignEditBtn.classList.toggle("hidden", !ign);
+}
+
+function promptIgnEdit() {
+  const current = getIgn();
+  const next = window.prompt("In-game name (IGN) — shown on shared clears:", current);
+  if (next == null) return;
+  const trimmed = next.trim();
+  if (!trimmed) {
+    if (current && window.confirm("Remove your IGN?")) setIgn("");
+    return;
+  }
+  setIgn(trimmed);
+}
+
+function getShareLeaderboardEnabled() {
+  try {
+    return localStorage.getItem(SHARE_LEADERBOARD_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function setShareLeaderboardEnabled(enabled) {
+  try {
+    if (enabled) localStorage.setItem(SHARE_LEADERBOARD_KEY, "1");
+    else localStorage.removeItem(SHARE_LEADERBOARD_KEY);
+  } catch (_) {
+    /* ignore */
+  }
+  if (shareLeaderboardCheck) shareLeaderboardCheck.checked = enabled;
+}
+
+function getSharedRunIds() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SHARED_RUN_IDS_KEY) || "[]");
+    return Array.isArray(raw) ? raw : [];
+  } catch {
+    return [];
+  }
+}
+
+function markRunShared(runId) {
+  const ids = new Set(getSharedRunIds());
+  ids.add(runId);
+  try {
+    localStorage.setItem(SHARED_RUN_IDS_KEY, JSON.stringify([...ids].slice(-500)));
+  } catch (_) {
+    /* ignore */
+  }
+}
+
+function isLeaderboardReady() {
+  return Boolean(
+    leaderboardConfig.enabled &&
+      leaderboardConfig.supabaseUrl &&
+      leaderboardConfig.supabaseAnonKey
+  );
+}
+
+function supabaseHeaders() {
+  const key = leaderboardConfig.supabaseAnonKey;
+  return {
+    apikey: key,
+    Authorization: `Bearer ${key}`,
+    "Content-Type": "application/json",
+  };
+}
+
+async function loadLeaderboardConfig() {
+  try {
+    const res = await fetch("leaderboard-config.json", { cache: "no-store" });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data && typeof data === "object") {
+      leaderboardConfig = {
+        enabled: data.enabled === true,
+        supabaseUrl: (data.supabaseUrl || "").replace(/\/$/, ""),
+        supabaseAnonKey: data.supabaseAnonKey || "",
+        table: data.table || "leaderboard_runs",
+      };
+    }
+  } catch (_) {
+    /* file:// or missing config */
+  }
+}
+
+async function shareRunToLeaderboard(run) {
+  if (!isLeaderboardReady()) return;
+  if (!getShareLeaderboardEnabled()) return;
+  if (run.outcome !== "complete") return;
+  const ign = getIgn();
+  if (!ign) return;
+  if (getSharedRunIds().includes(run.id)) return;
+
+  const table = leaderboardConfig.table || "leaderboard_runs";
+  const body = {
+    client_run_id: run.id,
+    ign,
+    dungeon_id: run.dungeonId,
+    dungeon_name: run.dungeonName,
+    duration_seconds: run.durationSeconds,
+    outcome: "complete",
+    run_type: run.runType,
+    group_size: run.groupSize,
+    hard_mode: run.hardMode,
+    find_time_seconds: run.findTimeSeconds,
+    started_at: run.startedAt,
+  };
+
+  try {
+    const res = await fetch(`${leaderboardConfig.supabaseUrl}/rest/v1/${table}`, {
+      method: "POST",
+      headers: { ...supabaseHeaders(), Prefer: "return=minimal" },
+      body: JSON.stringify(body),
+    });
+    if (res.ok || res.status === 409) {
+      markRunShared(run.id);
+      if (!pageLeaderboard.classList.contains("hidden")) void renderLeaderboardPage();
+    } else {
+      console.warn("Leaderboard share failed", res.status, await res.text());
+    }
+  } catch (err) {
+    console.warn("Leaderboard share error", err);
+  }
+}
+
+function maybeShareRun(runId) {
+  if (!runId) return;
+  const run = loadRuns().find((entry) => entry.id === runId);
+  if (run) void shareRunToLeaderboard(run);
+}
+
+async function fetchLeaderboardRows(dungeonId = "") {
+  if (!isLeaderboardReady()) return [];
+  const table = leaderboardConfig.table || "leaderboard_runs";
+  const params = new URLSearchParams({
+    select: "*",
+    outcome: "eq.complete",
+    order: "duration_seconds.asc",
+    limit: "100",
+  });
+  if (dungeonId) params.set("dungeon_id", `eq.${dungeonId}`);
+
+  const res = await fetch(`${leaderboardConfig.supabaseUrl}/rest/v1/${table}?${params}`, {
+    headers: supabaseHeaders(),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`Leaderboard fetch failed (${res.status})`);
+  const rows = await res.json();
+  return Array.isArray(rows) ? rows : [];
+}
+
+function formatRunTagsHtml(row, { includeIgn = false } = {}) {
+  const pills = [];
+  if (includeIgn && row.ign) {
+    pills.push(`<span class="outcome-pill ign-tag">${row.ign}</span>`);
+  }
+  if (row.run_type && RUN_SOURCES[row.run_type]) {
+    pills.push(`<span class="outcome-pill source-${row.run_type}">${RUN_SOURCES[row.run_type].label}</span>`);
+  }
+  if (row.group_size != null) {
+    pills.push(`<span class="outcome-pill group-size">${row.group_size}p</span>`);
+  }
+  if (row.hard_mode) {
+    pills.push(`<span class="outcome-pill hard-mode">Hard</span>`);
+  }
+  return pills.join("");
 }
 
 function loadRunsFromLocalStorage() {
@@ -426,6 +635,7 @@ function commitRun({ dungeonId, dungeonName, startedAt, durationSeconds, outcome
     runType: null,
     groupSize: null,
     hardMode: null,
+    ign: getIgn() || null,
   };
   const rejection = validateRun(run, loadRuns());
   if (rejection) {
@@ -779,6 +989,7 @@ function finishRunContext({ findTimeSeconds = null, groupSize = null, hardMode =
       groupSize,
       hardMode,
     });
+    maybeShareRun(runId);
   }
   after?.();
 }
@@ -1270,6 +1481,7 @@ function renderRunsTable() {
     const hardPill = run.hardMode
       ? `<span class="outcome-pill hard-mode">Hard</span>`
       : "";
+    const ignPill = run.ign ? `<span class="outcome-pill ign-tag">${run.ign}</span>` : "";
     const findNote =
       run.findTimeSeconds != null && run.findTimeSeconds > 0
         ? `<span class="find-time">+${formatDuration(run.findTimeSeconds)} search</span>`
@@ -1277,7 +1489,7 @@ function renderRunsTable() {
     row.innerHTML = `
       <td class="when">${when}</td>
       <td class="dungeon-cell"><div class="dungeon-cell-inner"><img class="table-icon" alt="" /><span class="dungeon-cell-name">${run.dungeonName}</span></div></td>
-      <td class="result-cell"><div class="run-tags">${sourcePill}${groupPill}${hardPill}<span class="outcome-pill ${run.outcome}">${outcome.label}</span></div></td>
+      <td class="result-cell"><div class="run-tags">${ignPill}${sourcePill}${groupPill}${hardPill}<span class="outcome-pill ${run.outcome}">${outcome.label}</span></div></td>
       <td class="time">${formatDuration(run.durationSeconds)}${findNote}</td>
       <td class="delete-cell"><button type="button" class="delete-btn" aria-label="Delete run">Delete</button></td>
     `;
@@ -1295,6 +1507,93 @@ function renderTimesPage() {
   renderStatsSummary();
   renderAverages();
   renderRunsTable();
+}
+
+function renderLeaderboardFilter() {
+  if (!leaderboardDungeonFilter) return;
+  const current = leaderboardDungeonFilter.value;
+  leaderboardDungeonFilter.innerHTML = `<option value="">All dungeons</option>`;
+  const dungeons = [...catalog.dungeons].sort((a, b) =>
+    (a.shortName || a.name).localeCompare(b.shortName || b.name)
+  );
+  for (const dungeon of dungeons) {
+    const option = document.createElement("option");
+    option.value = dungeon.id;
+    option.textContent = dungeon.shortName || dungeon.name;
+    leaderboardDungeonFilter.appendChild(option);
+  }
+  const valid = current === "" || dungeons.some((d) => d.id === current);
+  leaderboardDungeonFilter.value = valid ? current : "";
+}
+
+function renderLeaderboardTable() {
+  if (!leaderboardBody) return;
+  const filterId = leaderboardDungeonFilter?.value || "";
+  let rows = leaderboardRows;
+  if (filterId) rows = rows.filter((row) => row.dungeon_id === filterId);
+
+  leaderboardBody.innerHTML = "";
+  if (rows.length === 0) {
+    leaderboardBody.innerHTML = `<tr><td colspan="5" class="empty">${
+      filterId ? "No shared clears for this dungeon yet." : "No shared clears yet."
+    }</td></tr>`;
+    return;
+  }
+
+  rows.forEach((row, index) => {
+    const dungeon = getDungeon(row.dungeon_id);
+    const tr = document.createElement("tr");
+    const tags = formatRunTagsHtml(row);
+    tr.innerHTML = `
+      <td class="col-rank">${index + 1}</td>
+      <td class="col-ign">${row.ign || "—"}</td>
+      <td class="dungeon-cell"><div class="dungeon-cell-inner"><img class="table-icon" alt="" /><span class="dungeon-cell-name">${row.dungeon_name || row.dungeon_id}</span></div></td>
+      <td class="time">${formatDuration(Number(row.duration_seconds))}</td>
+      <td class="col-tags"><div class="run-tags">${tags || "—"}</div></td>
+    `;
+    if (dungeon) setDungeonIcon(tr.querySelector(".table-icon"), dungeon);
+    leaderboardBody.appendChild(tr);
+  });
+}
+
+function updateLeaderboardStatus(message, { error = false } = {}) {
+  if (!leaderboardStatus) return;
+  leaderboardStatus.textContent = message;
+  leaderboardStatus.classList.toggle("error", error);
+}
+
+async function renderLeaderboardPage() {
+  renderLeaderboardFilter();
+  if (shareLeaderboardCheck) shareLeaderboardCheck.checked = getShareLeaderboardEnabled();
+
+  if (!isLeaderboardReady()) {
+    updateLeaderboardStatus(
+      "Shared leaderboard is not configured on this site yet. See HOSTING.md in the repo to set up Supabase."
+    );
+    leaderboardRows = [];
+    renderLeaderboardTable();
+    return;
+  }
+
+  const ign = getIgn();
+  const sharing = getShareLeaderboardEnabled();
+  if (sharing && !ign) {
+    updateLeaderboardStatus("Set your IGN at the top to share clears.");
+  } else if (sharing) {
+    updateLeaderboardStatus("New completes upload automatically after you finish a run.");
+  } else {
+    updateLeaderboardStatus("Turn on sharing above to post your clears. Reading the board works without it.");
+  }
+
+  try {
+    leaderboardRows = await fetchLeaderboardRows();
+    renderLeaderboardTable();
+  } catch (err) {
+    console.error(err);
+    updateLeaderboardStatus(String(err.message || err), { error: true });
+    leaderboardRows = [];
+    renderLeaderboardTable();
+  }
 }
 
 function renderOverviewHero(runs) {
@@ -1545,10 +1844,12 @@ function showPage(name) {
   pageTimer.classList.toggle("hidden", name !== "timer");
   pageOverview.classList.toggle("hidden", name !== "overview");
   pageTimes.classList.toggle("hidden", name !== "times");
+  pageLeaderboard.classList.toggle("hidden", name !== "leaderboard");
   pageAbout.classList.toggle("hidden", name !== "about");
   tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.page === name));
   if (name === "times") renderTimesPage();
   if (name === "overview") renderOverviewPage();
+  if (name === "leaderboard") void renderLeaderboardPage();
 }
 
 async function initBackground() {
@@ -1594,8 +1895,20 @@ async function init() {
   dungeonById = new Map(catalog.dungeons.map((d) => [d.id, d]));
 
   await initRunsStorage();
+  await loadLeaderboardConfig();
   void initBackground();
+  renderIgnProfile();
+  setShareLeaderboardEnabled(getShareLeaderboardEnabled());
   if (appVersionEl) appVersionEl.textContent = `v${APP_VERSION}`;
+
+  ignSetBtn?.addEventListener("click", promptIgnEdit);
+  ignEditBtn?.addEventListener("click", promptIgnEdit);
+  shareLeaderboardCheck?.addEventListener("change", () => {
+    setShareLeaderboardEnabled(shareLeaderboardCheck.checked);
+    if (!pageLeaderboard.classList.contains("hidden")) void renderLeaderboardPage();
+  });
+  leaderboardRefreshBtn?.addEventListener("click", () => void renderLeaderboardPage());
+  leaderboardDungeonFilter?.addEventListener("change", () => renderLeaderboardTable());
 
   searchInput?.addEventListener("input", () => renderDungeonGrid());
   categoryTabs?.addEventListener("click", (event) => {

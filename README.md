@@ -76,7 +76,9 @@ If `127.0.0.1` says *connection refused*, you have not started the server — us
 
 Workflow: `.github/workflows/rotmg-timer-pages.yml`. Enable **Settings → Pages → Build and deployment → GitHub Actions** once. Private repos need a plan that includes Pages.
 
-**Important:** a hosted link is static — each person’s runs stay in **their browser** (not GitHub, not shared). Use **Times → Export / Import** to back up or move data. `runs.json` in the repo is only a sample; it does not update when friends log runs.
+**Step-by-step:** see **[HOSTING.md](./HOSTING.md)** (Pages URL + optional Supabase shared leaderboard).
+
+**Important:** personal runs stay in **each browser** unless exported. Optional **Board** tab shares **Complete** clears only when you set an IGN, enable sharing, and the host configures Supabase (`leaderboard-config.json`).
 
 **Before sharing the link**
 

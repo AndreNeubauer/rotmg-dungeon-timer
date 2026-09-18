@@ -1,0 +1,6 @@
+{
+  "enabled": false,
+  "supabaseUrl": "",
+  "supabaseAnonKey": "",
+  "table": "leaderboard_runs"
+}
