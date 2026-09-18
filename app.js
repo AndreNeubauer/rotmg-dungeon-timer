@@ -1209,7 +1209,7 @@ function renderRunsTable() {
         : "";
     row.innerHTML = `
       <td class="when">${when}</td>
-      <td class="dungeon-cell"><img class="table-icon" alt="" /><span>${run.dungeonName}</span></td>
+      <td class="dungeon-cell"><div class="dungeon-cell-inner"><img class="table-icon" alt="" /><span class="dungeon-cell-name">${run.dungeonName}</span></div></td>
       <td class="result-cell"><div class="run-tags">${sourcePill}${groupPill}${hardPill}<span class="outcome-pill ${run.outcome}">${outcome.label}</span></div></td>
       <td class="time">${formatDuration(run.durationSeconds)}${findNote}</td>
       <td class="delete-cell"><button type="button" class="delete-btn" aria-label="Delete run">Delete</button></td>

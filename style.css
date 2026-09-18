@@ -41,26 +41,26 @@ body {
 /* Blurred copy — only visible in a soft circle behind main content */
 #bg-blur {
   position: fixed;
-  inset: -48px;
+  inset: -64px;
   z-index: -2;
   background-size: cover;
   background-position: center;
-  filter: blur(20px) brightness(0.7);
-  transform: scale(1.04);
+  filter: blur(22px) brightness(0.55);
+  transform: scale(1.05);
   pointer-events: none;
   -webkit-mask-image: radial-gradient(
     circle at 50% 44%,
     #000 0%,
-    #000 26%,
-    rgba(0, 0, 0, 0.55) 38%,
-    transparent 56%
+    #000 34%,
+    rgba(0, 0, 0, 0.65) 48%,
+    transparent 72%
   );
   mask-image: radial-gradient(
     circle at 50% 44%,
     #000 0%,
-    #000 26%,
-    rgba(0, 0, 0, 0.55) 38%,
-    transparent 56%
+    #000 34%,
+    rgba(0, 0, 0, 0.65) 48%,
+    transparent 72%
   );
 }
 
@@ -71,14 +71,16 @@ body {
   pointer-events: none;
   background: radial-gradient(
     circle at 50% 44%,
-    rgba(12, 12, 12, 0.5) 0%,
-    rgba(12, 12, 12, 0.22) 32%,
-    transparent 58%
+    rgba(12, 12, 12, 0.72) 0%,
+    rgba(12, 12, 12, 0.48) 38%,
+    rgba(12, 12, 12, 0.18) 58%,
+    transparent 78%
   );
 }
 
 main {
   position: relative;
+  z-index: 0;
   max-width: 520px;
   margin: 0 auto;
   padding: 1.5rem 1rem 1rem;
@@ -86,6 +88,7 @@ main {
 
 .app-footer {
   position: relative;
+  z-index: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -293,8 +296,14 @@ header {
   max-width: 18rem;
 }
 
-.timer-start-row #start-btn {
+.timer-start-row #start-btn,
+.timer-end-row #end-btn {
   width: 100%;
+}
+
+.timer-end-row {
+  margin: 0 auto;
+  max-width: 18rem;
 }
 
 .timer-selection {
@@ -854,6 +863,7 @@ button:disabled {
 .runs-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
   font-size: 0.85rem;
 }
 
@@ -866,13 +876,32 @@ button:disabled {
   text-align: left;
 }
 
+.runs-table th.col-when,
+.runs-table td.when {
+  width: 4.75rem;
+}
+
+.runs-table th.col-time,
+.runs-table td.time {
+  width: 3.75rem;
+}
+
+.runs-table th.col-actions,
+.runs-table td.delete-cell {
+  width: 4.25rem;
+}
+
 .runs-table th:last-child {
-  width: 4.5rem;
+  text-align: right;
+}
+
+.runs-table tbody tr {
+  border-bottom: 1px solid var(--border);
 }
 
 .runs-table td {
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--border);
+  padding: 0.55rem 0;
+  border-bottom: none;
   vertical-align: middle;
 }
 
@@ -894,15 +923,20 @@ button:disabled {
   padding-right: 0.75rem;
 }
 
-.dungeon-cell {
+.dungeon-cell-inner {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
-  min-height: 2rem;
+  gap: 0.5rem;
+  min-height: 1.75rem;
 }
 
-.dungeon-cell span {
+.dungeon-cell-name {
   line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .table-icon {
