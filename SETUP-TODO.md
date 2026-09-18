@@ -32,7 +32,18 @@ git push https://github.com/AndreNeubauer/rotmg-dungeon-timer.git rotmg-timer-on
 
 - [ ] Push succeeded (`main` on `rotmg-dungeon-timer` has files)
 
-**If push fails:** Settings → Collaborators / GitHub Apps → Cursor needs **Write** on `rotmg-dungeon-timer`.
+#### If the Cloud Agent still can’t push (403 / “cursor[bot] denied”)
+
+Cursor **Integrations** in the app ≠ always the **GitHub App** this agent uses to git push.
+
+1. Open **GitHub** (not Cursor): [github.com/settings/installations](https://github.com/settings/installations)
+2. Find **Cursor** → **Configure**
+3. Under **Repository access**, ensure **rotmg-dungeon-timer** is included (or “All repositories”)
+4. Save, then **start a new Cloud Agent** on `rotmg-dungeon-timer` (or ask the agent to retry push)
+
+Until that works, push from **your PC** with the commands above (uses your GitHub login — always works).
+
+**Status (2026-09-18):** repo still empty; agent push blocked with `Resource not accessible by integration`.
 
 ### 2. Enable GitHub Pages
 
