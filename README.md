@@ -72,9 +72,20 @@ Then open **http://127.0.0.1:8765** and keep the terminal open.
 
 If `127.0.0.1` says *connection refused*, you have not started the server — use **`index.html`** instead, or run `start.bat` / `serve.py` first.
 
-### GitHub Pages (optional)
+### GitHub Pages (share with friends)
 
 Workflow: `.github/workflows/rotmg-timer-pages.yml`. Enable **Settings → Pages → Build and deployment → GitHub Actions** once. Private repos need a plan that includes Pages.
+
+**Important:** a hosted link is static — each person’s runs stay in **their browser** (not GitHub, not shared). Use **Times → Export / Import** to back up or move data. `runs.json` in the repo is only a sample; it does not update when friends log runs.
+
+**Before sharing the link**
+
+1. Enable GitHub Pages (above) and confirm the deploy workflow is green.
+2. Decide whether `runs.json` in the repo should stay sample-only (recommended) — your real runs are local unless you commit them.
+3. Send friends the Pages URL; tell them Export occasionally if they care about backup.
+4. Optional: make the repo public so Pages is free and easy.
+
+**Does it save to GitHub automatically?** No. Only if you run `serve.py` locally and manually `git add runs.json && git push`. Hosted users never write to the repo.
 
 ## Dungeons
 

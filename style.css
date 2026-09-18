@@ -102,6 +102,11 @@ main {
   line-height: 1.4;
 }
 
+.app-footer-storage {
+  font-size: 0.58rem;
+  opacity: 0.85;
+}
+
 .app-footer-version {
   font-size: 0.58rem;
   opacity: 0.8;
@@ -663,9 +668,32 @@ button:disabled {
 /* Times page */
 .times-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.65rem;
   margin-bottom: 1rem;
+}
+
+.times-data-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.data-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  padding: 0.4rem 0.55rem;
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.data-btn:hover {
+  color: var(--text);
+  border-color: var(--muted);
 }
 
 .times-filter-label {
@@ -1190,6 +1218,47 @@ button:disabled {
 
 input:disabled {
   opacity: 0.5;
+}
+
+@media (max-width: 767px) {
+  #bg-blur {
+    filter: blur(26px) brightness(0.48);
+    -webkit-mask-image: radial-gradient(
+      circle at 50% 42%,
+      #000 0%,
+      #000 54%,
+      rgba(0, 0, 0, 0.78) 70%,
+      transparent 98%
+    );
+    mask-image: radial-gradient(
+      circle at 50% 42%,
+      #000 0%,
+      #000 54%,
+      rgba(0, 0, 0, 0.78) 70%,
+      transparent 98%
+    );
+  }
+
+  #bg-scrim {
+    background: radial-gradient(
+      circle at 50% 42%,
+      rgba(12, 12, 12, 0.84) 0%,
+      rgba(12, 12, 12, 0.62) 52%,
+      rgba(12, 12, 12, 0.3) 74%,
+      transparent 98%
+    );
+  }
+
+  .runs-table th.col-when,
+  .runs-table td.when {
+    width: 4.25rem;
+    padding-right: 0.35rem;
+  }
+
+  .runs-table th.col-time,
+  .runs-table td.time {
+    width: 3.25rem;
+  }
 }
 
 @media (max-width: 380px) {

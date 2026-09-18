@@ -1,4 +1,4 @@
-const APP_VERSION = "1.8";
+const APP_VERSION = "1.9";
 const STORAGE_KEY = "rotmg-dungeon-runs";
 const RUNS_API = "/api/runs";
 const EXALT_CATEGORY = "exalt";
@@ -79,6 +79,10 @@ const runsBody = document.getElementById("runs-body");
 const statsSummary = document.getElementById("stats-summary");
 const averagesList = document.getElementById("averages-list");
 const timesDungeonFilter = document.getElementById("times-dungeon-filter");
+const exportRunsBtn = document.getElementById("export-runs-btn");
+const importRunsBtn = document.getElementById("import-runs-btn");
+const importRunsInput = document.getElementById("import-runs-input");
+const storageModeEl = document.getElementById("storage-mode");
 
 const OUTCOMES = {
   complete: { label: "Complete", short: "✓" },
@@ -265,6 +269,23 @@ async function writeRunsToFile(runs) {
   if (!res.ok) throw new Error(`Failed to save runs (${res.status})`);
 }
 
+async function loadSeedRunsJson() {
+  try {
+    const res = await fetch("runs.json", { cache: "no-store" });
+    if (!res.ok) return [];
+    const raw = await res.json();
+    if (!Array.isArray(raw)) return [];
+    return raw.map(normalizeRun);
+  } catch {
+    return [];
+  }
+}
+
+function updateStorageLabel() {
+  if (!storageModeEl) return;
+  storageModeEl.textContent = fileStorageReady ? "Saved to runs.json" : "Saved in browser";
+}
+
 async function initRunsStorage() {
   try {
     let runs = await fetchRunsFromFile();
@@ -278,14 +299,60 @@ async function initRunsStorage() {
     const needsId = runs.some((run) => !run.id);
     runsCache = runs.map(normalizeRun);
     if (needsId) await persistRuns(runsCache);
+    updateStorageLabel();
     return;
   } catch (_) {
     fileStorageReady = false;
   }
 
   runsCache = loadRunsFromLocalStorage();
+  if (runsCache.length === 0) {
+    const seed = await loadSeedRunsJson();
+    if (seed.length > 0) runsCache = seed;
+  }
   const needsId = runsCache.some((run) => !run.id);
-  if (needsId) persistRuns(runsCache);
+  if (needsId || runsCache.length > 0) persistRuns(runsCache);
+  updateStorageLabel();
+}
+
+function exportRunsDownload() {
+  const runs = loadRuns();
+  const blob = new Blob([`${JSON.stringify(runs, null, 2)}\n`], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `rotmg-runs-${new Date().toISOString().slice(0, 10)}.json`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+async function importRunsFromFile(file) {
+  if (!file) return;
+  let imported;
+  try {
+    imported = JSON.parse(await file.text());
+  } catch {
+    window.alert("That file is not valid JSON.");
+    return;
+  }
+  if (!Array.isArray(imported)) {
+    window.alert("Expected a JSON array of runs.");
+    return;
+  }
+
+  const normalized = imported.map(normalizeRun);
+  const existing = loadRuns();
+  let next = normalized;
+  if (existing.length > 0) {
+    const merge = window.confirm(
+      `Import ${normalized.length} run(s)? OK = merge with your ${existing.length} existing. Cancel = replace all.`
+    );
+    next = merge ? [...existing, ...normalized] : normalized;
+  }
+
+  saveRuns(next);
+  renderTimesPage();
+  if (!pageOverview.classList.contains("hidden")) renderOverviewPage();
 }
 
 async function persistRuns(runs) {
@@ -1548,6 +1615,13 @@ async function init() {
     tab.addEventListener("click", () => showPage(tab.dataset.page));
   });
   timesDungeonFilter?.addEventListener("change", () => renderTimesPage());
+  exportRunsBtn?.addEventListener("click", exportRunsDownload);
+  importRunsBtn?.addEventListener("click", () => importRunsInput?.click());
+  importRunsInput?.addEventListener("change", () => {
+    const file = importRunsInput.files?.[0];
+    importRunsInput.value = "";
+    void importRunsFromFile(file);
+  });
 
   renderDungeonPicker();
   updateSelectedDisplay();
