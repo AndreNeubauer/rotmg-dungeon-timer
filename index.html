@@ -5,14 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
   <title>RotMG Timer</title>
-  <link rel="stylesheet" href="style.css?v=13" />
+  <link rel="stylesheet" href="style.css?v=14" />
 </head>
 <body>
+  <div id="bg-layer" aria-hidden="true"></div>
+  <div id="bg-scrim" aria-hidden="true"></div>
   <main>
     <header>
       <h1>RotMG Timer</h1>
       <nav class="tabs">
         <button type="button" class="tab active" data-page="timer">Timer</button>
+        <button type="button" class="tab" data-page="overview">Overview</button>
         <button type="button" class="tab" data-page="times">Times</button>
       </nav>
     </header>
@@ -40,9 +43,9 @@
         <p class="status" id="status"></p>
         <div class="buttons">
           <button type="button" id="start-btn">Start</button>
-          <button type="button" id="end-btn" hidden>End</button>
+          <button type="button" id="end-btn">End</button>
         </div>
-        <div class="buttons fail-buttons" hidden>
+        <div class="buttons fail-buttons">
           <button type="button" id="nexus-btn">Nexus</button>
           <button type="button" id="died-btn">Died</button>
         </div>
@@ -50,6 +53,15 @@
           <p class="chain-prompt-label" id="post-end-label"></p>
           <div class="chain-prompt-buttons" id="post-end-actions"></div>
         </div>
+      </section>
+    </div>
+
+    <div id="page-overview" class="page hidden">
+      <div id="overview-hero" class="overview-hero"></div>
+      <div id="overview-exalt" class="overview-exalt"></div>
+      <section class="overview-section">
+        <h2 class="overview-heading">Recent runs</h2>
+        <div id="overview-recent" class="overview-recent"></div>
       </section>
     </div>
 
@@ -77,9 +89,13 @@
     </div>
   </main>
 
+  <footer class="app-footer">
+    By MeleeOnly — made for collecting data to see how long exalting takes.
+  </footer>
+
   <img id="dungeon-icon" alt="" hidden />
   <span id="dungeon-meta" hidden></span>
-  <script src="dungeons.js?v=13"></script>
-  <script src="app.js?v=13"></script>
+  <script src="dungeons.js?v=14"></script>
+  <script src="app.js?v=14"></script>
 </body>
 </html>

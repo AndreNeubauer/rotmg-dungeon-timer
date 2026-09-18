@@ -1,0 +1,62 @@
+{
+  "note": "Exalt loading-style art. One random background per page load. In-game screens live in the Exalt client (extract with exalt-extractor); these are bundled community/official promo pieces.",
+  "credit": "SaturnZCheery / DECA Games / RotMG community artists",
+  "backgrounds": [
+    {
+      "dungeonId": "lost-halls",
+      "file": "lost-halls.jpg"
+    },
+    {
+      "dungeonId": "cultist-hideout",
+      "file": "cultist-hideout.jpg"
+    },
+    {
+      "dungeonId": "the-void",
+      "file": "the-void.jpg"
+    },
+    {
+      "dungeonId": "the-shatters",
+      "file": "the-shatters.jpg"
+    },
+    {
+      "dungeonId": "spectral-penitentiary",
+      "file": "spectral-penitentiary.jpg"
+    },
+    {
+      "dungeonId": "oryxs-sanctuary",
+      "file": "oryxs-sanctuary.jpg"
+    },
+    {
+      "dungeonId": "moonlight-village",
+      "file": "moonlight-village.jpg"
+    },
+    {
+      "dungeonId": "fungal-cavern",
+      "file": "fungal-cavern.jpg"
+    },
+    {
+      "dungeonId": "ice-citadel",
+      "file": "ice-citadel.jpg"
+    },
+    {
+      "dungeonId": "the-nest",
+      "file": "the-nest.jpg"
+    },
+    {
+      "dungeonId": "crystal-cavern",
+      "file": "crystal-cavern.jpg"
+    },
+    {
+      "dungeonId": "kogbold-steamworks",
+      "file": "kogbold-steamworks.jpg"
+    },
+    {
+      "dungeonId": "plagued-nest",
+      "file": "plagued-nest.jpg"
+    },
+    {
+      "dungeonId": "advanced-kogbold-steamworks",
+      "file": "advanced-kogbold-steamworks.jpg"
+    }
+  ]
+}

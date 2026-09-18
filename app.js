@@ -85,7 +85,12 @@ const OUTCOMES = {
   died: { label: "Died", short: "Died" },
 };
 const pageTimer = document.getElementById("page-timer");
+const pageOverview = document.getElementById("page-overview");
 const pageTimes = document.getElementById("page-times");
+const overviewHero = document.getElementById("overview-hero");
+const overviewExalt = document.getElementById("overview-exalt");
+const overviewRecent = document.getElementById("overview-recent");
+const bgLayer = document.getElementById("bg-layer");
 const tabs = document.querySelectorAll(".tab");
 const postEndPrompt = document.getElementById("post-end-prompt");
 const postEndLabel = document.getElementById("post-end-label");
@@ -124,6 +129,8 @@ let currentRunChained = false;
 let runsCache = [];
 /** When true, reads/writes go to runs.json via serve.py. */
 let fileStorageReady = false;
+/** Resolved icon URLs — local icons/ first, then CDN fallback. */
+const iconCache = new Map();
 
 function formatDuration(seconds) {
   const total = Math.round(seconds);
@@ -146,16 +153,28 @@ function setDungeonIcon(img, dungeon) {
     img.removeAttribute("src");
     return;
   }
+  const cached = iconCache.get(dungeon.id);
+  if (cached) {
+    img.src = cached;
+    return;
+  }
+  const local = `icons/${dungeon.id}.png`;
+  const cdn = dungeon.icon ? iconUrlCdn(dungeon) : iconUrlCdn({ icon: catalog.fallbackIcon });
   const fallback = iconUrlCdn({ icon: catalog.fallbackIcon });
-  const useCdn = () => {
-    img.onerror = () => {
-      img.onerror = null;
-      img.src = fallback;
-    };
-    img.src = dungeon.icon ? iconUrlCdn(dungeon) : fallback;
+  img.decoding = "async";
+  img.loading = "lazy";
+  img.onload = () => iconCache.set(dungeon.id, img.src);
+  img.onerror = () => {
+    const src = img.getAttribute("src") || img.src;
+    if (src.includes("icons/") || src.endsWith(local)) {
+      img.src = cdn;
+      return;
+    }
+    img.onerror = null;
+    img.src = fallback;
+    iconCache.set(dungeon.id, fallback);
   };
-  img.onerror = useCdn;
-  img.src = `icons/${dungeon.id}.png`;
+  img.src = local;
 }
 
 function getDungeon(idOrName) {
@@ -481,6 +500,27 @@ function computeStats(runs = loadRuns()) {
 
 function avgDuration(total, count) {
   return count > 0 ? total / count : null;
+}
+
+function getExaltDungeonIds() {
+  return new Set(catalog.dungeons.filter((d) => d.category === "exalt").map((d) => d.id));
+}
+
+function bestClearSeconds(runs) {
+  let best = null;
+  for (const run of runs) {
+    if (run.outcome !== "complete") continue;
+    if (best == null || run.durationSeconds < best) best = run.durationSeconds;
+  }
+  return best;
+}
+
+function totalClearHours(runs) {
+  let total = 0;
+  for (const run of runs) {
+    if (run.outcome === "complete") total += run.durationSeconds;
+  }
+  return total / 3600;
 }
 
 function getDungeonSummaries(runs = loadRuns()) {
@@ -1142,7 +1182,7 @@ function renderRunsTable() {
     row.innerHTML = `
       <td class="when">${when}</td>
       <td class="dungeon-cell"><img class="table-icon" alt="" /><span>${run.dungeonName}</span></td>
-      <td>${sourcePill}${groupPill}${hardPill}<span class="outcome-pill ${run.outcome}">${outcome.label}</span></td>
+      <td class="result-cell"><div class="run-tags">${sourcePill}${groupPill}${hardPill}<span class="outcome-pill ${run.outcome}">${outcome.label}</span></div></td>
       <td class="time">${formatDuration(run.durationSeconds)}${findNote}</td>
       <td class="delete-cell"><button type="button" class="delete-btn" aria-label="Delete run">Delete</button></td>
     `;
@@ -1160,6 +1200,125 @@ function renderTimesPage() {
   renderStatsSummary();
   renderAverages();
   renderRunsTable();
+}
+
+function renderOverviewHero(runs) {
+  const exaltIds = getExaltDungeonIds();
+  const exaltRuns = runs.filter((run) => exaltIds.has(run.dungeonId));
+  const { overall } = computeStats(exaltRuns);
+  const rate = successRate(overall);
+  const avgClear = avgDuration(overall.clearDuration, overall.clearCount);
+  const hours = totalClearHours(exaltRuns);
+
+  const stats = [
+    { label: "Exalt attempts", value: overall.total || "0" },
+    { label: "Success rate", value: rate != null ? `${rate}%` : "—" },
+    { label: "Avg clear", value: avgClear != null ? formatDuration(avgClear) : "—" },
+    { label: "Time in clears", value: hours > 0 ? `${hours.toFixed(1)}h` : "—" },
+  ];
+
+  overviewHero.innerHTML = stats
+    .map(
+      (stat) => `
+    <div class="overview-stat">
+      <div class="overview-stat-value">${stat.value}</div>
+      <div class="overview-stat-label">${stat.label}</div>
+    </div>`
+    )
+    .join("");
+}
+
+function renderOverviewExalt(runs) {
+  const exaltIds = getExaltDungeonIds();
+  const summaries = getDungeonSummaries(runs)
+    .filter((entry) => exaltIds.has(entry.id))
+    .sort((a, b) => b.stats.total - a.stats.total || a.name.localeCompare(b.name));
+
+  overviewExalt.innerHTML = "";
+  if (summaries.length === 0) {
+    overviewExalt.innerHTML = `<p class="empty">No exalt runs logged yet.</p>`;
+    return;
+  }
+
+  for (const entry of summaries) {
+    const dungeonRuns = runs.filter((run) => run.dungeonId === entry.id);
+    const best = bestClearSeconds(dungeonRuns);
+    const rate = successRate(entry.stats);
+    const card = document.createElement("article");
+    card.className = "dungeon-card-stat";
+    const img = document.createElement("img");
+    img.alt = "";
+    if (entry.dungeon) setDungeonIcon(img, entry.dungeon);
+
+    const body = document.createElement("div");
+    body.className = "dungeon-card-stat-body";
+    body.innerHTML = `
+      <div class="dungeon-card-stat-name">${entry.dungeon?.shortName || entry.name}</div>
+      <div class="dungeon-card-stat-meta">${entry.stats.complete}/${entry.stats.total} clears · ${rate ?? 0}%</div>
+      <div class="rate-bar" aria-hidden="true"><span style="width:${rate ?? 0}%"></span></div>
+    `;
+
+    const times = document.createElement("div");
+    times.className = "dungeon-card-stat-times";
+    times.innerHTML = `
+      <div class="dungeon-card-stat-best">${best != null ? formatDuration(best) : "—"}</div>
+      <div class="dungeon-card-stat-avg">${entry.avgClear != null ? `${formatDuration(entry.avgClear)} avg` : "—"}</div>
+    `;
+
+    card.append(img, body, times);
+    overviewExalt.appendChild(card);
+  }
+}
+
+function renderOverviewRecent(runs) {
+  const recent = runs.slice().reverse().slice(0, 8);
+  overviewRecent.innerHTML = "";
+  if (recent.length === 0) {
+    overviewRecent.innerHTML = `<p class="empty">Nothing logged yet.</p>`;
+    return;
+  }
+
+  for (const run of recent) {
+    const dungeon = getDungeon(run.dungeonId);
+    const card = document.createElement("article");
+    card.className = "recent-run";
+    const img = document.createElement("img");
+    img.alt = "";
+    if (dungeon) setDungeonIcon(img, dungeon);
+
+    const when = new Date(run.startedAt).toLocaleString(undefined, {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const tags = [];
+    if (run.runType) tags.push(RUN_SOURCES[run.runType].label);
+    if (run.groupSize != null) tags.push(`${run.groupSize}p`);
+    if (run.hardMode) tags.push("Hard");
+    if (run.outcome !== "complete") tags.push(OUTCOMES[run.outcome].label);
+
+    const main = document.createElement("div");
+    main.className = "recent-run-main";
+    main.innerHTML = `
+      <div class="recent-run-name">${run.dungeonName}</div>
+      <div class="recent-run-when">${when}${tags.length ? ` · ${tags.join(" · ")}` : ""}</div>
+    `;
+
+    const time = document.createElement("div");
+    time.className = "recent-run-time";
+    time.textContent = formatDuration(run.durationSeconds);
+
+    card.append(img, main, time);
+    overviewRecent.appendChild(card);
+  }
+}
+
+function renderOverviewPage() {
+  const runs = loadRuns();
+  renderOverviewHero(runs);
+  renderOverviewExalt(runs);
+  renderOverviewRecent(runs);
 }
 
 function setRunning(running) {
@@ -1288,11 +1447,27 @@ function onEnd() {
 }
 
 function showPage(name) {
-  const isTimer = name === "timer";
-  pageTimer.classList.toggle("hidden", !isTimer);
-  pageTimes.classList.toggle("hidden", isTimer);
+  pageTimer.classList.toggle("hidden", name !== "timer");
+  pageOverview.classList.toggle("hidden", name !== "overview");
+  pageTimes.classList.toggle("hidden", name !== "times");
   tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.page === name));
-  if (!isTimer) renderTimesPage();
+  if (name === "times") renderTimesPage();
+  if (name === "overview") renderOverviewPage();
+}
+
+async function initBackground() {
+  if (!bgLayer) return;
+  try {
+    const res = await fetch("exalt-backgrounds.json", { cache: "no-store" });
+    if (!res.ok) return;
+    const data = await res.json();
+    const files = [...new Set((data.backgrounds || []).map((entry) => entry.file).filter(Boolean))];
+    if (!files.length) return;
+    const pick = files[Math.floor(Math.random() * files.length)];
+    bgLayer.style.backgroundImage = `url("backgrounds/${pick}")`;
+  } catch (_) {
+    /* file:// or missing manifest — solid bg only */
+  }
 }
 
 async function loadCatalog() {
@@ -1321,6 +1496,7 @@ async function init() {
   dungeonById = new Map(catalog.dungeons.map((d) => [d.id, d]));
 
   await initRunsStorage();
+  void initBackground();
 
   searchInput?.addEventListener("input", () => renderDungeonGrid());
   categoryTabs?.addEventListener("click", (event) => {
