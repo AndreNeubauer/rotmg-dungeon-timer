@@ -18,7 +18,7 @@ If the repo is **private**, you need a GitHub plan that includes Pages for priva
 
 ### 2. Deploy
 
-Every push to `main` that touches `apps/rotmg-dungeon-timer/` runs the workflow **Deploy RotMG Timer**.
+Every push to `main` runs the workflow **Deploy RotMG Timer** (`.github/workflows/deploy-pages.yml` in this repo).
 
 - **Actions** tab → open the latest **Deploy RotMG Timer** run → it should be green
 - If deploy fails with `404` / “Ensure GitHub Pages has been enabled”, go back to step 1
@@ -29,9 +29,9 @@ After a successful deploy:
 
 - **Settings → Pages** shows the site URL, usually:
   - `https://<username>.github.io/<repo>/`
-  - This repo: `https://andreneubauer.github.io/test/`
+  - Example dedicated repo: `https://andreneubauer.github.io/rotmg-dungeon-timer/`
 
-The timer lives at that URL (workflow uploads the `apps/rotmg-dungeon-timer` folder as the site root).
+The workflow uploads this repo root as the site (see **MOVE-REPO.md** if migrating from PersonalAI).
 
 ### 4. Share with friends
 
@@ -51,7 +51,7 @@ The app talks to Supabase directly from the browser (anon key + Row Level Securi
 ### 2. Create the table
 
 1. Supabase dashboard → **SQL Editor** → **New query**
-2. Paste the contents of `apps/rotmg-dungeon-timer/supabase-schema.sql`
+2. Paste the contents of `supabase-schema.sql`
 3. **Run**
 
 ### 3. Get API credentials
@@ -63,7 +63,7 @@ The app talks to Supabase directly from the browser (anon key + Row Level Securi
 
 ### 4. Configure the app
 
-Edit `apps/rotmg-dungeon-timer/leaderboard-config.json`:
+Edit `leaderboard-config.json`:
 
 ```json
 {
@@ -96,7 +96,6 @@ Only **Complete** clears are shared. Nexus/Died stay local.
 ## Part 3 — Local development
 
 ```bash
-cd apps/rotmg-dungeon-timer
 python3 serve.py
 # http://127.0.0.1:8765
 ```

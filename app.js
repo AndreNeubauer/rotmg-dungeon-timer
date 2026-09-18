@@ -1888,8 +1888,7 @@ async function init() {
     document.body.innerHTML =
       "<main style='padding:2rem;font-family:system-ui;color:#eee;background:#111;min-height:100vh'>" +
       "<h1>RotMG Timer</h1><p>Could not load dungeon list.</p>" +
-      "<p>Open via <a href='https://andreneubauer.github.io/test/'>GitHub Pages</a> " +
-      "or run <code>python3 serve.py</code> in <code>apps/rotmg-dungeon-timer</code>.</p></main>";
+      "<p>Open via GitHub Pages or run <code>python3 serve.py</code> in this folder.</p></main>";
     return;
   }
   dungeonById = new Map(catalog.dungeons.map((d) => [d.id, d]));
