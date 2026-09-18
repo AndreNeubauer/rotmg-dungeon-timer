@@ -1,4 +1,4 @@
-const APP_VERSION = "1.5";
+const APP_VERSION = "1.6";
 const STORAGE_KEY = "rotmg-dungeon-runs";
 const RUNS_API = "/api/runs";
 const EXALT_CATEGORY = "exalt";
@@ -93,6 +93,7 @@ const overviewHero = document.getElementById("overview-hero");
 const overviewExalt = document.getElementById("overview-exalt");
 const overviewRecent = document.getElementById("overview-recent");
 const bgLayer = document.getElementById("bg-layer");
+const bgBlur = document.getElementById("bg-blur");
 const appVersionEl = document.getElementById("app-version");
 const tabs = document.querySelectorAll(".tab");
 const postEndPrompt = document.getElementById("post-end-prompt");
@@ -1492,7 +1493,9 @@ async function initBackground() {
     const files = [...new Set((data.backgrounds || []).map((entry) => entry.file).filter(Boolean))];
     if (!files.length) return;
     const pick = files[Math.floor(Math.random() * files.length)];
-    bgLayer.style.backgroundImage = `url("backgrounds/${pick}")`;
+    const url = `url("backgrounds/${pick}")`;
+    bgLayer.style.backgroundImage = url;
+    if (bgBlur) bgBlur.style.backgroundImage = url;
   } catch (_) {
     /* file:// or missing manifest — solid bg only */
   }
