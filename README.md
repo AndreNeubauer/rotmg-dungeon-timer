@@ -31,7 +31,7 @@ Any other dungeon saves and returns to the picker immediately.
 
 When you use **`python3 serve.py`** (or `start.bat` / `start.sh`), runs are saved to:
 
-**`apps/rotmg-dungeon-timer/runs.json`**
+**`runs.json`**
 
 The app reads and writes that file on every save. It survives shutdowns and browser restarts as long as you start the timer via the local server.
 
@@ -52,7 +52,7 @@ After `git pull origin main`:
 
 ### Easiest — no server
 
-Open **`index.html`** in Chrome, Edge, or Firefox (double-click it in `apps/rotmg-dungeon-timer/`).
+Open **`index.html`** in Chrome, Edge, or Firefox (double-click in this folder).
 
 No Python, no `127.0.0.1`, no terminal. Data stays in browser **`localStorage`** only (not `runs.json`).
 
@@ -64,7 +64,6 @@ No Python, no `127.0.0.1`, no terminal. Data stays in browser **`localStorage`**
 Or:
 
 ```bash
-cd apps/rotmg-dungeon-timer
 python3 serve.py
 ```
 
