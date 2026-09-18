@@ -29,7 +29,7 @@ After a successful deploy:
 
 - **Settings → Pages** shows the site URL, usually:
   - `https://<username>.github.io/<repo>/`
-  - Example dedicated repo: `https://andreneubauer.github.io/rotmg-dungeon-timer/`
+  - This app: `https://andreneubauer.github.io/rotmg-dungeon-timer/`
 
 The workflow uploads this repo root as the site (see **MOVE-REPO.md** if migrating from PersonalAI).
 

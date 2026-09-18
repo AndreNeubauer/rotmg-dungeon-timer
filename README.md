@@ -1,6 +1,9 @@
 # RotMG Dungeon Timer
 
-Simple localhost web app to log dungeon clear times.
+**Canonical repo:** [github.com/AndreNeubauer/rotmg-dungeon-timer](https://github.com/AndreNeubauer/rotmg-dungeon-timer)  
+**Live app (after Pages):** [andreneubauer.github.io/rotmg-dungeon-timer](https://andreneubauer.github.io/rotmg-dungeon-timer/)
+
+Simple web app to log dungeon clear times.
 
 ## Use
 
@@ -73,7 +76,7 @@ If `127.0.0.1` says *connection refused*, you have not started the server — us
 
 ### GitHub Pages (share with friends)
 
-Workflow: `.github/workflows/rotmg-timer-pages.yml`. Enable **Settings → Pages → Build and deployment → GitHub Actions** once. Private repos need a plan that includes Pages.
+Workflow: `.github/workflows/deploy-pages.yml`. Enable **Settings → Pages → Build and deployment → GitHub Actions** once on the **rotmg-dungeon-timer** repo.
 
 **Step-by-step:** see **[HOSTING.md](./HOSTING.md)** (Pages URL + optional Supabase shared leaderboard).
 
