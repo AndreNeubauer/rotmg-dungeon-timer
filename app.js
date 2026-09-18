@@ -1,4 +1,4 @@
-const APP_VERSION = "1.4";
+const APP_VERSION = "1.5";
 const STORAGE_KEY = "rotmg-dungeon-runs";
 const RUNS_API = "/api/runs";
 const EXALT_CATEGORY = "exalt";
@@ -66,7 +66,7 @@ const CATEGORY_TAB_LABELS = {
   heroic: "Heroic",
   other: "Other",
 };
-const dungeonIcon = document.getElementById("dungeon-icon");
+const timerSelectionIcon = document.getElementById("timer-selection-icon");
 const dungeonName = document.getElementById("dungeon-name");
 const dungeonMeta = document.getElementById("dungeon-meta");
 const timerEl = document.getElementById("timer");
@@ -151,23 +151,42 @@ function iconUrlCdn(dungeon) {
   return `${catalog.iconBase}${encodeURIComponent(file)}`;
 }
 
-function setDungeonIcon(img, dungeon) {
+function setDungeonIcon(img, dungeon, { lazy = false } = {}) {
+  if (!img) return;
   if (!dungeon) {
+    img.onload = null;
+    img.onerror = null;
     img.removeAttribute("src");
+    img.removeAttribute("data-dungeon-id");
     return;
   }
-  const cached = iconCache.get(dungeon.id);
+
+  const dungeonId = dungeon.id;
+  img.onload = null;
+  img.onerror = null;
+  img.dataset.dungeonId = dungeonId;
+  img.decoding = "async";
+  img.loading = lazy ? "lazy" : "eager";
+
+  const cached = iconCache.get(dungeonId);
   if (cached) {
     img.src = cached;
     return;
   }
-  const local = `icons/${dungeon.id}.png`;
+
+  const local = `icons/${dungeonId}.png`;
   const cdn = dungeon.icon ? iconUrlCdn(dungeon) : iconUrlCdn({ icon: catalog.fallbackIcon });
   const fallback = iconUrlCdn({ icon: catalog.fallbackIcon });
-  img.decoding = "async";
-  img.loading = "lazy";
-  img.onload = () => iconCache.set(dungeon.id, img.src);
+
+  const commitCache = (url) => {
+    if (img.dataset.dungeonId === dungeonId) {
+      iconCache.set(dungeonId, url);
+    }
+  };
+
+  img.onload = () => commitCache(img.currentSrc || img.src);
   img.onerror = () => {
+    if (img.dataset.dungeonId !== dungeonId) return;
     const src = img.getAttribute("src") || img.src;
     if (src.includes("icons/") || src.endsWith(local)) {
       img.src = cdn;
@@ -175,7 +194,7 @@ function setDungeonIcon(img, dungeon) {
     }
     img.onerror = null;
     img.src = fallback;
-    iconCache.set(dungeon.id, fallback);
+    commitCache(fallback);
   };
   img.src = local;
 }
@@ -953,7 +972,7 @@ function createDungeonCard(dungeon, { compact = false } = {}) {
 
   const img = document.createElement("img");
   img.alt = "";
-  setDungeonIcon(img, dungeon);
+  setDungeonIcon(img, dungeon, { lazy: true });
 
   const label = document.createElement("span");
   label.className = "dungeon-card-name";
@@ -1014,8 +1033,13 @@ function updateSelectedDisplay() {
     dungeonName.textContent = "—";
     return;
   }
-  setDungeonIcon(dungeonIcon, dungeon);
-  dungeonName.textContent = dungeon.name;
+  setDungeonIcon(timerSelectionIcon, dungeon);
+  dungeonName.textContent = dungeon.shortName || dungeon.name;
+  if (dungeon.shortName) dungeonName.title = dungeon.name;
+  else dungeonName.removeAttribute("title");
+
+  const selectedCard = dungeonGrid?.querySelector(`.dungeon-card[data-id="${dungeon.id}"]`);
+  selectedCard?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
   if (!isRunning() && !pendingFindRunId && !pendingEndRun) {
     statusEl.textContent = "";
   }
