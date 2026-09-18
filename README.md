@@ -40,7 +40,7 @@ The app reads and writes that file on every save. It survives shutdowns and brow
 
 Opening **`index.html`** directly (no server) falls back to browser **`localStorage`** — data stays on that browser only, not in `runs.json`. On first server start, any existing `localStorage` runs are copied into `runs.json`.
 
-Sample runs live in **`runs.json`** in the repo. When you log new times via the server, that file updates on your machine. If you clone fresh and want a blank slate, replace it with `[]` or copy from `runs.json.example`.
+**`runs.json`** is gitignored (your real times stay local). Sample data is in **`runs.json.example`**. When you log via the server, `runs.json` is created/updated on your machine only.
 
 **Validation on save** (speedrun WR checks disabled until full group WR list exists):
 - Duplicate same dungeon + same time within 2 minutes

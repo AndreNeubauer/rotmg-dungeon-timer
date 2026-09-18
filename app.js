@@ -479,15 +479,18 @@ async function writeRunsToFile(runs) {
 }
 
 async function loadSeedRunsJson() {
-  try {
-    const res = await fetch("runs.json", { cache: "no-store" });
-    if (!res.ok) return [];
-    const raw = await res.json();
-    if (!Array.isArray(raw)) return [];
-    return raw.map(normalizeRun);
-  } catch {
-    return [];
+  for (const file of ["runs.json", "runs.json.example"]) {
+    try {
+      const res = await fetch(file, { cache: "no-store" });
+      if (!res.ok) continue;
+      const raw = await res.json();
+      if (!Array.isArray(raw)) continue;
+      return raw.map(normalizeRun);
+    } catch {
+      /* try next seed file */
+    }
   }
+  return [];
 }
 
 function updateStorageLabel() {
