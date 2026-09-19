@@ -4,5 +4,9 @@ set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 git fetch origin main
 git subtree split -P apps/rotmg-dungeon-timer -b rotmg-timer-only
-git push https://github.com/AndreNeubauer/rotmg-dungeon-timer.git rotmg-timer-only:main
+REMOTE="https://github.com/AndreNeubauer/rotmg-dungeon-timer.git"
+if [ -n "${ROTMG_TIMER_PUSH_TOKEN:-}" ]; then
+  REMOTE="https://x-access-token:${ROTMG_TIMER_PUSH_TOKEN}@github.com/AndreNeubauer/rotmg-dungeon-timer.git"
+fi
+git push "$REMOTE" rotmg-timer-only:main
 echo "Done — check https://github.com/AndreNeubauer/rotmg-dungeon-timer/actions"
