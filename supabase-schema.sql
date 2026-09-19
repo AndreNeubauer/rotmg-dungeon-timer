@@ -43,8 +43,19 @@ create policy "Public insert runs"
     and char_length(trim(ign)) between 1 and 32
   );
 
--- No updates/deletes from the app (admin via Supabase dashboard if needed)
-
 -- Required when "Automatically expose new tables" is OFF in project settings
 grant usage on schema public to anon, authenticated;
-grant select, insert on public.leaderboard_runs to anon, authenticated;
+grant select, insert, update on public.leaderboard_runs to anon, authenticated;
+
+-- Allow tagging a run after End (party/organic, group size, search time, LH path name)
+drop policy if exists "Public update runs" on public.leaderboard_runs;
+create policy "Public update runs"
+  on public.leaderboard_runs
+  for update
+  to anon, authenticated
+  using (true)
+  with check (
+    outcome in ('complete', 'nexus', 'died')
+    and duration_seconds >= 3
+    and char_length(trim(ign)) between 1 and 32
+  );

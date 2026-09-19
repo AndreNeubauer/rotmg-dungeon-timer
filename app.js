@@ -1,4 +1,4 @@
-const APP_VERSION = "2.8.1";
+const APP_VERSION = "2.8.2";
 
 const PAGE_ROUTE_SEGMENTS = {
   timer: "Timer",
@@ -26,11 +26,10 @@ const PAGE_TITLES = {
 const STORAGE_KEY = "rotmg-dungeon-runs";
 const IGN_STORAGE_KEY = "rotmg-timer-ign";
 const SHARED_RUN_IDS_KEY = "rotmg-timer-shared-run-ids";
+const PENDING_RUNS_KEY = "rotmg-timer-pending-runs";
+const RunPersistence = window.RotmgRunPersistence;
 const RUNS_API = "/api/runs";
 const EXALT_CATEGORY = "exalt";
-const DUPLICATE_WINDOW_MS = 120_000;
-const OVERLAP_TOLERANCE_MS = 3_000;
-const GLOBAL_MIN_SECONDS = 3;
 
 /**
  * After End — optional follow-ups.
@@ -129,6 +128,7 @@ const pageAbout = document.getElementById("page-about");
 const overviewHero = document.getElementById("overview-hero");
 const overviewExalt = document.getElementById("overview-exalt");
 const overviewRecent = document.getElementById("overview-recent");
+const timerRecentList = document.getElementById("timer-recent-list");
 const bgLayer = document.getElementById("bg-layer");
 const bgBlur = document.getElementById("bg-blur");
 const appVersionEl = document.getElementById("app-version");
@@ -386,15 +386,66 @@ function usesBoardStorage() {
   return isLeaderboardReady();
 }
 
-/** Load all runs from Supabase — single source of truth for Times + Board. */
+function loadPendingRuns() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PENDING_RUNS_KEY) || "[]");
+    if (!Array.isArray(raw)) return [];
+    return raw.map(normalizeRun);
+  } catch {
+    return [];
+  }
+}
+
+function savePendingRuns(runs) {
+  try {
+    localStorage.setItem(PENDING_RUNS_KEY, JSON.stringify(runs.slice(-200)));
+  } catch (_) {
+    /* ignore quota */
+  }
+}
+
+function upsertPendingRun(run) {
+  if (!run?.id) return;
+  const next = loadPendingRuns().filter((entry) => entry.id !== run.id);
+  next.push(normalizeRun(run));
+  savePendingRuns(next);
+}
+
+function forgetPendingRun(runId) {
+  if (!runId) return;
+  savePendingRuns(loadPendingRuns().filter((entry) => entry.id !== runId));
+}
+
+function mergePendingIntoCache() {
+  if (!RunPersistence) return;
+  runsCache = RunPersistence.mergePendingIntoRuns(runsCache, loadPendingRuns());
+}
+
+function rememberLocalRun(run) {
+  if (!run?.id) return;
+  upsertPendingRun(run);
+  mergePendingIntoCache();
+}
+
+function runsToSync() {
+  const byId = new Map();
+  for (const run of [...loadRuns(), ...loadPendingRuns()]) {
+    if (run?.id) byId.set(run.id, run);
+  }
+  return [...byId.values()];
+}
+
+/** Load all runs from Supabase, then keep unsynced local LH/Void/etc. */
 async function refreshRunsFromBoard() {
   if (!isLeaderboardReady()) return false;
   try {
     const rows = await fetchLeaderboardRows();
     runsCache = rows.map(boardRowToRun);
+    mergePendingIntoCache();
     return true;
   } catch (err) {
     console.warn("Failed to load runs from board", err);
+    mergePendingIntoCache();
     return false;
   }
 }
@@ -420,20 +471,11 @@ async function fetchBoardClientRunIds() {
   }
 }
 
-async function shareRunToLeaderboard(run, { boardIds = null } = {}) {
-  if (!isLeaderboardReady()) return { ok: false, reason: "not-configured" };
+function leaderboardWriteBody(run) {
   const outcome = run.outcome && OUTCOMES[run.outcome] ? run.outcome : "complete";
-  const ign = getIgn() || run.ign || "Anonymous";
-  const onBoard = boardIds ?? (await fetchBoardClientRunIds());
-  if (onBoard.has(run.id)) {
-    if (!getSharedRunIds().includes(run.id)) markRunShared(run.id);
-    return { ok: true, reason: "already-shared" };
-  }
-
-  const table = leaderboardConfig.table || "leaderboard_runs";
-  const body = {
+  return {
     client_run_id: run.id,
-    ign,
+    ign: getIgn() || run.ign || "Anonymous",
     dungeon_id: run.dungeonId,
     dungeon_name: run.dungeonName,
     duration_seconds: run.durationSeconds,
@@ -444,6 +486,42 @@ async function shareRunToLeaderboard(run, { boardIds = null } = {}) {
     find_time_seconds: run.findTimeSeconds,
     started_at: run.startedAt,
   };
+}
+
+async function patchRunOnLeaderboard(run) {
+  if (!isLeaderboardReady() || !run?.id) return { ok: false, reason: "not-configured" };
+  const table = leaderboardConfig.table || "leaderboard_runs";
+  const body = leaderboardWriteBody(run);
+  delete body.client_run_id;
+  delete body.started_at;
+  try {
+    const res = await fetch(
+      `${leaderboardConfig.supabaseUrl}/rest/v1/${table}?client_run_id=eq.${encodeURIComponent(run.id)}`,
+      {
+        method: "PATCH",
+        headers: { ...supabaseHeaders(), Prefer: "return=minimal" },
+        body: JSON.stringify(body),
+      }
+    );
+    if (res.ok) return { ok: true, reason: "patched" };
+    return { ok: false, reason: `http-${res.status}` };
+  } catch (err) {
+    console.warn("Leaderboard patch error", err);
+    return { ok: false, reason: "network" };
+  }
+}
+
+async function shareRunToLeaderboard(run, { boardIds = null } = {}) {
+  if (!isLeaderboardReady()) return { ok: false, reason: "not-configured" };
+  const onBoard = boardIds ?? (await fetchBoardClientRunIds());
+  if (onBoard.has(run.id)) {
+    if (!getSharedRunIds().includes(run.id)) markRunShared(run.id);
+    const patched = await patchRunOnLeaderboard(run);
+    return { ok: true, reason: patched.ok ? "patched" : "already-shared" };
+  }
+
+  const table = leaderboardConfig.table || "leaderboard_runs";
+  const body = leaderboardWriteBody(run);
 
   try {
     const res = await fetch(`${leaderboardConfig.supabaseUrl}/rest/v1/${table}`, {
@@ -453,6 +531,7 @@ async function shareRunToLeaderboard(run, { boardIds = null } = {}) {
     });
     if (res.ok || res.status === 409) {
       markRunShared(run.id);
+      if (res.status === 409) await patchRunOnLeaderboard(run);
       return { ok: true, reason: res.status === 409 ? "duplicate" : "uploaded" };
     }
     console.warn("Leaderboard share failed", res.status, await res.text());
@@ -470,7 +549,7 @@ async function syncAllRunsToBoard({ quiet = false } = {}) {
   }
 
   const boardIds = await fetchBoardClientRunIds();
-  const pending = loadRuns().filter((run) => !boardIds.has(run.id));
+  const pending = runsToSync().filter((run) => !boardIds.has(run.id));
   if (pending.length === 0) {
     if (!quiet) updateLeaderboardStatus("All runs are on the board.");
     return;
@@ -498,15 +577,26 @@ async function syncAllRunsToBoard({ quiet = false } = {}) {
 }
 
 function refreshRunViews() {
+  renderTimerRecent();
   if (!pageTimes.classList.contains("hidden")) renderTimesPage();
   if (!pageOverview.classList.contains("hidden")) renderOverviewPage();
   if (!pageLeaderboard.classList.contains("hidden")) renderLeaderboardTable();
 }
 
+function findRunById(runId) {
+  if (!runId) return null;
+  return (
+    loadRuns().find((entry) => entry.id === runId) ||
+    loadPendingRuns().find((entry) => entry.id === runId) ||
+    null
+  );
+}
+
 async function maybeShareRun(runId) {
   if (!runId) return;
-  const run = loadRuns().find((entry) => entry.id === runId);
+  const run = findRunById(runId);
   if (!run) return;
+  rememberLocalRun(run);
   await shareRunToLeaderboard(run);
   await refreshRunsFromBoard();
   refreshRunViews();
@@ -613,7 +703,8 @@ async function initRunsStorage() {
   }
 
   runsCache = loadRunsFromLocalStorage();
-  if (runsCache.length === 0) {
+  mergePendingIntoCache();
+  if (runsCache.length === 0 && !usesBoardStorage()) {
     const seed = await loadSeedRunsJson();
     if (seed.length > 0) runsCache = seed;
   }
@@ -665,7 +756,10 @@ async function importRunsFromFile(file) {
 
 async function persistRuns(runs) {
   runsCache = runs.map(normalizeRun);
-  if (usesBoardStorage()) return;
+  if (usesBoardStorage()) {
+    mergePendingIntoCache();
+    return;
+  }
   if (fileStorageReady) {
     try {
       await writeRunsToFile(runsCache);
@@ -680,21 +774,29 @@ async function persistRuns(runs) {
 
 function saveRuns(runs) {
   runsCache = runs.map(normalizeRun);
-  if (usesBoardStorage()) return;
+  if (usesBoardStorage()) {
+    mergePendingIntoCache();
+    return;
+  }
   void persistRuns(runsCache);
 }
 
 function deleteRun(runId) {
-  if (usesBoardStorage()) return;
+  forgetPendingRun(runId);
+  if (usesBoardStorage()) {
+    runsCache = loadRuns().filter((r) => r.id !== runId);
+    refreshRunViews();
+    return;
+  }
   saveRuns(loadRuns().filter((r) => r.id !== runId));
 }
 
 function runStartMs(run) {
-  return new Date(run.startedAt).getTime();
+  return RunPersistence.runStartMs(run);
 }
 
 function runEndMs(run) {
-  return runStartMs(run) + run.durationSeconds * 1000;
+  return RunPersistence.runEndMs(run);
 }
 
 function validationPeerRuns(proposedRun) {
@@ -705,26 +807,7 @@ function validationPeerRuns(proposedRun) {
 }
 
 function validateRun(run, existingRuns) {
-  const duration = run.durationSeconds;
-  if (!Number.isFinite(duration) || duration < GLOBAL_MIN_SECONDS) {
-    return `Too short (${formatDuration(Math.max(0, duration))}) — not saved`;
-  }
-
-  const startMs = runStartMs(run);
-  for (const other of existingRuns) {
-    if (startMs + OVERLAP_TOLERANCE_MS < runEndMs(other) - OVERLAP_TOLERANCE_MS) {
-      return `Time travel — overlaps ${other.dungeonName} (${formatDuration(other.durationSeconds)}) — not saved`;
-    }
-    if (
-      other.dungeonId === run.dungeonId &&
-      Math.round(other.durationSeconds) === Math.round(duration) &&
-      Math.abs(startMs - runStartMs(other)) <= DUPLICATE_WINDOW_MS
-    ) {
-      return `Duplicate ${run.dungeonName} (${formatDuration(duration)}) — not saved`;
-    }
-  }
-
-  return null;
+  return RunPersistence.validateRun(run, existingRuns, { formatDuration });
 }
 
 function showRunRejected(message) {
@@ -756,7 +839,9 @@ function commitRun({ dungeonId, dungeonName, startedAt, durationSeconds, outcome
   statusEl.classList.remove("rejected");
   const runs = loadRuns();
   runs.push(run);
+  rememberLocalRun(run);
   saveRuns(runs);
+  renderTimerRecent();
   return run.id;
 }
 
@@ -781,10 +866,14 @@ function setRunMeta(runId, { runType, findTimeSeconds, groupSize, hardMode } = {
       return next;
     })
   );
+  const updated = findRunById(runId);
+  if (updated) rememberLocalRun(updated);
 }
 
 function updateRun(runId, patch) {
   saveRuns(loadRuns().map((run) => (run.id === runId ? { ...run, ...patch } : run)));
+  const updated = findRunById(runId);
+  if (updated) rememberLocalRun(updated);
 }
 
 function getDungeonPlayerMax(dungeon) {
@@ -793,7 +882,7 @@ function getDungeonPlayerMax(dungeon) {
 }
 
 function getRunPlayerMax(runId) {
-  const run = loadRuns().find((entry) => entry.id === runId);
+  const run = findRunById(runId);
   return run ? getDungeonPlayerMax(getDungeon(run.dungeonId)) : DEFAULT_PLAYER_MAX;
 }
 
@@ -1034,7 +1123,7 @@ function selectDungeon(id, { fromPrompt = false } = {}) {
   if (isRunning()) return;
   if (pendingFindRunId) dismissFindTimePrompt();
   if (!fromPrompt) {
-    hideChainPrompt();
+    hideChainPrompt({ share: true });
     readyForNextRun();
   }
   selectedDungeonId = id;
@@ -1043,24 +1132,28 @@ function selectDungeon(id, { fromPrompt = false } = {}) {
   updateSelectedDisplay();
 }
 
-function hideChainPrompt() {
+function hideChainPrompt({ share = false } = {}) {
+  const toShare = share ? pendingEndRun?.runId || savedRunIdForPrompt : null;
   pendingEndRun = null;
   savedRunIdForPrompt = null;
   postEndPrompt.classList.add("hidden");
   postEndActions.innerHTML = "";
+  if (toShare) void maybeShareRun(toShare);
 }
 
 function dismissFindTimePrompt() {
+  const runId = pendingFindRunId;
   pendingFindRunId = null;
   findTimeAfterDone = null;
   selectedRunType = null;
   postEndPrompt.classList.add("hidden");
   postEndActions.innerHTML = "";
   refreshIdleControls();
+  if (runId) void maybeShareRun(runId);
 }
 
 function hidePostEndPrompt() {
-  hideChainPrompt();
+  hideChainPrompt({ share: true });
   dismissFindTimePrompt();
 }
 
@@ -1077,7 +1170,7 @@ function refreshIdleControls() {
 
 function shouldOfferSearchTime(runId, { chained = false } = {}) {
   if (!runId || chained) return false;
-  const run = loadRuns().find((entry) => entry.id === runId);
+  const run = findRunById(runId);
   return Boolean(run && !CHAIN_SPAWN_DUNGEONS.has(run.dungeonId));
 }
 
@@ -1144,7 +1237,7 @@ function offerRunContext(runId, afterDone, { showSearchTime = true } = {}) {
   pendingFindRunId = runId;
   findTimeAfterDone = afterDone;
   selectedRunType = null;
-  const run = loadRuns().find((entry) => entry.id === runId);
+  const run = findRunById(runId);
   const showHardMode = Boolean(run && HARD_MODE_DUNGEONS.has(run.dungeonId));
   const playerMax = getRunPlayerMax(runId);
   const chainNote = showSearchTime
@@ -1343,6 +1436,7 @@ function handlePostEndAction(action) {
     hideChainPrompt();
     selectDungeon(action.nextId, { fromPrompt: true });
     onStart({ chained: true });
+    if (runId) void maybeShareRun(runId);
     return;
   }
 
@@ -1563,7 +1657,7 @@ function renderAverages() {
 
 function renderRunsTable() {
   const filterId = getTimesFilterId();
-  const runs = getFilteredTimesRuns().slice().reverse();
+  const runs = RunPersistence.runsNewestFirst(getFilteredTimesRuns());
   runsBody.innerHTML = "";
 
   if (runs.length === 0) {
@@ -1774,11 +1868,12 @@ function renderOverviewExalt(runs) {
   }
 }
 
-function renderOverviewRecent(runs) {
-  const recent = runs.slice().reverse().slice(0, 8);
-  overviewRecent.innerHTML = "";
+function renderRecentRunList(container, runs, { emptyText, limit = 8 } = {}) {
+  if (!container) return;
+  container.innerHTML = "";
+  const recent = RunPersistence.runsNewestFirst(runs).slice(0, limit);
   if (recent.length === 0) {
-    overviewRecent.innerHTML = `<p class="empty">Nothing logged yet.</p>`;
+    container.innerHTML = `<p class="empty">${emptyText}</p>`;
     return;
   }
 
@@ -1814,8 +1909,19 @@ function renderOverviewRecent(runs) {
     time.textContent = formatDuration(run.durationSeconds);
 
     card.append(img, main, time);
-    overviewRecent.appendChild(card);
+    container.appendChild(card);
   }
+}
+
+function renderTimerRecent() {
+  renderRecentRunList(timerRecentList, loadRuns(), {
+    emptyText: "No runs yet — they show up here after End.",
+    limit: 6,
+  });
+}
+
+function renderOverviewRecent(runs) {
+  renderRecentRunList(overviewRecent, runs, { emptyText: "Nothing logged yet.", limit: 8 });
 }
 
 function renderOverviewPage() {
@@ -1995,6 +2101,7 @@ function showPage(name, { replace = false, skipHistory = false } = {}) {
   document.title =
     name === "timer" ? "RotMG Timer" : `RotMG Timer — ${PAGE_TITLES[name] || "Timer"}`;
 
+  if (name === "timer") renderTimerRecent();
   if (name === "times") {
     void (usesBoardStorage() ? refreshRunsFromBoard() : Promise.resolve()).then(() => renderTimesPage());
   }
@@ -2044,6 +2151,9 @@ async function init() {
     return;
   }
   dungeonById = new Map(catalog.dungeons.map((d) => [d.id, d]));
+  if (!RunPersistence) {
+    console.error("run-persistence.js failed to load");
+  }
 
   await loadLeaderboardConfig();
   if (isLeaderboardReady()) {
