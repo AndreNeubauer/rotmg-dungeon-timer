@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
   <title>RotMG Timer</title>
-  <link rel="stylesheet" href="style.css?v=27" />
+  <link rel="stylesheet" href="style.css?v=28" />
 </head>
 <body>
   <div id="bg-layer" aria-hidden="true"></div>
@@ -113,8 +113,9 @@
           you export or commit the file yourself.
         </p>
         <ul class="about-list">
-          <li><strong>Hosted link / open HTML</strong> — browser storage (private to that browser). Use <strong>Export</strong> on Times to back up.</li>
-          <li><strong>Local server</strong> (<code>python3 serve.py</code>) — writes <code>runs.json</code> on your PC. Git push if you want it in the repo.</li>
+          <li><strong>Hosted link</strong> — all runs live on the shared board. Times and Board show the same data.</li>
+          <li><strong>Local server</strong> (<code>python3 serve.py</code>) — falls back to <code>runs.json</code> on your PC when no board is configured.</li>
+          <li><strong>IGN</strong> — optional tag on your runs, not a login or filter.</li>
         </ul>
 
         <p class="about-credit">By MeleeOnly with love — for figuring out how long exalting really takes.</p>
@@ -123,7 +124,7 @@
 
     <div id="page-leaderboard" class="page hidden">
       <div class="leaderboard-toolbar">
-        <p class="leaderboard-intro">Everyone’s runs — saved to the board automatically when you log a time.</p>
+        <p class="leaderboard-intro">Same run log as Times — fastest clears first. New times save automatically.</p>
         <button type="button" id="leaderboard-refresh-btn" class="data-btn">Refresh</button>
       </div>
       <p class="leaderboard-status" id="leaderboard-status"></p>
@@ -183,7 +184,7 @@
   </footer>
 
   <span id="dungeon-meta" hidden></span>
-  <script src="dungeons.js?v=27"></script>
-  <script src="app.js?v=27"></script>
+  <script src="dungeons.js?v=28"></script>
+  <script src="app.js?v=28"></script>
 </body>
 </html>
