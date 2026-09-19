@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>RotMG Timer</title>
+  <link rel="stylesheet" href="style.css?v=26" />
+</head>
+<body>
+  <div id="bg-layer" aria-hidden="true"></div>
+  <div id="bg-blur" aria-hidden="true"></div>
+  <div id="bg-scrim" aria-hidden="true"></div>
+  <main>
+    <header>
+      <div class="header-top">
+        <h1>RotMG Timer</h1>
+        <div class="ign-profile" id="ign-profile">
+          <span class="ign-label">IGN</span>
+          <span class="ign-value" id="ign-display">—</span>
+          <button type="button" class="ign-action" id="ign-set-btn">Set IGN</button>
+          <button type="button" class="ign-action hidden" id="ign-edit-btn">Edit</button>
+        </div>
+      </div>
+      <nav class="tabs">
+        <button type="button" class="tab active" data-page="timer">Timer</button>
+        <button type="button" class="tab" data-page="overview">Overview</button>
+        <button type="button" class="tab" data-page="times">Times</button>
+        <button type="button" class="tab" data-page="leaderboard">Board</button>
+        <button type="button" class="tab" data-page="about">About</button>
+      </nav>
+    </header>
+
+    <div id="page-timer" class="page">
+      <div class="dungeon-picker">
+        <nav class="category-tabs" id="category-tabs" aria-label="Dungeon categories">
+          <button type="button" class="category-tab active" data-category="exalt">Exalt</button>
+          <button type="button" class="category-tab" data-category="realm">Realm</button>
+          <button type="button" class="category-tab" data-category="advanced">Advanced</button>
+          <button type="button" class="category-tab" data-category="oryx">Oryx</button>
+          <button type="button" class="category-tab" data-category="wormhole">Wormholes</button>
+          <button type="button" class="category-tab" data-category="wormhole-adv">Adv. WH</button>
+          <button type="button" class="category-tab" data-category="special">Special</button>
+          <button type="button" class="category-tab" data-category="heroic">Heroic</button>
+          <button type="button" class="category-tab" data-category="other">Other</button>
+        </nav>
+        <input type="search" id="dungeon-search" placeholder="Search this tab" autocomplete="off" />
+        <div id="dungeon-grid" class="dungeon-grid"></div>
+      </div>
+
+      <section class="timer-block">
+        <div class="buttons timer-start-row">
+          <button type="button" id="start-btn">Start</button>
+        </div>
+        <div class="timer-selection">
+          <img class="timer-selection-icon" id="timer-selection-icon" alt="" width="40" height="40" />
+          <div class="timer-selection-text">
+            <span class="timer-selection-label">Selected</span>
+            <p class="dungeon-name" id="dungeon-name">Lost Halls</p>
+          </div>
+        </div>
+        <div class="timer" id="timer">—</div>
+        <p class="status" id="status"></p>
+        <div class="buttons timer-end-row">
+          <button type="button" id="end-btn">End</button>
+        </div>
+        <div class="buttons fail-buttons">
+          <button type="button" id="nexus-btn">Nexus</button>
+          <button type="button" id="died-btn">Died</button>
+        </div>
+        <div id="post-end-prompt" class="chain-prompt hidden">
+          <p class="chain-prompt-label" id="post-end-label"></p>
+          <div class="chain-prompt-buttons" id="post-end-actions"></div>
+        </div>
+      </section>
+    </div>
+
+    <div id="page-overview" class="page hidden">
+      <div id="overview-hero" class="overview-hero"></div>
+      <div id="overview-exalt" class="overview-exalt"></div>
+      <section class="overview-section">
+        <h2 class="overview-heading">Recent runs</h2>
+        <div id="overview-recent" class="overview-recent"></div>
+      </section>
+    </div>
+
+    <div id="page-about" class="page hidden">
+      <article class="about-page">
+        <h2 class="about-title">What this is</h2>
+        <p>
+          A simple dungeon timer for <strong>Realm of the Mad God</strong>, built to track how long
+          exalting and other runs actually take. Personal stats stay in your browser; optional shared
+          leaderboard when Supabase is configured.
+        </p>
+
+        <h2 class="about-title">How to use</h2>
+        <ol class="about-list">
+          <li>Pick a dungeon on <strong>Timer</strong>, hit <strong>Start</strong> when you enter, <strong>End</strong> when you finish.</li>
+          <li>Use <strong>Nexus</strong> or <strong>Died</strong> if the run did not clear.</li>
+          <li>After a clear, optionally log party/organic, group size, and search time.</li>
+        </ol>
+
+        <h2 class="about-title">Tabs</h2>
+        <ul class="about-list">
+          <li><strong>Overview</strong> — exalt summary, best/avg times, recent runs at a glance.</li>
+          <li><strong>Times</strong> — full log with filters and per-dungeon averages.</li>
+          <li><strong>Board</strong> — shared clears (opt-in) when the host sets up Supabase.</li>
+        </ul>
+
+        <h2 class="about-title">Data</h2>
+        <p>
+          Runs are <strong>not</strong> auto-uploaded to GitHub. Each save stays on your device unless
+          you export or commit the file yourself.
+        </p>
+        <ul class="about-list">
+          <li><strong>Hosted link / open HTML</strong> — browser storage (private to that browser). Use <strong>Export</strong> on Times to back up.</li>
+          <li><strong>Local server</strong> (<code>python3 serve.py</code>) — writes <code>runs.json</code> on your PC. Git push if you want it in the repo.</li>
+        </ul>
+
+        <p class="about-credit">By MeleeOnly with love — for figuring out how long exalting really takes.</p>
+      </article>
+    </div>
+
+    <div id="page-leaderboard" class="page hidden">
+      <div class="leaderboard-toolbar">
+        <p class="leaderboard-intro">Everyone’s runs — saved to the board automatically when you log a time.</p>
+        <button type="button" id="leaderboard-refresh-btn" class="data-btn">Refresh</button>
+      </div>
+      <p class="leaderboard-status" id="leaderboard-status"></p>
+      <div class="times-toolbar leaderboard-filter-row">
+        <label class="times-filter-label" for="leaderboard-dungeon-filter">Dungeon</label>
+        <select id="leaderboard-dungeon-filter">
+          <option value="">All dungeons</option>
+        </select>
+      </div>
+      <table class="runs-table leaderboard-table">
+        <thead>
+          <tr>
+            <th class="col-rank">#</th>
+            <th class="col-ign">IGN</th>
+            <th class="col-dungeon">Dungeon</th>
+            <th class="col-result">Result</th>
+            <th class="col-time">Time</th>
+            <th class="col-tags">Tags</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body"></tbody>
+      </table>
+    </div>
+
+    <div id="page-times" class="page hidden">
+      <div class="times-toolbar">
+        <label class="times-filter-label" for="times-dungeon-filter">Dungeon</label>
+        <select id="times-dungeon-filter">
+          <option value="">All dungeons</option>
+        </select>
+        <div class="times-data-actions">
+          <button type="button" id="export-runs-btn" class="data-btn" title="Download your runs as JSON">Export</button>
+          <button type="button" id="import-runs-btn" class="data-btn" title="Load runs from a JSON file">Import</button>
+          <input type="file" id="import-runs-input" accept=".json,application/json" hidden />
+        </div>
+      </div>
+      <div id="stats-summary" class="stats-summary"></div>
+      <div id="averages-list" class="averages-list"></div>
+      <table class="runs-table">
+        <thead>
+          <tr>
+            <th class="col-when">When</th>
+            <th class="col-dungeon">Dungeon</th>
+            <th class="col-result">Result</th>
+            <th class="col-time">Time</th>
+            <th class="col-actions"></th>
+          </tr>
+        </thead>
+        <tbody id="runs-body"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <span class="app-footer-credit">By MeleeOnly with love</span>
+    <span class="app-footer-storage" id="storage-mode"></span>
+    <span class="app-footer-version" id="app-version"></span>
+  </footer>
+
+  <span id="dungeon-meta" hidden></span>
+  <script src="dungeons.js?v=26"></script>
+  <script src="app.js?v=26"></script>
+</body>
+</html>
