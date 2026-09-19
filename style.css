@@ -184,6 +184,12 @@ header {
   flex-wrap: wrap;
 }
 
+.leaderboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
 .leaderboard-share {
   display: flex;
   align-items: center;

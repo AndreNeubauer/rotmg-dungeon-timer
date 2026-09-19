@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
   <title>RotMG Timer</title>
-  <link rel="stylesheet" href="style.css?v=22" />
+  <link rel="stylesheet" href="style.css?v=23" />
 </head>
 <body>
   <div id="bg-layer" aria-hidden="true"></div>
@@ -127,7 +127,12 @@
           <input type="checkbox" id="share-leaderboard-check" />
           Share my clears to leaderboard
         </label>
-        <button type="button" id="leaderboard-refresh-btn" class="data-btn">Refresh</button>
+        <div class="leaderboard-actions">
+          <button type="button" id="leaderboard-sync-btn" class="data-btn" title="Upload complete runs from this browser that were never shared">
+            Upload local clears
+          </button>
+          <button type="button" id="leaderboard-refresh-btn" class="data-btn">Refresh</button>
+        </div>
       </div>
       <p class="leaderboard-status" id="leaderboard-status"></p>
       <div class="times-toolbar leaderboard-filter-row">
@@ -186,7 +191,7 @@
   </footer>
 
   <span id="dungeon-meta" hidden></span>
-  <script src="dungeons.js?v=22"></script>
-  <script src="app.js?v=22"></script>
+  <script src="dungeons.js?v=23"></script>
+  <script src="app.js?v=23"></script>
 </body>
 </html>
