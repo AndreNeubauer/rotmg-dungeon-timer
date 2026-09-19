@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
   <title>RotMG Timer</title>
-  <link rel="stylesheet" href="style.css?v=29" />
+  <link rel="stylesheet" href="style.css?v=30" />
 </head>
 <body>
   <div id="bg-layer" aria-hidden="true"></div>
@@ -104,18 +104,14 @@
         <ul class="about-list">
           <li><strong>Overview</strong> — exalt summary, best/avg times, recent runs at a glance.</li>
           <li><strong>Times</strong> — full log with filters and per-dungeon averages.</li>
-          <li><strong>Board</strong> — shared clears (opt-in) when the host sets up Supabase.</li>
+          <li><strong>Board</strong> — same runs as Times, sorted by fastest clear.</li>
         </ul>
 
         <h2 class="about-title">Data</h2>
-        <p>
-          Runs are <strong>not</strong> auto-uploaded to GitHub. Each save stays on your device unless
-          you export or commit the file yourself.
-        </p>
         <ul class="about-list">
-          <li><strong>Hosted link</strong> — all runs live on the shared board. Times and Board show the same data.</li>
-          <li><strong>Local server</strong> (<code>python3 serve.py</code>) — falls back to <code>runs.json</code> on your PC when no board is configured.</li>
-          <li><strong>IGN</strong> — optional tag on your runs, not a login or filter.</li>
+          <li><strong>Hosted site</strong> — runs save to the shared log automatically. Times and Board match.</li>
+          <li><strong>Local server</strong> (<code>python3 serve.py</code>) — uses <code>runs.json</code> on your PC when no board is configured.</li>
+          <li><strong>IGN</strong> — optional tag on runs you log; not required to view anything.</li>
         </ul>
 
         <p class="about-credit">By MeleeOnly with love — for figuring out how long exalting really takes.</p>
@@ -184,7 +180,7 @@
   </footer>
 
   <span id="dungeon-meta" hidden></span>
-  <script src="dungeons.js?v=29"></script>
-  <script src="app.js?v=29"></script>
+  <script src="dungeons.js?v=30"></script>
+  <script src="app.js?v=30"></script>
 </body>
 </html>

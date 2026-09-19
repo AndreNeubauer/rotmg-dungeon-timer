@@ -1,4 +1,4 @@
-const APP_VERSION = "2.7.1";
+const APP_VERSION = "2.8";
 
 const PAGE_ROUTE_SEGMENTS = {
   timer: "Timer",
