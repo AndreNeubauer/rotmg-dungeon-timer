@@ -1,4 +1,4 @@
-const APP_VERSION = "2.5";
+const APP_VERSION = "2.6";
 
 const PAGE_ROUTE_SEGMENTS = {
   timer: "Timer",
@@ -108,7 +108,6 @@ const timesDungeonFilter = document.getElementById("times-dungeon-filter");
 const exportRunsBtn = document.getElementById("export-runs-btn");
 const importRunsBtn = document.getElementById("import-runs-btn");
 const importRunsInput = document.getElementById("import-runs-input");
-const storageModeEl = document.getElementById("storage-mode");
 const ignDisplay = document.getElementById("ign-display");
 const ignSetBtn = document.getElementById("ign-set-btn");
 const ignEditBtn = document.getElementById("ign-edit-btn");
@@ -293,6 +292,12 @@ function setIgn(value) {
     localStorage.setItem(IGN_STORAGE_KEY, trimmed);
   }
   renderIgnProfile();
+  void mergeBoardRunsIntoLocal().then((added) => {
+    if (added > 0) {
+      renderTimesPage();
+      if (!pageOverview.classList.contains("hidden")) renderOverviewPage();
+    }
+  });
 }
 
 function renderIgnProfile() {
@@ -366,6 +371,66 @@ async function loadLeaderboardConfig() {
   } catch (_) {
     /* file:// or missing config */
   }
+}
+
+function boardRowToRun(row) {
+  return normalizeRun({
+    id: row.client_run_id,
+    dungeonId: row.dungeon_id,
+    dungeonName: row.dungeon_name,
+    startedAt: row.started_at,
+    durationSeconds: Number(row.duration_seconds),
+    outcome: row.outcome,
+    runType: row.run_type,
+    groupSize: row.group_size,
+    hardMode: row.hard_mode,
+    findTimeSeconds: row.find_time_seconds,
+    ign: row.ign,
+  });
+}
+
+async function fetchBoardRunsForIgn(ign) {
+  if (!isLeaderboardReady() || !ign) return [];
+  const table = leaderboardConfig.table || "leaderboard_runs";
+  const params = new URLSearchParams({
+    select: "*",
+    order: "started_at.asc",
+    limit: "500",
+    ign: `eq.${ign}`,
+  });
+  const res = await fetch(`${leaderboardConfig.supabaseUrl}/rest/v1/${table}?${params}`, {
+    headers: supabaseHeaders(),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`Board fetch failed (${res.status})`);
+  const rows = await res.json();
+  return Array.isArray(rows) ? rows : [];
+}
+
+/** Pull your board clears into local Times/Overview (deduped by run id). */
+async function mergeBoardRunsIntoLocal() {
+  if (!isLeaderboardReady()) return 0;
+  const ign = getIgn();
+  if (!ign) return 0;
+
+  let boardRows;
+  try {
+    boardRows = await fetchBoardRunsForIgn(ign);
+  } catch (err) {
+    console.warn("Board merge skipped", err);
+    return 0;
+  }
+
+  const local = loadRuns();
+  const localIds = new Set(local.map((run) => run.id));
+  const toAdd = boardRows
+    .filter((row) => row.client_run_id && !localIds.has(row.client_run_id))
+    .map(boardRowToRun);
+  if (toAdd.length === 0) return 0;
+
+  for (const run of toAdd) markRunShared(run.id);
+  await persistRuns([...local, ...toAdd]);
+  return toAdd.length;
 }
 
 async function fetchBoardClientRunIds() {
@@ -555,11 +620,6 @@ async function loadSeedRunsJson() {
   return [];
 }
 
-function updateStorageLabel() {
-  if (!storageModeEl) return;
-  storageModeEl.textContent = fileStorageReady ? "Saved to runs.json" : "Saved in browser";
-}
-
 async function initRunsStorage() {
   try {
     let runs = await fetchRunsFromFile();
@@ -573,7 +633,6 @@ async function initRunsStorage() {
     const needsId = runs.some((run) => !run.id);
     runsCache = runs.map(normalizeRun);
     if (needsId) await persistRuns(runsCache);
-    updateStorageLabel();
     return;
   } catch (_) {
     fileStorageReady = false;
@@ -586,7 +645,6 @@ async function initRunsStorage() {
   }
   const needsId = runsCache.some((run) => !run.id);
   if (needsId || runsCache.length > 0) persistRuns(runsCache);
-  updateStorageLabel();
 }
 
 function exportRunsDownload() {
@@ -1944,7 +2002,9 @@ function showPage(name, { replace = false, skipHistory = false } = {}) {
   document.title =
     name === "timer" ? "RotMG Timer" : `RotMG Timer — ${PAGE_TITLES[name] || "Timer"}`;
 
-  if (name === "times") renderTimesPage();
+  if (name === "times") {
+    void mergeBoardRunsIntoLocal().then(() => renderTimesPage());
+  }
   if (name === "overview") renderOverviewPage();
   if (name === "leaderboard") void renderLeaderboardPage();
 }
@@ -1992,6 +2052,7 @@ async function init() {
 
   await initRunsStorage();
   await loadLeaderboardConfig();
+  await mergeBoardRunsIntoLocal();
   void initBackground();
   renderIgnProfile();
   if (appVersionEl) appVersionEl.textContent = `v${APP_VERSION}`;
