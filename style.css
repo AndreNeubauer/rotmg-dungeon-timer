@@ -190,17 +190,13 @@ header {
   gap: 0.45rem;
 }
 
-.leaderboard-share {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
+.leaderboard-intro {
+  flex: 1;
+  margin: 0;
   font-size: 0.78rem;
-  color: var(--text);
-  cursor: pointer;
-}
-
-.leaderboard-share input {
-  accent-color: var(--green);
+  color: var(--muted);
+  line-height: 1.4;
+  min-width: 12rem;
 }
 
 .leaderboard-status {

@@ -8,7 +8,7 @@ create table if not exists public.leaderboard_runs (
   dungeon_id text not null,
   dungeon_name text not null,
   duration_seconds numeric not null check (duration_seconds >= 3),
-  outcome text not null default 'complete' check (outcome = 'complete'),
+  outcome text not null default 'complete' check (outcome in ('complete', 'nexus', 'died')),
   run_type text check (run_type is null or run_type in ('party', 'organic')),
   group_size integer check (group_size is null or group_size >= 1),
   hard_mode boolean,
@@ -32,13 +32,13 @@ create policy "Public read leaderboard"
   to anon, authenticated
   using (true);
 
--- Anyone can submit a clear (one row per client_run_id)
-create policy "Public insert clears"
+-- Anyone can submit a run (one row per client_run_id)
+create policy "Public insert runs"
   on public.leaderboard_runs
   for insert
   to anon, authenticated
   with check (
-    outcome = 'complete'
+    outcome in ('complete', 'nexus', 'died')
     and duration_seconds >= 3
     and char_length(trim(ign)) between 1 and 32
   );

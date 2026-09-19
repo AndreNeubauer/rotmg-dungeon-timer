@@ -1,7 +1,6 @@
-const APP_VERSION = "2.2";
+const APP_VERSION = "2.3";
 const STORAGE_KEY = "rotmg-dungeon-runs";
 const IGN_STORAGE_KEY = "rotmg-timer-ign";
-const SHARE_LEADERBOARD_KEY = "rotmg-timer-share-leaderboard";
 const SHARED_RUN_IDS_KEY = "rotmg-timer-shared-run-ids";
 const RUNS_API = "/api/runs";
 const EXALT_CATEGORY = "exalt";
@@ -90,9 +89,7 @@ const ignDisplay = document.getElementById("ign-display");
 const ignSetBtn = document.getElementById("ign-set-btn");
 const ignEditBtn = document.getElementById("ign-edit-btn");
 const pageLeaderboard = document.getElementById("page-leaderboard");
-const shareLeaderboardCheck = document.getElementById("share-leaderboard-check");
 const leaderboardRefreshBtn = document.getElementById("leaderboard-refresh-btn");
-const leaderboardSyncBtn = document.getElementById("leaderboard-sync-btn");
 const leaderboardStatus = document.getElementById("leaderboard-status");
 const leaderboardDungeonFilter = document.getElementById("leaderboard-dungeon-filter");
 const leaderboardBody = document.getElementById("leaderboard-body");
@@ -293,24 +290,6 @@ function promptIgnEdit() {
   setIgn(trimmed);
 }
 
-function getShareLeaderboardEnabled() {
-  try {
-    return localStorage.getItem(SHARE_LEADERBOARD_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function setShareLeaderboardEnabled(enabled) {
-  try {
-    if (enabled) localStorage.setItem(SHARE_LEADERBOARD_KEY, "1");
-    else localStorage.removeItem(SHARE_LEADERBOARD_KEY);
-  } catch (_) {
-    /* ignore */
-  }
-  if (shareLeaderboardCheck) shareLeaderboardCheck.checked = enabled;
-}
-
 function getSharedRunIds() {
   try {
     const raw = JSON.parse(localStorage.getItem(SHARED_RUN_IDS_KEY) || "[]");
@@ -365,10 +344,9 @@ async function loadLeaderboardConfig() {
   }
 }
 
-async function shareRunToLeaderboard(run, { manual = false } = {}) {
+async function shareRunToLeaderboard(run) {
   if (!isLeaderboardReady()) return { ok: false, reason: "not-configured" };
-  if (!manual && !getShareLeaderboardEnabled()) return { ok: false, reason: "sharing-off" };
-  if (run.outcome !== "complete") return { ok: false, reason: "not-complete" };
+  const outcome = run.outcome && OUTCOMES[run.outcome] ? run.outcome : "complete";
   const ign = getIgn() || run.ign || "Anonymous";
   if (getSharedRunIds().includes(run.id)) return { ok: true, reason: "already-shared" };
 
@@ -379,7 +357,7 @@ async function shareRunToLeaderboard(run, { manual = false } = {}) {
     dungeon_id: run.dungeonId,
     dungeon_name: run.dungeonName,
     duration_seconds: run.durationSeconds,
-    outcome: "complete",
+    outcome,
     run_type: run.runType,
     group_size: run.groupSize,
     hard_mode: run.hardMode,
@@ -405,54 +383,44 @@ async function shareRunToLeaderboard(run, { manual = false } = {}) {
   }
 }
 
-async function syncLocalClearsToLeaderboard() {
+async function syncAllRunsToBoard({ quiet = false } = {}) {
   if (!isLeaderboardReady()) {
-    updateLeaderboardStatus("Leaderboard is not configured.", { error: true });
-    return;
-  }
-  const clears = loadRuns().filter((run) => run.outcome === "complete");
-  const pending = clears.filter((run) => !getSharedRunIds().includes(run.id));
-  if (pending.length === 0) {
-    updateLeaderboardStatus(
-      clears.length === 0
-        ? "No complete runs in this browser to upload."
-        : "All complete runs from this browser are already uploaded."
-    );
+    if (!quiet) updateLeaderboardStatus("Board database is not configured.", { error: true });
     return;
   }
 
-  if (leaderboardSyncBtn) leaderboardSyncBtn.disabled = true;
-  updateLeaderboardStatus(`Uploading ${pending.length} clear(s)…`);
+  const pending = loadRuns().filter((run) => !getSharedRunIds().includes(run.id));
+  if (pending.length === 0) {
+    if (!quiet) updateLeaderboardStatus("All runs from this browser are on the board.");
+    return;
+  }
+
+  if (!quiet) updateLeaderboardStatus(`Saving ${pending.length} run(s) to the board…`);
 
   let uploaded = 0;
-  let duplicates = 0;
   let failed = 0;
 
   for (const run of pending) {
-    const result = await shareRunToLeaderboard(run, { manual: true });
-    if (result.ok) {
-      if (result.reason === "duplicate") duplicates += 1;
-      else uploaded += 1;
-    } else if (result.reason !== "already-shared") {
-      failed += 1;
-    }
+    const result = await shareRunToLeaderboard(run);
+    if (result.ok && result.reason === "uploaded") uploaded += 1;
+    else if (!result.ok && result.reason !== "already-shared") failed += 1;
   }
 
-  if (leaderboardSyncBtn) leaderboardSyncBtn.disabled = false;
-  const parts = [];
-  if (uploaded) parts.push(`${uploaded} uploaded`);
-  if (duplicates) parts.push(`${duplicates} already on board`);
-  if (failed) parts.push(`${failed} failed`);
-  updateLeaderboardStatus(parts.join(" · ") || "Done.", { error: failed > 0 });
-  await renderLeaderboardPage();
+  if (!quiet) {
+    updateLeaderboardStatus(
+      failed ? `${uploaded} saved · ${failed} failed` : `${uploaded} run(s) saved to the board.`,
+      { error: failed > 0 }
+    );
+  }
+  if (!pageLeaderboard.classList.contains("hidden")) await renderLeaderboardPage();
 }
 
 async function maybeShareRun(runId) {
   if (!runId) return;
   const run = loadRuns().find((entry) => entry.id === runId);
   if (!run) return;
-  const result = await shareRunToLeaderboard(run);
-  if (result.ok && !pageLeaderboard.classList.contains("hidden")) void renderLeaderboardPage();
+  await shareRunToLeaderboard(run);
+  if (!pageLeaderboard.classList.contains("hidden")) void renderLeaderboardPage();
 }
 
 async function fetchLeaderboardRows(dungeonId = "") {
@@ -460,9 +428,8 @@ async function fetchLeaderboardRows(dungeonId = "") {
   const table = leaderboardConfig.table || "leaderboard_runs";
   const params = new URLSearchParams({
     select: "*",
-    outcome: "eq.complete",
-    order: "duration_seconds.asc",
-    limit: "100",
+    order: "started_at.desc",
+    limit: "200",
   });
   if (dungeonId) params.set("dungeon_id", `eq.${dungeonId}`);
 
@@ -611,17 +578,7 @@ async function importRunsFromFile(file) {
   renderTimesPage();
   if (!pageOverview.classList.contains("hidden")) renderOverviewPage();
 
-  if (isLeaderboardReady()) {
-    const importedClears = normalized.filter((run) => run.outcome === "complete").length;
-    if (
-      importedClears > 0 &&
-      window.confirm(
-        `Import done. Upload ${importedClears} complete run(s) to the shared Board now? (Uses your IGN if set, otherwise "Anonymous".)`
-      )
-    ) {
-      await syncLocalClearsToLeaderboard();
-    }
-  }
+  await syncAllRunsToBoard({ quiet: true });
 }
 
 async function persistRuns(runs) {
@@ -1594,8 +1551,8 @@ function renderLeaderboardTable() {
 
   leaderboardBody.innerHTML = "";
   if (rows.length === 0) {
-    leaderboardBody.innerHTML = `<tr><td colspan="5" class="empty">${
-      filterId ? "No shared clears for this dungeon yet." : "No shared clears yet."
+    leaderboardBody.innerHTML = `<tr><td colspan="6" class="empty">${
+      filterId ? "No runs for this dungeon yet." : "No runs on the board yet."
     }</td></tr>`;
     return;
   }
@@ -1604,10 +1561,12 @@ function renderLeaderboardTable() {
     const dungeon = getDungeon(row.dungeon_id);
     const tr = document.createElement("tr");
     const tags = formatRunTagsHtml(row);
+    const outcome = OUTCOMES[row.outcome] || OUTCOMES.complete;
     tr.innerHTML = `
       <td class="col-rank">${index + 1}</td>
       <td class="col-ign">${row.ign || "—"}</td>
       <td class="dungeon-cell"><div class="dungeon-cell-inner"><img class="table-icon" alt="" /><span class="dungeon-cell-name">${row.dungeon_name || row.dungeon_id}</span></div></td>
+      <td class="result-cell"><span class="outcome-pill ${row.outcome || "complete"}">${outcome.label}</span></td>
       <td class="time">${formatDuration(Number(row.duration_seconds))}</td>
       <td class="col-tags"><div class="run-tags">${tags || "—"}</div></td>
     `;
@@ -1624,22 +1583,16 @@ function updateLeaderboardStatus(message, { error = false } = {}) {
 
 async function renderLeaderboardPage() {
   renderLeaderboardFilter();
-  if (shareLeaderboardCheck) shareLeaderboardCheck.checked = getShareLeaderboardEnabled();
 
   if (!isLeaderboardReady()) {
-    updateLeaderboardStatus(
-      "Shared leaderboard is not configured on this site yet. See HOSTING.md in the repo to set up Supabase."
-    );
+    updateLeaderboardStatus("Board database is not configured yet.");
     leaderboardRows = [];
     renderLeaderboardTable();
     return;
   }
 
-  const ign = getIgn();
-  const sharing = getShareLeaderboardEnabled();
-  updateLeaderboardStatus(
-    "Your times live in this browser until you upload. Board tab → Upload local clears sends them to the shared database. IGN is optional (shows your name on the board)."
-  );
+  await syncAllRunsToBoard({ quiet: true });
+  updateLeaderboardStatus("Runs save to the board automatically when you log them.");
 
   try {
     leaderboardRows = await fetchLeaderboardRows();
@@ -1953,17 +1906,12 @@ async function init() {
   await loadLeaderboardConfig();
   void initBackground();
   renderIgnProfile();
-  setShareLeaderboardEnabled(getShareLeaderboardEnabled());
   if (appVersionEl) appVersionEl.textContent = `v${APP_VERSION}`;
 
   ignSetBtn?.addEventListener("click", promptIgnEdit);
   ignEditBtn?.addEventListener("click", promptIgnEdit);
-  shareLeaderboardCheck?.addEventListener("change", () => {
-    setShareLeaderboardEnabled(shareLeaderboardCheck.checked);
-    if (!pageLeaderboard.classList.contains("hidden")) void renderLeaderboardPage();
-  });
   leaderboardRefreshBtn?.addEventListener("click", () => void renderLeaderboardPage());
-  leaderboardSyncBtn?.addEventListener("click", () => void syncLocalClearsToLeaderboard());
+  await syncAllRunsToBoard({ quiet: true });
   leaderboardDungeonFilter?.addEventListener("change", () => renderLeaderboardTable());
 
   searchInput?.addEventListener("input", () => renderDungeonGrid());
