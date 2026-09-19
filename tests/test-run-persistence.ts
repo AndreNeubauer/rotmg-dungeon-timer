@@ -1,15 +1,22 @@
-const assert = require("node:assert/strict");
-const {
+import assert from "node:assert/strict";
+import {
   mergePendingIntoRuns,
   validateRun,
   runsNewestFirst,
-} = require("../run-persistence.js");
+  type PersistableRun,
+} from "../src/lib/run-persistence";
 
-function fmt(seconds) {
+function fmt(seconds: number) {
   return `${Math.round(seconds)}s`;
 }
 
-function run(id, dungeonId, startedAt, durationSeconds, extra = {}) {
+function run(
+  id: string,
+  dungeonId: string,
+  startedAt: string,
+  durationSeconds: number,
+  extra: Partial<PersistableRun> = {}
+): PersistableRun {
   return {
     id,
     dungeonId,
@@ -25,7 +32,6 @@ function run(id, dungeonId, startedAt, durationSeconds, extra = {}) {
   };
 }
 
-// Board refresh used to replace cache and drop unsynced LH/Void runs.
 {
   const board = [run("old", "abyss-of-demons", "2026-09-19T12:00:00.000Z", 40)];
   const pending = [
@@ -40,7 +46,6 @@ function run(id, dungeonId, startedAt, durationSeconds, extra = {}) {
   );
 }
 
-// Local metadata (path name, party tag) overlays the board row.
 {
   const board = [run("lh1", "lost-halls", "2026-09-19T17:00:00.000Z", 480, { dungeonName: "Lost Halls" })];
   const pending = [
@@ -57,7 +62,6 @@ function run(id, dungeonId, startedAt, durationSeconds, extra = {}) {
   assert.equal(merged[0].groupSize, 8);
 }
 
-// Sequential LH → Void (Void starts when LH ends) is not an overlap.
 {
   const lh = run("lh1", "lost-halls", "2026-09-19T17:00:00.000Z", 480);
   const voidStart = new Date(Date.parse(lh.startedAt) + 480 * 1000).toISOString();
@@ -65,7 +69,6 @@ function run(id, dungeonId, startedAt, durationSeconds, extra = {}) {
   assert.equal(validateRun(voidRun, [lh], { formatDuration: fmt }), null);
 }
 
-// A second LH+Void pair later the same session still saves.
 {
   const firstLh = run("lh1", "lost-halls", "2026-09-19T17:00:00.000Z", 480);
   const firstVoid = run("void1", "the-void", "2026-09-19T17:08:00.000Z", 180);
@@ -75,21 +78,20 @@ function run(id, dungeonId, startedAt, durationSeconds, extra = {}) {
   assert.equal(validateRun(secondVoid, [firstLh, firstVoid, secondLh], { formatDuration: fmt }), null);
 }
 
-// True overlap still rejects.
 {
   const long = run("a", "lost-halls", "2026-09-19T17:00:00.000Z", 600);
   const nested = run("b", "the-void", "2026-09-19T17:02:00.000Z", 60);
   const message = validateRun(nested, [long], { formatDuration: fmt });
-  assert.match(message, /overlaps/);
+  assert.match(message!, /overlaps/);
 }
 
-// Too short still rejects.
 {
-  const message = validateRun(run("x", "the-void", "2026-09-19T17:00:00.000Z", 2), [], { formatDuration: fmt });
-  assert.match(message, /Too short/);
+  const message = validateRun(run("x", "the-void", "2026-09-19T17:00:00.000Z", 2), [], {
+    formatDuration: fmt,
+  });
+  assert.match(message!, /Too short/);
 }
 
-// Newest-first so just-logged runs appear at the top of Timer/Times.
 {
   const ordered = runsNewestFirst([
     run("a", "lost-halls", "2026-09-19T17:00:00.000Z", 10),

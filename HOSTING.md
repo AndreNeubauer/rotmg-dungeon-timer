@@ -3,8 +3,10 @@
 ## GitHub Pages
 
 1. **Settings → Pages → Source:** GitHub Actions
-2. Push to `main` — workflow **Deploy RotMG Timer** publishes the site
+2. Push to `main` — workflow **Deploy RotMG Timer** builds Next.js and publishes the static `out/` folder
 3. URL: `https://<username>.github.io/<repo>/`
+
+The app uses Next.js static export with `basePath` set to the repo name for GitHub Pages project sites.
 
 ## Shared run log (Supabase)
 
@@ -15,7 +17,7 @@ The hosted app stores all runs in Supabase. Times and Board read from the same t
 1. [supabase.com](https://supabase.com) → new project
 2. **SQL Editor** → run `supabase-schema.sql`
 3. **Settings → API** → copy Project URL + anon/publishable key
-4. Edit `leaderboard-config.json`:
+4. Edit `public/leaderboard-config.json`:
 
 ```json
 {
@@ -33,8 +35,8 @@ The hosted app stores all runs in Supabase. Times and Board read from the same t
 | Problem | Fix |
 |--------|-----|
 | Pages deploy 404 | Enable **Source: GitHub Actions** under Settings → Pages |
-| Board/Times empty | Check `leaderboard-config.json`, browser console (F12), schema + grants in SQL |
+| Board/Times empty | Check `public/leaderboard-config.json`, browser console (F12), schema + grants in SQL |
 | Insert permission denied | Re-run the `grant` lines at the bottom of `supabase-schema.sql` |
-| Path tags (LH → Cult/Void) not updating | Re-run the **Public update runs** policy + `grant update` in `supabase-schema.sql` |
+| Assets or links broken | Ensure the repo name matches `basePath` in `next.config.ts` (`rotmg-dungeon-timer`) |
 
 Bad rows can be removed in Supabase **Table Editor**.

@@ -2,11 +2,13 @@
 
 **Live app:** [andreneubauer.github.io/rotmg-dungeon-timer](https://andreneubauer.github.io/rotmg-dungeon-timer/)
 
-Log dungeon clear times. **Timer** shows your latest clears. **Times** and **Board** show the same shared run log (fastest clears first on Board, newest first on Times).
+Log dungeon clear times. **Times** and **Board** show the same shared run log (fastest clears first on Board, newest first on Times).
+
+Built with **Next.js** and **Tailwind CSS**, deployed as a static site on GitHub Pages.
 
 ## Quick start
 
-1. Open the live link (or run `python3 serve.py` locally → http://127.0.0.1:8765)
+1. Open the live link (or run `npm run dev` locally → http://127.0.0.1:3000)
 2. **Timer** — pick dungeon → **Start** → **End** / **Nexus** / **Died**
 3. Optional after a clear: party/organic, group size, search time
 4. Optional: **Set IGN** — tags your runs; not required to view anything
@@ -15,20 +17,20 @@ Log dungeon clear times. **Timer** shows your latest clears. **Times** and **Boa
 
 | Tab | What it shows |
 |-----|----------------|
-| **Timer** | Pick dungeon, start/end; recent clears listed on the same tab |
 | **Overview** | Exalt stats, best/avg times, recent runs |
 | **Times** | Full log, filters, per-dungeon averages |
 | **Board** | Same runs as Times, sorted by fastest time |
 
 Runs save automatically to the shared board on the hosted site.
 
-## Local dev (optional)
+## Local dev
 
 ```bash
-python3 serve.py
+npm install
+npm run dev
 ```
 
-Without Supabase configured, runs go to `runs.json` on your machine (`runs.json` is gitignored).
+Without Supabase configured, runs are stored in your browser (`localStorage`).
 
 ## Self-hosting
 
@@ -37,7 +39,14 @@ See [HOSTING.md](./HOSTING.md) — GitHub Pages + optional Supabase setup.
 ## Maintenance scripts
 
 ```bash
-python3 scripts/build-catalog-js.py      # rebuild dungeons.js (CI runs this)
 python3 scripts/fetch-realmeye-icons.py  # refresh portal icons
 python3 scripts/set-dungeon-player-max.py
+```
+
+Dungeon data lives in `dungeons.json` (served from `public/`).
+
+## Tests
+
+```bash
+npm test
 ```

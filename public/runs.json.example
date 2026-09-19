@@ -1,0 +1,35 @@
+[
+  {
+    "id": "a1b2c3d4-1111-4000-8000-000000000001",
+    "dungeonId": "ocean-trench",
+    "dungeonName": "Ocean Trench",
+    "startedAt": "2026-09-17T09:27:48.000Z",
+    "durationSeconds": 72,
+    "outcome": "complete",
+    "findTimeSeconds": null,
+    "runType": "organic",
+    "groupSize": null
+  },
+  {
+    "id": "a1b2c3d4-2222-4000-8000-000000000002",
+    "dungeonId": "the-void",
+    "dungeonName": "The Void",
+    "startedAt": "2026-09-17T09:37:02.000Z",
+    "durationSeconds": 238,
+    "outcome": "complete",
+    "findTimeSeconds": null,
+    "runType": null,
+    "groupSize": null
+  },
+  {
+    "id": "a1b2c3d4-3333-4000-8000-000000000003",
+    "dungeonId": "parasite-chambers",
+    "dungeonName": "Parasite Chambers",
+    "startedAt": "2026-09-17T09:47:35.000Z",
+    "durationSeconds": 85,
+    "outcome": "complete",
+    "findTimeSeconds": null,
+    "runType": null,
+    "groupSize": null
+  }
+]

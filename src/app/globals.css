@@ -1,0 +1,169 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  --bg: #0c0c0c;
+  --surface: #161616;
+  --border: #252525;
+  --text: #e4e4e4;
+  --muted: #707070;
+  --accent: #fff;
+  --green: #3d9a56;
+  --red: #b54a4a;
+  --content-max: 680px;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-green: var(--green);
+  --color-red: var(--red);
+}
+
+html {
+  font-size: 18px;
+  scrollbar-gutter: stable;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  background-color: var(--bg);
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.92) saturate(1.08);
+  pointer-events: none;
+}
+
+.bg-blur {
+  position: fixed;
+  inset: -64px;
+  z-index: -2;
+  background-size: cover;
+  background-position: center;
+  filter: blur(22px) brightness(0.55);
+  transform: scale(1.05);
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(
+    circle at 50% 44%,
+    #000 0%,
+    #000 34%,
+    rgba(0, 0, 0, 0.65) 48%,
+    transparent 72%
+  );
+  mask-image: radial-gradient(
+    circle at 50% 44%,
+    #000 0%,
+    #000 34%,
+    rgba(0, 0, 0, 0.65) 48%,
+    transparent 72%
+  );
+}
+
+.bg-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 44%,
+    rgba(12, 12, 12, 0.72) 0%,
+    rgba(12, 12, 12, 0.48) 38%,
+    rgba(12, 12, 12, 0.18) 58%,
+    transparent 78%
+  );
+}
+
+.dungeon-card img,
+.table-icon {
+  image-rendering: pixelated;
+}
+
+.outcome-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.62rem;
+  padding: 0.12rem 0.38rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.outcome-pill.complete {
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 35%, var(--border));
+}
+
+.outcome-pill.nexus {
+  color: #c9a227;
+  border-color: color-mix(in srgb, #c9a227 35%, var(--border));
+}
+
+.outcome-pill.died {
+  color: var(--red);
+  border-color: color-mix(in srgb, var(--red) 35%, var(--border));
+}
+
+.outcome-pill.source-party {
+  color: #8ab4d4;
+  border-color: color-mix(in srgb, #8ab4d4 35%, var(--border));
+}
+
+.outcome-pill.source-organic {
+  color: #b4a48a;
+  border-color: color-mix(in srgb, #b4a48a 35%, var(--border));
+}
+
+.outcome-pill.group-size,
+.outcome-pill.hard-mode {
+  color: var(--text);
+}
+
+.outcome-pill.ign-tag {
+  color: #8ab4d4;
+  border-color: color-mix(in srgb, #8ab4d4 35%, var(--border));
+}
+
+.timer.running .timer-display {
+  color: var(--green);
+}
+
+.status.running {
+  color: var(--green);
+}
+
+.status.saved {
+  color: var(--muted);
+}
+
+.status.rejected {
+  color: var(--red);
+}
+
+.rate-bar {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 0.35rem;
+}
+
+.rate-bar span {
+  display: block;
+  height: 100%;
+  background: var(--green);
+}
