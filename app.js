@@ -1,4 +1,4 @@
-const APP_VERSION = "2.8";
+const APP_VERSION = "2.8.1";
 
 const PAGE_ROUTE_SEGMENTS = {
   timer: "Timer",
@@ -1648,7 +1648,7 @@ function renderLeaderboardTable() {
 
   leaderboardBody.innerHTML = "";
   if (runs.length === 0) {
-    leaderboardBody.innerHTML = `<tr><td colspan="6" class="empty">${
+    leaderboardBody.innerHTML = `<tr><td colspan="4" class="empty">${
       filterId ? "No runs for this dungeon yet." : "No runs yet."
     }</td></tr>`;
     return;
@@ -1659,20 +1659,19 @@ function renderLeaderboardTable() {
     const tr = document.createElement("tr");
     const tags = formatRunTagsHtml(
       {
+        ign: run.ign,
         run_type: run.runType,
         group_size: run.groupSize,
         hard_mode: run.hardMode,
       },
-      { includeIgn: false }
+      { includeIgn: true }
     );
     const outcome = OUTCOMES[run.outcome] || OUTCOMES.complete;
     tr.innerHTML = `
       <td class="col-rank">${index + 1}</td>
-      <td class="col-ign">${run.ign || "—"}</td>
       <td class="dungeon-cell"><div class="dungeon-cell-inner"><img class="table-icon" alt="" /><span class="dungeon-cell-name">${run.dungeonName}</span></div></td>
-      <td class="result-cell"><span class="outcome-pill ${run.outcome}">${outcome.label}</span></td>
+      <td class="result-cell"><div class="run-tags">${tags}<span class="outcome-pill ${run.outcome}">${outcome.label}</span></div></td>
       <td class="time">${formatDuration(run.durationSeconds)}</td>
-      <td class="col-tags"><div class="run-tags">${tags || "—"}</div></td>
     `;
     if (dungeon) setDungeonIcon(tr.querySelector(".table-icon"), dungeon);
     leaderboardBody.appendChild(tr);
