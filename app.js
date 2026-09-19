@@ -2005,7 +2005,9 @@ function showPage(name, { replace = false, skipHistory = false } = {}) {
   if (name === "times") {
     void mergeBoardRunsIntoLocal().then(() => renderTimesPage());
   }
-  if (name === "overview") renderOverviewPage();
+  if (name === "overview") {
+    void mergeBoardRunsIntoLocal().then(() => renderOverviewPage());
+  }
   if (name === "leaderboard") void renderLeaderboardPage();
 }
 
