@@ -1,4 +1,4 @@
-const APP_VERSION = "2.6";
+const APP_VERSION = "2.7";
 
 const PAGE_ROUTE_SEGMENTS = {
   timer: "Timer",
@@ -174,7 +174,6 @@ let fileStorageReady = false;
 const iconCache = new Map();
 /** Supabase leaderboard — loaded from leaderboard-config.json */
 let leaderboardConfig = { enabled: false, supabaseUrl: "", supabaseAnonKey: "", table: "leaderboard_runs" };
-let leaderboardRows = [];
 
 function formatDuration(seconds) {
   const total = Math.round(seconds);
@@ -292,12 +291,6 @@ function setIgn(value) {
     localStorage.setItem(IGN_STORAGE_KEY, trimmed);
   }
   renderIgnProfile();
-  void mergeBoardRunsIntoLocal().then((added) => {
-    if (added > 0) {
-      renderTimesPage();
-      if (!pageOverview.classList.contains("hidden")) renderOverviewPage();
-    }
-  });
 }
 
 function renderIgnProfile() {
@@ -309,7 +302,7 @@ function renderIgnProfile() {
 
 function promptIgnEdit() {
   const current = getIgn();
-  const next = window.prompt("In-game name (IGN) — shown on shared clears:", current);
+  const next = window.prompt("In-game name (IGN) — optional tag on your runs:", current);
   if (next == null) return;
   const trimmed = next.trim();
   if (!trimmed) {
@@ -389,48 +382,21 @@ function boardRowToRun(row) {
   });
 }
 
-async function fetchBoardRunsForIgn(ign) {
-  if (!isLeaderboardReady() || !ign) return [];
-  const table = leaderboardConfig.table || "leaderboard_runs";
-  const params = new URLSearchParams({
-    select: "*",
-    order: "started_at.asc",
-    limit: "500",
-    ign: `eq.${ign}`,
-  });
-  const res = await fetch(`${leaderboardConfig.supabaseUrl}/rest/v1/${table}?${params}`, {
-    headers: supabaseHeaders(),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`Board fetch failed (${res.status})`);
-  const rows = await res.json();
-  return Array.isArray(rows) ? rows : [];
+function usesBoardStorage() {
+  return isLeaderboardReady();
 }
 
-/** Pull your board clears into local Times/Overview (deduped by run id). */
-async function mergeBoardRunsIntoLocal() {
-  if (!isLeaderboardReady()) return 0;
-  const ign = getIgn();
-  if (!ign) return 0;
-
-  let boardRows;
+/** Load all runs from Supabase — single source of truth for Times + Board. */
+async function refreshRunsFromBoard() {
+  if (!isLeaderboardReady()) return false;
   try {
-    boardRows = await fetchBoardRunsForIgn(ign);
+    const rows = await fetchLeaderboardRows();
+    runsCache = rows.map(boardRowToRun);
+    return true;
   } catch (err) {
-    console.warn("Board merge skipped", err);
-    return 0;
+    console.warn("Failed to load runs from board", err);
+    return false;
   }
-
-  const local = loadRuns();
-  const localIds = new Set(local.map((run) => run.id));
-  const toAdd = boardRows
-    .filter((row) => row.client_run_id && !localIds.has(row.client_run_id))
-    .map(boardRowToRun);
-  if (toAdd.length === 0) return 0;
-
-  for (const run of toAdd) markRunShared(run.id);
-  await persistRuns([...local, ...toAdd]);
-  return toAdd.length;
 }
 
 async function fetchBoardClientRunIds() {
@@ -506,7 +472,7 @@ async function syncAllRunsToBoard({ quiet = false } = {}) {
   const boardIds = await fetchBoardClientRunIds();
   const pending = loadRuns().filter((run) => !boardIds.has(run.id));
   if (pending.length === 0) {
-    if (!quiet) updateLeaderboardStatus("All runs from this browser are on the board.");
+    if (!quiet) updateLeaderboardStatus("All runs are on the board.");
     return;
   }
 
@@ -527,7 +493,14 @@ async function syncAllRunsToBoard({ quiet = false } = {}) {
       { error: failed > 0 }
     );
   }
-  if (!pageLeaderboard.classList.contains("hidden")) await renderLeaderboardPage();
+  await refreshRunsFromBoard();
+  refreshRunViews();
+}
+
+function refreshRunViews() {
+  if (!pageTimes.classList.contains("hidden")) renderTimesPage();
+  if (!pageOverview.classList.contains("hidden")) renderOverviewPage();
+  if (!pageLeaderboard.classList.contains("hidden")) renderLeaderboardTable();
 }
 
 async function maybeShareRun(runId) {
@@ -535,7 +508,8 @@ async function maybeShareRun(runId) {
   const run = loadRuns().find((entry) => entry.id === runId);
   if (!run) return;
   await shareRunToLeaderboard(run);
-  if (!pageLeaderboard.classList.contains("hidden")) void renderLeaderboardPage();
+  await refreshRunsFromBoard();
+  refreshRunViews();
 }
 
 async function fetchLeaderboardRows(dungeonId = "") {
@@ -544,7 +518,7 @@ async function fetchLeaderboardRows(dungeonId = "") {
   const params = new URLSearchParams({
     select: "*",
     order: "started_at.desc",
-    limit: "200",
+    limit: "1000",
   });
   if (dungeonId) params.set("dungeon_id", `eq.${dungeonId}`);
 
@@ -683,14 +657,15 @@ async function importRunsFromFile(file) {
   }
 
   saveRuns(next);
+  await syncAllRunsToBoard({ quiet: true });
+  if (usesBoardStorage()) await refreshRunsFromBoard();
   renderTimesPage();
   if (!pageOverview.classList.contains("hidden")) renderOverviewPage();
-
-  await syncAllRunsToBoard({ quiet: true });
 }
 
 async function persistRuns(runs) {
   runsCache = runs.map(normalizeRun);
+  if (usesBoardStorage()) return;
   if (fileStorageReady) {
     try {
       await writeRunsToFile(runsCache);
@@ -704,10 +679,13 @@ async function persistRuns(runs) {
 }
 
 function saveRuns(runs) {
-  void persistRuns(runs);
+  runsCache = runs.map(normalizeRun);
+  if (usesBoardStorage()) return;
+  void persistRuns(runsCache);
 }
 
 function deleteRun(runId) {
+  if (usesBoardStorage()) return;
   saveRuns(loadRuns().filter((r) => r.id !== runId));
 }
 
@@ -717,6 +695,13 @@ function runStartMs(run) {
 
 function runEndMs(run) {
   return runStartMs(run) + run.durationSeconds * 1000;
+}
+
+function validationPeerRuns(proposedRun) {
+  const all = loadRuns();
+  if (!usesBoardStorage()) return all;
+  const tag = (proposedRun.ign || getIgn() || "Anonymous").toLowerCase();
+  return all.filter((run) => (run.ign || "Anonymous").toLowerCase() === tag);
 }
 
 function validateRun(run, existingRuns) {
@@ -762,7 +747,7 @@ function commitRun({ dungeonId, dungeonName, startedAt, durationSeconds, outcome
     hardMode: null,
     ign: getIgn() || null,
   };
-  const rejection = validateRun(run, loadRuns());
+  const rejection = validateRun(run, validationPeerRuns(run));
   if (rejection) {
     showRunRejected(rejection);
     return null;
@@ -1611,15 +1596,18 @@ function renderRunsTable() {
       run.findTimeSeconds != null && run.findTimeSeconds > 0
         ? `<span class="find-time">+${formatDuration(run.findTimeSeconds)} search</span>`
         : "";
+    const deleteCell = usesBoardStorage()
+      ? `<td class="delete-cell"></td>`
+      : `<td class="delete-cell"><button type="button" class="delete-btn" aria-label="Delete run">Delete</button></td>`;
     row.innerHTML = `
       <td class="when">${when}</td>
       <td class="dungeon-cell"><div class="dungeon-cell-inner"><img class="table-icon" alt="" /><span class="dungeon-cell-name">${run.dungeonName}</span></div></td>
       <td class="result-cell"><div class="run-tags">${ignPill}${sourcePill}${groupPill}${hardPill}<span class="outcome-pill ${run.outcome}">${outcome.label}</span></div></td>
       <td class="time">${formatDuration(run.durationSeconds)}${findNote}</td>
-      <td class="delete-cell"><button type="button" class="delete-btn" aria-label="Delete run">Delete</button></td>
+      ${deleteCell}
     `;
     if (dungeon) setDungeonIcon(row.querySelector(".table-icon"), dungeon);
-    row.querySelector(".delete-btn").addEventListener("click", () => {
+    row.querySelector(".delete-btn")?.addEventListener("click", () => {
       deleteRun(run.id);
       renderTimesPage();
     });
@@ -1654,28 +1642,36 @@ function renderLeaderboardFilter() {
 function renderLeaderboardTable() {
   if (!leaderboardBody) return;
   const filterId = leaderboardDungeonFilter?.value || "";
-  let rows = leaderboardRows;
-  if (filterId) rows = rows.filter((row) => row.dungeon_id === filterId);
+  let runs = loadRuns().slice();
+  if (filterId) runs = runs.filter((run) => run.dungeonId === filterId);
+  runs.sort((a, b) => a.durationSeconds - b.durationSeconds);
 
   leaderboardBody.innerHTML = "";
-  if (rows.length === 0) {
+  if (runs.length === 0) {
     leaderboardBody.innerHTML = `<tr><td colspan="6" class="empty">${
-      filterId ? "No runs for this dungeon yet." : "No runs on the board yet."
+      filterId ? "No runs for this dungeon yet." : "No runs yet."
     }</td></tr>`;
     return;
   }
 
-  rows.forEach((row, index) => {
-    const dungeon = getDungeon(row.dungeon_id);
+  runs.forEach((run, index) => {
+    const dungeon = getDungeon(run.dungeonId);
     const tr = document.createElement("tr");
-    const tags = formatRunTagsHtml(row);
-    const outcome = OUTCOMES[row.outcome] || OUTCOMES.complete;
+    const tags = formatRunTagsHtml(
+      {
+        run_type: run.runType,
+        group_size: run.groupSize,
+        hard_mode: run.hardMode,
+      },
+      { includeIgn: false }
+    );
+    const outcome = OUTCOMES[run.outcome] || OUTCOMES.complete;
     tr.innerHTML = `
       <td class="col-rank">${index + 1}</td>
-      <td class="col-ign">${row.ign || "—"}</td>
-      <td class="dungeon-cell"><div class="dungeon-cell-inner"><img class="table-icon" alt="" /><span class="dungeon-cell-name">${row.dungeon_name || row.dungeon_id}</span></div></td>
-      <td class="result-cell"><span class="outcome-pill ${row.outcome || "complete"}">${outcome.label}</span></td>
-      <td class="time">${formatDuration(Number(row.duration_seconds))}</td>
+      <td class="col-ign">${run.ign || "—"}</td>
+      <td class="dungeon-cell"><div class="dungeon-cell-inner"><img class="table-icon" alt="" /><span class="dungeon-cell-name">${run.dungeonName}</span></div></td>
+      <td class="result-cell"><span class="outcome-pill ${run.outcome}">${outcome.label}</span></td>
+      <td class="time">${formatDuration(run.durationSeconds)}</td>
       <td class="col-tags"><div class="run-tags">${tags || "—"}</div></td>
     `;
     if (dungeon) setDungeonIcon(tr.querySelector(".table-icon"), dungeon);
@@ -1694,21 +1690,19 @@ async function renderLeaderboardPage() {
 
   if (!isLeaderboardReady()) {
     updateLeaderboardStatus("Board database is not configured yet.");
-    leaderboardRows = [];
     renderLeaderboardTable();
     return;
   }
 
-  await syncAllRunsToBoard({ quiet: true });
-  updateLeaderboardStatus("Runs save to the board automatically when you log them.");
-
+  updateLeaderboardStatus("Loading…");
   try {
-    leaderboardRows = await fetchLeaderboardRows();
+    await syncAllRunsToBoard({ quiet: true });
+    await refreshRunsFromBoard();
+    updateLeaderboardStatus("");
     renderLeaderboardTable();
   } catch (err) {
     console.error(err);
     updateLeaderboardStatus(String(err.message || err), { error: true });
-    leaderboardRows = [];
     renderLeaderboardTable();
   }
 }
@@ -2003,10 +1997,10 @@ function showPage(name, { replace = false, skipHistory = false } = {}) {
     name === "timer" ? "RotMG Timer" : `RotMG Timer — ${PAGE_TITLES[name] || "Timer"}`;
 
   if (name === "times") {
-    void mergeBoardRunsIntoLocal().then(() => renderTimesPage());
+    void (usesBoardStorage() ? refreshRunsFromBoard() : Promise.resolve()).then(() => renderTimesPage());
   }
   if (name === "overview") {
-    void mergeBoardRunsIntoLocal().then(() => renderOverviewPage());
+    void (usesBoardStorage() ? refreshRunsFromBoard() : Promise.resolve()).then(() => renderOverviewPage());
   }
   if (name === "leaderboard") void renderLeaderboardPage();
 }
@@ -2052,9 +2046,14 @@ async function init() {
   }
   dungeonById = new Map(catalog.dungeons.map((d) => [d.id, d]));
 
-  await initRunsStorage();
   await loadLeaderboardConfig();
-  await mergeBoardRunsIntoLocal();
+  if (isLeaderboardReady()) {
+    await initRunsStorage();
+    await syncAllRunsToBoard({ quiet: true });
+    await refreshRunsFromBoard();
+  } else {
+    await initRunsStorage();
+  }
   void initBackground();
   renderIgnProfile();
   if (appVersionEl) appVersionEl.textContent = `v${APP_VERSION}`;
@@ -2062,7 +2061,6 @@ async function init() {
   ignSetBtn?.addEventListener("click", promptIgnEdit);
   ignEditBtn?.addEventListener("click", promptIgnEdit);
   leaderboardRefreshBtn?.addEventListener("click", () => void renderLeaderboardPage());
-  await syncAllRunsToBoard({ quiet: true });
   leaderboardDungeonFilter?.addEventListener("change", () => renderLeaderboardTable());
 
   searchInput?.addEventListener("input", () => renderDungeonGrid());
