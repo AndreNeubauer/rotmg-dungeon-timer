@@ -7,6 +7,8 @@ git subtree split -P apps/rotmg-dungeon-timer -b rotmg-timer-only
 REMOTE="https://github.com/AndreNeubauer/rotmg-dungeon-timer.git"
 if [ -n "${ROTMG_TIMER_PUSH_TOKEN:-}" ]; then
   REMOTE="https://x-access-token:${ROTMG_TIMER_PUSH_TOKEN}@github.com/AndreNeubauer/rotmg-dungeon-timer.git"
+elif command -v gh >/dev/null && gh auth status -h github.com 2>/dev/null | grep -q "Logged in"; then
+  REMOTE="https://x-access-token:$(gh auth token)@github.com/AndreNeubauer/rotmg-dungeon-timer.git"
 fi
-git push "$REMOTE" rotmg-timer-only:main
+git push --force "$REMOTE" rotmg-timer-only:main
 echo "Done — check https://github.com/AndreNeubauer/rotmg-dungeon-timer/actions"
