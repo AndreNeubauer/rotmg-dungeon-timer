@@ -21,7 +21,7 @@ Use this as a single list. Details live in [HOSTING.md](./HOSTING.md), [PUSH-TO-
 
 ### 1. Push the app to the new repo
 
-The new repo is still **empty**. Push from your PC (or grant Cursor write access and ask the agent to retry):
+~~The new repo is still **empty**.~~ **Done (2026-09-19)** — code is on `main`.
 
 ```bash
 cd /path/to/test
@@ -30,7 +30,7 @@ git subtree split -P apps/rotmg-dungeon-timer -b rotmg-timer-only
 git push https://github.com/AndreNeubauer/rotmg-dungeon-timer.git rotmg-timer-only:main
 ```
 
-- [ ] Push succeeded (`main` on `rotmg-dungeon-timer` has files)
+- [x] Push succeeded (`main` on `rotmg-dungeon-timer` has files)
 
 #### If the Cloud Agent still can’t push (403 / “cursor[bot] denied”)
 
@@ -53,20 +53,20 @@ On **rotmg-dungeon-timer** (not `test`):
 2. **Build and deployment → Source:** **GitHub Actions**
 3. Save
 
-- [ ] Pages source = GitHub Actions
+- [x] Pages source = GitHub Actions
 
 ### 3. Confirm deploy
 
 1. [Actions](https://github.com/AndreNeubauer/rotmg-dungeon-timer/actions) → **Deploy RotMG Timer**
 2. Latest run should be **green** (re-run if it failed before Pages was enabled)
 
-- [ ] Deploy workflow green
+- [x] Deploy workflow green (2026-09-19)
 
 ### 4. Open the live site
 
 **URL:** https://andreneubauer.github.io/rotmg-dungeon-timer/
 
-- [ ] Site loads, dungeon grid appears, timer works
+- [x] Site loads, dungeon grid appears, timer works
 
 ### 5. Share with friends
 
