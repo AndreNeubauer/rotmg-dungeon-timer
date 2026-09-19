@@ -160,15 +160,9 @@ def main() -> None:
         "unmappedLevels": sorted(unmapped),
     }
     OUT.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    js_out = ROOT / "wr-times.js"
-    body = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
-    js_out.write_text(
-        f"// Auto-generated — run: python3 scripts/fetch-wr-times.py\nwindow.WR_TIMES = {body};\n",
-        encoding="utf-8",
-    )
     solo_n = sum(1 for d in dungeons if "soloMinClearSeconds" in d)
     group_n = sum(1 for d in dungeons if "groupMinClearSeconds" in d)
-    print(f"Wrote {OUT.name} + {js_out.name} — {solo_n} solo, {group_n} group WRs")
+    print(f"Wrote {OUT.name} — {solo_n} solo, {group_n} group WRs")
 
 
 if __name__ == "__main__":

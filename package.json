@@ -6,7 +6,7 @@
     "dev": "next dev",
     "prebuild": "node scripts/sync-public-data.mjs",
     "build": "next build",
-    "start": "next start",
+    "start": "npx --yes serve@latest out -p 3000",
     "lint": "next lint",
     "test": "tsx tests/test-run-persistence.ts"
   },

@@ -27,7 +27,14 @@ Runs save automatically to the shared board on the hosted site.
 
 ```bash
 npm install
-npm run dev
+npm run dev          # http://127.0.0.1:3000
+```
+
+Preview the static build (same as GitHub Pages):
+
+```bash
+npm run build
+npm start            # serves the out/ folder
 ```
 
 Without Supabase configured, runs are stored in your browser (`localStorage`).
@@ -41,6 +48,7 @@ See [HOSTING.md](./HOSTING.md) — GitHub Pages + optional Supabase setup.
 ```bash
 python3 scripts/fetch-realmeye-icons.py  # refresh portal icons
 python3 scripts/set-dungeon-player-max.py
+python3 scripts/fetch-wr-times.py          # refresh speedrun.com WR data → wr-times.json
 ```
 
 Dungeon data lives in `dungeons.json` (served from `public/`).

@@ -4,8 +4,6 @@
 from __future__ import annotations
 
 import json
-import subprocess
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -54,9 +52,6 @@ def main() -> None:
         dungeon["playerMax"] = player_max_for(dungeon)
     DUNGEONS_JSON.write_text(json.dumps(data, indent=2) + "\n")
     print(f"Updated playerMax for {len(data['dungeons'])} dungeons")
-    build = ROOT / "scripts" / "build-catalog-js.py"
-    if build.exists():
-        subprocess.run([sys.executable, str(build)], check=True)
 
 
 if __name__ == "__main__":
