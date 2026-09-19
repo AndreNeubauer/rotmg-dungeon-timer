@@ -1,4 +1,4 @@
-const APP_VERSION = "2.4";
+const APP_VERSION = "2.5";
 
 const PAGE_ROUTE_SEGMENTS = {
   timer: "Timer",
@@ -368,11 +368,36 @@ async function loadLeaderboardConfig() {
   }
 }
 
-async function shareRunToLeaderboard(run) {
+async function fetchBoardClientRunIds() {
+  if (!isLeaderboardReady()) return new Set();
+  const table = leaderboardConfig.table || "leaderboard_runs";
+  const params = new URLSearchParams({ select: "client_run_id", limit: "1000" });
+  try {
+    const res = await fetch(`${leaderboardConfig.supabaseUrl}/rest/v1/${table}?${params}`, {
+      headers: supabaseHeaders(),
+      cache: "no-store",
+    });
+    if (!res.ok) return new Set();
+    const rows = await res.json();
+    return new Set(
+      (Array.isArray(rows) ? rows : [])
+        .map((row) => row.client_run_id)
+        .filter(Boolean)
+    );
+  } catch {
+    return new Set();
+  }
+}
+
+async function shareRunToLeaderboard(run, { boardIds = null } = {}) {
   if (!isLeaderboardReady()) return { ok: false, reason: "not-configured" };
   const outcome = run.outcome && OUTCOMES[run.outcome] ? run.outcome : "complete";
   const ign = getIgn() || run.ign || "Anonymous";
-  if (getSharedRunIds().includes(run.id)) return { ok: true, reason: "already-shared" };
+  const onBoard = boardIds ?? (await fetchBoardClientRunIds());
+  if (onBoard.has(run.id)) {
+    if (!getSharedRunIds().includes(run.id)) markRunShared(run.id);
+    return { ok: true, reason: "already-shared" };
+  }
 
   const table = leaderboardConfig.table || "leaderboard_runs";
   const body = {
@@ -413,7 +438,8 @@ async function syncAllRunsToBoard({ quiet = false } = {}) {
     return;
   }
 
-  const pending = loadRuns().filter((run) => !getSharedRunIds().includes(run.id));
+  const boardIds = await fetchBoardClientRunIds();
+  const pending = loadRuns().filter((run) => !boardIds.has(run.id));
   if (pending.length === 0) {
     if (!quiet) updateLeaderboardStatus("All runs from this browser are on the board.");
     return;
@@ -425,7 +451,7 @@ async function syncAllRunsToBoard({ quiet = false } = {}) {
   let failed = 0;
 
   for (const run of pending) {
-    const result = await shareRunToLeaderboard(run);
+    const result = await shareRunToLeaderboard(run, { boardIds });
     if (result.ok && result.reason === "uploaded") uploaded += 1;
     else if (!result.ok && result.reason !== "already-shared") failed += 1;
   }
