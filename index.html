@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
   <title>RotMG Timer</title>
-  <link rel="stylesheet" href="style.css?v=31" />
+  <link rel="stylesheet" href="style.css?v=32" />
 </head>
 <body>
   <div id="bg-layer" aria-hidden="true"></div>
@@ -73,6 +73,10 @@
           <div class="chain-prompt-buttons" id="post-end-actions"></div>
         </div>
       </section>
+      <section class="timer-recent" aria-label="Recent runs">
+        <h2 class="timer-recent-heading">Recent runs</h2>
+        <div id="timer-recent-list" class="overview-recent"></div>
+      </section>
     </div>
 
     <div id="page-overview" class="page hidden">
@@ -95,13 +99,14 @@
 
         <h2 class="about-title">How to use</h2>
         <ol class="about-list">
-          <li>Pick a dungeon on <strong>Timer</strong>, hit <strong>Start</strong> when you enter, <strong>End</strong> when you finish.</li>
+          <li>Pick a dungeon on <strong>Timer</strong>, hit <strong>Start</strong> when you enter, <strong>End</strong> when you finish. Clears show under <strong>Recent runs</strong> on that tab.</li>
           <li>Use <strong>Nexus</strong> or <strong>Died</strong> if the run did not clear.</li>
           <li>After a clear, optionally log party/organic, group size, and search time.</li>
         </ol>
 
         <h2 class="about-title">Tabs</h2>
         <ul class="about-list">
+          <li><strong>Timer</strong> — start/end a dungeon; recent clears stay on this tab.</li>
           <li><strong>Overview</strong> — exalt summary, best/avg times, recent runs at a glance.</li>
           <li><strong>Times</strong> — full log with filters and per-dungeon averages.</li>
           <li><strong>Board</strong> — same runs as Times, sorted by fastest clear.</li>
@@ -178,7 +183,8 @@
   </footer>
 
   <span id="dungeon-meta" hidden></span>
-  <script src="dungeons.js?v=31"></script>
-  <script src="app.js?v=31"></script>
+  <script src="dungeons.js?v=32"></script>
+  <script src="run-persistence.js?v=32"></script>
+  <script src="app.js?v=32"></script>
 </body>
 </html>

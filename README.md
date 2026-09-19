@@ -2,7 +2,7 @@
 
 **Live app:** [andreneubauer.github.io/rotmg-dungeon-timer](https://andreneubauer.github.io/rotmg-dungeon-timer/)
 
-Log dungeon clear times. **Times** and **Board** show the same shared run log (fastest clears first on Board, newest first on Times).
+Log dungeon clear times. **Timer** shows your latest clears. **Times** and **Board** show the same shared run log (fastest clears first on Board, newest first on Times).
 
 ## Quick start
 
@@ -15,6 +15,7 @@ Log dungeon clear times. **Times** and **Board** show the same shared run log (f
 
 | Tab | What it shows |
 |-----|----------------|
+| **Timer** | Pick dungeon, start/end; recent clears listed on the same tab |
 | **Overview** | Exalt stats, best/avg times, recent runs |
 | **Times** | Full log, filters, per-dungeon averages |
 | **Board** | Same runs as Times, sorted by fastest time |

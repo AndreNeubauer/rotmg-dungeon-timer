@@ -543,6 +543,21 @@ header {
   display: flex;
 }
 
+.timer-recent {
+  margin: 1.4rem auto 0;
+  max-width: 22rem;
+  text-align: left;
+}
+
+.timer-recent-heading {
+  margin: 0 0 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .buttons button {
   flex: 1;
   border: none;
