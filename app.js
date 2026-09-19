@@ -1,4 +1,28 @@
-const APP_VERSION = "2.3";
+const APP_VERSION = "2.4";
+
+const PAGE_ROUTE_SEGMENTS = {
+  timer: "Timer",
+  overview: "Overview",
+  times: "Times",
+  leaderboard: "Board",
+  about: "About",
+};
+
+const ROUTE_SEGMENT_TO_PAGE = {
+  Timer: "timer",
+  Overview: "overview",
+  Times: "times",
+  Board: "leaderboard",
+  About: "about",
+};
+
+const PAGE_TITLES = {
+  timer: "Timer",
+  overview: "Overview",
+  times: "Times",
+  leaderboard: "Board",
+  about: "About",
+};
 const STORAGE_KEY = "rotmg-dungeon-runs";
 const IGN_STORAGE_KEY = "rotmg-timer-ign";
 const SHARED_RUN_IDS_KEY = "rotmg-timer-shared-run-ids";
@@ -1849,13 +1873,51 @@ function onEnd() {
   finishRunFlow(runId);
 }
 
-function showPage(name) {
+function getAppBase() {
+  const path = window.location.pathname.replace(/\/$/, "");
+  const parts = path.split("/").filter(Boolean);
+  if (parts.length === 0) return "";
+  const last = parts[parts.length - 1];
+  if (ROUTE_SEGMENT_TO_PAGE[last] || last === "index.html") {
+    return parts.length > 1 ? `/${parts.slice(0, -1).join("/")}` : "";
+  }
+  return path.startsWith("/") ? path : `/${path}`;
+}
+
+function buildPageUrl(pageName) {
+  const segment = PAGE_ROUTE_SEGMENTS[pageName] || "Timer";
+  const base = getAppBase().replace(/\/$/, "");
+  return `${base}/${segment}`;
+}
+
+function pageFromPath(pathname = window.location.pathname) {
+  const parts = pathname.replace(/\/$/, "").split("/").filter(Boolean);
+  if (parts.length === 0) return "timer";
+  const last = parts[parts.length - 1];
+  if (last === "index.html") return "timer";
+  return ROUTE_SEGMENT_TO_PAGE[last] || "timer";
+}
+
+function showPage(name, { replace = false, skipHistory = false } = {}) {
+  const valid = Object.keys(PAGE_ROUTE_SEGMENTS);
+  if (!valid.includes(name)) name = "timer";
+
   pageTimer.classList.toggle("hidden", name !== "timer");
   pageOverview.classList.toggle("hidden", name !== "overview");
   pageTimes.classList.toggle("hidden", name !== "times");
   pageLeaderboard.classList.toggle("hidden", name !== "leaderboard");
   pageAbout.classList.toggle("hidden", name !== "about");
   tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.page === name));
+
+  if (!skipHistory) {
+    const url = buildPageUrl(name) + window.location.search + window.location.hash;
+    if (replace) history.replaceState({ page: name }, "", url);
+    else history.pushState({ page: name }, "", url);
+  }
+
+  document.title =
+    name === "timer" ? "RotMG Timer" : `RotMG Timer — ${PAGE_TITLES[name] || "Timer"}`;
+
   if (name === "times") renderTimesPage();
   if (name === "overview") renderOverviewPage();
   if (name === "leaderboard") void renderLeaderboardPage();
@@ -1931,6 +1993,10 @@ async function init() {
   tabs.forEach((tab) => {
     tab.addEventListener("click", () => showPage(tab.dataset.page));
   });
+  window.addEventListener("popstate", (event) => {
+    showPage(event.state?.page || pageFromPath(), { skipHistory: true });
+  });
+  showPage(pageFromPath(), { replace: true, skipHistory: false });
   timesDungeonFilter?.addEventListener("change", () => renderTimesPage());
   exportRunsBtn?.addEventListener("click", exportRunsDownload);
   importRunsBtn?.addEventListener("click", () => importRunsInput?.click());

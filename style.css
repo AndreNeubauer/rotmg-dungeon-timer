@@ -8,6 +8,7 @@
   --accent: #fff;
   --green: #3d9a56;
   --red: #b54a4a;
+  --content-max: 680px;
 }
 
 * {
@@ -15,6 +16,7 @@
 }
 
 html {
+  font-size: 18px;
   scrollbar-gutter: stable;
 }
 
@@ -81,9 +83,9 @@ body {
 main {
   position: relative;
   z-index: 0;
-  max-width: 520px;
+  max-width: var(--content-max);
   margin: 0 auto;
-  padding: 1.5rem 1rem 1rem;
+  padding: 1.75rem 1.15rem 1.25rem;
 }
 
 .app-footer {
@@ -93,7 +95,7 @@ main {
   flex-direction: column;
   align-items: center;
   gap: 0.2rem;
-  max-width: 520px;
+  max-width: var(--content-max);
   margin: 0 auto;
   padding: 0 1rem 1.25rem;
   font-size: 0.65rem;
@@ -115,7 +117,7 @@ main {
 
 h1 {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.35rem;
   font-weight: 600;
 }
 
@@ -249,7 +251,7 @@ header {
   border: none;
   color: var(--muted);
   padding: 0;
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   cursor: pointer;
 }
 
@@ -260,8 +262,8 @@ header {
 /* Dungeon picker */
 .dungeon-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 0.6rem;
   margin-bottom: 1rem;
 }
 
@@ -282,7 +284,7 @@ header {
   background: var(--surface);
   color: inherit;
   cursor: pointer;
-  min-height: 72px;
+  min-height: 84px;
 }
 
 .dungeon-card.compact {
@@ -310,8 +312,8 @@ header {
 
 .dungeon-card img {
   image-rendering: pixelated;
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
 }
 
 .dungeon-card.compact img {
@@ -406,7 +408,7 @@ header {
 
 .timer-start-row {
   margin: 0 auto 0.65rem;
-  max-width: 18rem;
+  max-width: 22rem;
 }
 
 .timer-start-row #start-btn,
@@ -416,7 +418,7 @@ header {
 
 .timer-end-row {
   margin: 0 auto;
-  max-width: 18rem;
+  max-width: 22rem;
 }
 
 .timer-selection {
@@ -426,7 +428,7 @@ header {
   gap: 0.75rem;
   margin: 0 auto 1rem;
   padding: 0.65rem 0.85rem;
-  max-width: 18rem;
+  max-width: 22rem;
   background: color-mix(in srgb, var(--surface) 92%, transparent);
   border: 1px solid color-mix(in srgb, var(--green) 35%, var(--border));
   border-radius: 8px;
@@ -434,8 +436,8 @@ header {
 
 .timer-selection-icon {
   image-rendering: pixelated;
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   flex-shrink: 0;
   object-fit: contain;
 }
@@ -455,7 +457,7 @@ header {
 
 .dungeon-name {
   margin: 0.1rem 0 0;
-  font-size: 1rem;
+  font-size: 1.15rem;
   font-weight: 500;
   color: var(--text);
   white-space: nowrap;
@@ -464,7 +466,7 @@ header {
 }
 
 .timer {
-  font-size: 3rem;
+  font-size: 3.75rem;
   font-weight: 300;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
@@ -521,8 +523,8 @@ header {
   flex: 1;
   border: none;
   border-radius: 4px;
-  padding: 0.7rem;
-  font-size: 0.95rem;
+  padding: 0.85rem;
+  font-size: 1.05rem;
   font-weight: 500;
   cursor: pointer;
   color: #fff;

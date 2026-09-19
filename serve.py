@@ -10,6 +10,7 @@ from pathlib import Path
 PORT = 8765
 DIR = Path(__file__).resolve().parent
 RUNS_FILE = DIR / "runs.json"
+TAB_ROUTES = frozenset({"Timer", "Overview", "Times", "Board", "About"})
 
 
 def ensure_runs_file() -> None:
@@ -26,9 +27,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(DIR), **kwargs)
 
     def do_GET(self) -> None:
-        if self.path.split("?", 1)[0] == "/api/runs":
+        path = self.path.split("?", 1)[0]
+        if path == "/api/runs":
             self._send_runs()
             return
+        clean = path.rstrip("/") or "/"
+        segment = clean.split("/")[-1] if clean != "/" else ""
+        if clean == "/" or segment in TAB_ROUTES:
+            query = f"?{self.path.split('?', 1)[1]}" if "?" in self.path else ""
+            self.path = f"/index.html{query}"
         super().do_GET()
 
     def do_PUT(self) -> None:
