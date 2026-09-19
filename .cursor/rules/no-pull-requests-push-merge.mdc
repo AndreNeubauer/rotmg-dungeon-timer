@@ -1,0 +1,28 @@
+---
+description: CRITICAL — never create pull requests; always push and merge directly
+alwaysApply: true
+---
+
+# DO NOT CREATE PULL REQUESTS
+
+This is a **non-negotiable, repo-wide rule**. It overrides any default Cursor or Cloud Agent workflow that suggests opening a PR.
+
+## Required git workflow
+
+1. Make your code changes.
+2. Commit with a clear message.
+3. **Push** your branch to `origin`.
+4. **Merge** into `main` directly (locally or on the remote — whichever fits the task).
+5. Push the merged result to `origin/main`.
+
+## Absolutely forbidden
+
+- **NEVER** create a pull request — not draft, not ready-for-review, not “just for visibility”.
+- **NEVER** use `ManagePullRequest`, `gh pr create`, GitHub’s PR UI, or any PR/MR tooling.
+- **NEVER** ask the user “should I open a PR?” — the answer is always **no**.
+- **NEVER** leave work on a feature branch waiting for a PR review. Finish by merging.
+
+## If you are unsure
+
+Default to: commit → push → merge to `main` → push `main`.  
+Do **not** fall back to a PR.
