@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { formatDuration } from "@/lib/format";
 import {
   avgDuration,
@@ -11,15 +11,29 @@ import {
   totalClearHours,
 } from "@/lib/stats";
 import { getExaltDungeonIds } from "@/lib/dungeons";
+import { loadWrTimes, type WrDungeonEntry } from "@/lib/wr-times";
 import { useRuns } from "@/hooks/RunsContext";
 import { DungeonIcon } from "./DungeonIcon";
 import { RecentRunsList } from "./RecentRunsList";
+import { StatCardsSkeleton } from "./LoadingSkeleton";
+import { WrComparison, wrForDungeon } from "./WrComparison";
 
 export function OverviewPage() {
   const { runs, catalog, getDungeonById, refreshFromBoard, usesBoardStorage } = useRuns();
+  const [wrMap, setWrMap] = useState<Map<string, WrDungeonEntry>>(new Map());
+  const [loading, setLoading] = useState(usesBoardStorage);
 
   useEffect(() => {
-    if (usesBoardStorage) void refreshFromBoard();
+    void loadWrTimes().then(setWrMap);
+  }, []);
+
+  useEffect(() => {
+    if (!usesBoardStorage) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    void refreshFromBoard().finally(() => setLoading(false));
   }, [usesBoardStorage, refreshFromBoard]);
 
   if (!catalog) return null;
@@ -44,14 +58,18 @@ export function OverviewPage() {
 
   return (
     <>
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="rounded-md border border-border bg-surface/70 p-3 text-center">
-            <div className="text-[1.25rem] font-semibold tabular-nums">{stat.value}</div>
-            <div className="text-[0.68rem] text-muted">{stat.label}</div>
-          </div>
-        ))}
-      </div>
+      {loading ? (
+        <StatCardsSkeleton />
+      ) : (
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {stats.map((stat) => (
+            <div key={stat.label} className="rounded-md border border-border bg-surface/70 p-3 text-center">
+              <div className="text-[1.25rem] font-semibold tabular-nums">{stat.value}</div>
+              <div className="text-[0.68rem] text-muted">{stat.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="mb-6 grid gap-2 sm:grid-cols-2">
         {exaltSummaries.length === 0 ? (
@@ -59,8 +77,14 @@ export function OverviewPage() {
         ) : (
           exaltSummaries.map((entry) => {
             const dungeonRuns = runs.filter((run) => run.dungeonId === entry.id);
+            const bestRun = dungeonRuns
+              .filter((r) => r.outcome === "complete")
+              .sort((a, b) => a.durationSeconds - b.durationSeconds)[0];
             const best = bestClearSeconds(dungeonRuns);
             const entryRate = successRate(entry.stats);
+            const wr = bestRun
+              ? wrForDungeon(wrMap, entry.id, bestRun.runType, bestRun.groupSize)
+              : wrForDungeon(wrMap, entry.id, null, null);
             return (
               <article
                 key={entry.id}
@@ -85,6 +109,14 @@ export function OverviewPage() {
                   <div className="text-[0.68rem] text-muted">
                     {entry.avgClear != null ? `${formatDuration(entry.avgClear)} avg` : "—"}
                   </div>
+                  {best != null && (
+                    <WrComparison
+                      clearSeconds={best}
+                      wrSeconds={wr.seconds}
+                      wrDisplay={wr.display}
+                      wrWeblink={wr.weblink}
+                    />
+                  )}
                 </div>
               </article>
             );
@@ -94,7 +126,7 @@ export function OverviewPage() {
 
       <section>
         <h2 className="mb-3 text-[0.95rem] font-medium">Recent runs</h2>
-        <RecentRunsList runs={runs} emptyText="Nothing logged yet." limit={8} />
+        <RecentRunsList runs={runs} emptyText="Nothing logged yet." limit={8} showWr />
       </section>
     </>
   );

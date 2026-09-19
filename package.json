@@ -1,6 +1,6 @@
 {
   "name": "rotmg-dungeon-timer",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "npx --yes serve@latest out -p 3000",
     "lint": "next lint",
-    "test": "tsx tests/test-run-persistence.ts"
+    "test": "tsx tests/test-run-persistence.ts && tsx tests/test-stats.ts && tsx tests/test-wr-times.ts"
   },
   "dependencies": {
     "next": "^15.5.3",
@@ -16,10 +16,13 @@
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.7",
     "@tailwindcss/postcss": "^4.1.13",
     "@types/node": "^24.5.2",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^15.5.25",
     "tailwindcss": "^4.1.13",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"

@@ -22,21 +22,24 @@ import {
   CHAIN_SPAWN_DUNGEONS,
   EXALT_CATEGORY,
   HARD_MODE_DUNGEONS,
-  IGN_STORAGE_KEY,
-  PENDING_RUNS_KEY,
   POST_END_PROMPTS,
-  STORAGE_KEY,
 } from "@/lib/constants";
 import { formatDuration } from "@/lib/format";
 import {
-  boardRowToRun,
   fetchBoardClientRunIds,
-  fetchLeaderboardRows,
   isLeaderboardReady,
   loadLeaderboardConfig,
   shareRunToLeaderboard,
 } from "@/lib/leaderboard";
+import {
+  loadLocalRuns,
+  loadPendingRuns as loadPendingFromStorage,
+  persistLocalRunsToStorage,
+  savePendingRuns as savePendingToStorage,
+} from "@/lib/run-storage";
 import { mergePendingIntoRuns, runsNewestFirst, validateRun } from "@/lib/run-persistence";
+import { refreshRunsFromBoard, syncPendingRunsToBoard } from "./runs/boardSync";
+import { useIgnModal } from "./useIgnModal";
 import type {
   Dungeon,
   DungeonCatalog,
@@ -62,7 +65,12 @@ interface RunsContextValue {
   usesBoardStorage: boolean;
   ign: string;
   setIgn: (value: string) => void;
-  promptIgnEdit: () => void;
+  openIgnModal: () => void;
+  ignModalOpen: boolean;
+  closeIgnModal: () => void;
+  ignConfirmRemove: boolean;
+  setIgnConfirmRemove: (v: boolean) => void;
+  loadDemoRuns: () => Promise<void>;
   selectedDungeonId: string;
   selectedCategoryId: string;
   setSelectedCategoryId: (id: string) => void;
@@ -121,7 +129,16 @@ export function RunsProvider({ children }: { children: ReactNode }) {
     supabaseAnonKey: "",
     table: "leaderboard_runs",
   });
-  const [ign, setIgnState] = useState("");
+  const {
+    ign,
+    setIgn,
+    modalOpen: ignModalOpen,
+    confirmRemove: ignConfirmRemove,
+    setConfirmRemove: setIgnConfirmRemove,
+    openIgnModal,
+    closeIgnModal,
+    loadStoredIgn,
+  } = useIgnModal();
   const [selectedDungeonId, setSelectedDungeonId] = useState("lost-halls");
   const [selectedCategoryId, setSelectedCategoryId] = useState(EXALT_CATEGORY);
   const [searchQuery, setSearchQuery] = useState("");
@@ -156,25 +173,12 @@ export function RunsProvider({ children }: { children: ReactNode }) {
   );
 
   const loadPendingRuns = useCallback((): Run[] => {
-    try {
-      const raw = JSON.parse(localStorage.getItem(PENDING_RUNS_KEY) || "[]");
-      if (!Array.isArray(raw)) return [];
-      return raw.map((r) => norm(r));
-    } catch {
-      return [];
-    }
+    return loadPendingFromStorage(norm);
   }, [norm]);
 
-  const savePendingRuns = useCallback(
-    (pending: Run[]) => {
-      try {
-        localStorage.setItem(PENDING_RUNS_KEY, JSON.stringify(pending.slice(-200)));
-      } catch {
-        /* ignore */
-      }
-    },
-    []
-  );
+  const savePendingRuns = useCallback((pending: Run[]) => {
+    savePendingToStorage(pending);
+  }, []);
 
   const mergePending = useCallback(
     (boardRuns: Run[]) => mergePendingIntoRuns(boardRuns, loadPendingRuns()) as Run[],
@@ -200,25 +204,6 @@ export function RunsProvider({ children }: { children: ReactNode }) {
   );
 
   const getIgn = useCallback(() => ign, [ign]);
-
-  const setIgn = useCallback((value: string) => {
-    const trimmed = value.trim().slice(0, 32);
-    if (!trimmed) localStorage.removeItem(IGN_STORAGE_KEY);
-    else localStorage.setItem(IGN_STORAGE_KEY, trimmed);
-    setIgnState(trimmed);
-  }, []);
-
-  const promptIgnEdit = useCallback(() => {
-    const current = getIgn();
-    const next = window.prompt("In-game name (IGN) — optional tag on your runs:", current);
-    if (next == null) return;
-    const trimmed = next.trim();
-    if (!trimmed) {
-      if (current && window.confirm("Remove your IGN?")) setIgn("");
-      return;
-    }
-    setIgn(trimmed);
-  }, [getIgn, setIgn]);
 
   const findRunById = useCallback(
     (runId: string | null): Run | null => {
@@ -249,20 +234,27 @@ export function RunsProvider({ children }: { children: ReactNode }) {
         return;
       }
       setRuns(normalized);
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-      } catch {
-        /* ignore */
-      }
+      persistLocalRunsToStorage(normalized);
     },
     [norm, usesBoardStorage, mergePending]
   );
 
+  const loadDemoRuns = useCallback(async () => {
+    try {
+      const seedRes = await fetch(publicUrl("runs.json.example"), { cache: "no-store" });
+      if (!seedRes.ok) return;
+      const seed = await seedRes.json();
+      if (!Array.isArray(seed) || seed.length === 0) return;
+      persistLocalRuns(seed.map((r) => norm(r)));
+    } catch {
+      /* ignore */
+    }
+  }, [norm, persistLocalRuns]);
+
   const refreshFromBoard = useCallback(async () => {
     if (!isLeaderboardReady(leaderboardConfig)) return;
     try {
-      const rows = await fetchLeaderboardRows(leaderboardConfig);
-      setRuns(mergePending(rows.map((row) => norm(boardRowToRun(row)))));
+      setRuns(await refreshRunsFromBoard(leaderboardConfig, mergePending, norm));
     } catch (err) {
       console.warn("Failed to load runs from board", err);
       setRuns((prev) => mergePending(prev));
@@ -284,35 +276,37 @@ export function RunsProvider({ children }: { children: ReactNode }) {
     async ({ quiet = false } = {}) => {
       if (!isLeaderboardReady(leaderboardConfig)) {
         if (!quiet) {
-          setLeaderboardStatus("Board database is not configured.");
+          setLeaderboardStatus("Leaderboard database is not configured.");
           setLeaderboardStatusError(true);
         }
         return "not-configured";
       }
+      const pendingList = loadPendingRuns();
       const boardIds = await fetchBoardClientRunIds(leaderboardConfig);
-      const pending = [...runs, ...loadPendingRuns()]
+      const toUpload = [...runs, ...pendingList]
         .filter((r, i, arr) => arr.findIndex((x) => x.id === r.id) === i)
         .filter((run) => !boardIds.has(run.id));
 
-      if (pending.length === 0) {
-        if (!quiet) setLeaderboardStatus("All runs are on the board.");
+      if (toUpload.length === 0) {
+        if (!quiet) setLeaderboardStatus("All runs are on the leaderboard.");
         setLeaderboardStatusError(false);
         return "done";
       }
 
-      if (!quiet) setLeaderboardStatus(`Saving ${pending.length} run(s) to the board…`);
+      if (!quiet) setLeaderboardStatus(`Saving ${toUpload.length} run(s) to the leaderboard…`);
 
-      let uploaded = 0;
-      let failed = 0;
-      for (const run of pending) {
-        const result = await shareRunToLeaderboard(leaderboardConfig, run, getIgn(), boardIds);
-        if (result.ok && result.reason === "uploaded") uploaded += 1;
-        else if (!result.ok && result.reason !== "already-shared") failed += 1;
-      }
+      const { uploaded, failed } = await syncPendingRunsToBoard(
+        leaderboardConfig,
+        runs,
+        pendingList,
+        getIgn
+      );
 
       if (!quiet) {
         setLeaderboardStatus(
-          failed ? `${uploaded} saved · ${failed} failed` : `${uploaded} run(s) saved to the board.`
+          failed
+            ? `${uploaded} saved · ${failed} failed`
+            : `${uploaded} run(s) saved to the leaderboard.`
         );
         setLeaderboardStatusError(failed > 0);
       }
@@ -776,37 +770,21 @@ export function RunsProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      try {
-        const storedIgn = localStorage.getItem(IGN_STORAGE_KEY)?.trim() || "";
-        setIgnState(storedIgn);
-      } catch {
-        /* ignore */
-      }
+      loadStoredIgn();
 
       const config = await loadLeaderboardConfig();
       setLeaderboardConfig(config);
 
       if (isLeaderboardReady(config)) {
         try {
-          const rows = await fetchLeaderboardRows(config);
-          setRuns(mergePending(rows.map((row) => norm(boardRowToRun(row)))));
+          setRuns(await refreshRunsFromBoard(config, mergePending, norm));
         } catch {
           setRuns((prev) => mergePending(prev));
         }
       } else {
         try {
-          const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-          if (Array.isArray(raw) && raw.length > 0) {
-            setRuns(raw.map((r) => norm(r)));
-          } else {
-            const seedRes = await fetch(publicUrl("runs.json.example"), { cache: "no-store" });
-            if (seedRes.ok) {
-              const seed = await seedRes.json();
-              if (Array.isArray(seed) && seed.length > 0) {
-                setRuns(seed.map((r) => norm(r)));
-              }
-            }
-          }
+          const local = loadLocalRuns(norm);
+          if (local.length > 0) setRuns(local);
         } catch {
           /* empty */
         }
@@ -854,7 +832,12 @@ export function RunsProvider({ children }: { children: ReactNode }) {
       usesBoardStorage,
       ign,
       setIgn,
-      promptIgnEdit,
+      openIgnModal,
+      ignModalOpen,
+      closeIgnModal,
+      ignConfirmRemove,
+      setIgnConfirmRemove,
+      loadDemoRuns,
       selectedDungeonId,
       selectedCategoryId,
       setSelectedCategoryId: (id: string) => {
@@ -908,7 +891,12 @@ export function RunsProvider({ children }: { children: ReactNode }) {
       usesBoardStorage,
       ign,
       setIgn,
-      promptIgnEdit,
+      openIgnModal,
+      ignModalOpen,
+      closeIgnModal,
+      ignConfirmRemove,
+      setIgnConfirmRemove,
+      loadDemoRuns,
       selectedDungeonId,
       selectedCategoryId,
       startTime,
@@ -917,7 +905,6 @@ export function RunsProvider({ children }: { children: ReactNode }) {
       filteredDungeons,
       selectedDungeon,
       getDungeonById,
-      startTime,
       timerDisplay,
       statusMessage,
       statusKind,

@@ -1,11 +1,13 @@
 import { CatalogGate } from "@/components/CatalogGate";
+import { DemoRunsBanner } from "@/components/DemoRunsBanner";
 import { DungeonPicker } from "@/components/DungeonPicker";
 import { RecentRunsList } from "@/components/RecentRunsList";
 import { TimerBlock } from "@/components/TimerBlock";
 
-export default function TimerPage() {
+export default function TimerRoute() {
   return (
     <CatalogGate>
+      <DemoRunsBanner />
       <DungeonPicker />
       <TimerBlock />
       <section className="mt-8" aria-label="Recent runs">

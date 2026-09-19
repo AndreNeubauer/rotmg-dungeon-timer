@@ -1,27 +1,47 @@
 # RotMG Dungeon Timer
 
-**Live app:** [andreneubauer.github.io/rotmg-dungeon-timer](https://andreneubauer.github.io/rotmg-dungeon-timer/)
+**Live demo:** [andreneubauer.github.io/rotmg-dungeon-timer](https://andreneubauer.github.io/rotmg-dungeon-timer/)
 
-Log dungeon clear times. **Times** and **Board** show the same shared run log (fastest clears first on Board, newest first on Times).
+Track Realm of the Mad God dungeon clear times, compare against [speedrun.com](https://www.speedrun.com/rotmg) world records, and compete on a shared leaderboard.
 
-Built with **Next.js** and **Tailwind CSS**, deployed as a static site on GitHub Pages.
+Built with **Next.js 15**, **React 19**, **TypeScript**, and **Tailwind CSS 4** — deployed as a static site on GitHub Pages with optional **Supabase** sync.
+
+## Features
+
+- **Timer** — one-click start/end with keyboard shortcuts (`Space`, `E`, `N`, `D`)
+- **Stats** — exalt overview, per-dungeon success rates, best/avg times
+- **WR comparison** — your clears vs speedrun.com solo/group records
+- **Leaderboard** — shared run log sorted by fastest time (Supabase-backed on the hosted site)
+- **Dark / light / auto** theme
+
+## Tech stack
+
+| Layer | Choice |
+|-------|--------|
+| Framework | Next.js 15 (App Router, static export) |
+| UI | React 19, Tailwind CSS 4 |
+| Language | TypeScript |
+| Data | localStorage (local) · Supabase Postgres (hosted) |
+| CI/CD | GitHub Actions → GitHub Pages |
+| WR data | speedrun.com API → static `wr-times.json` |
+
+## Architecture
+
+```
+Browser (timer + localStorage)
+    ↓ optional sync
+Supabase (leaderboard_runs table)
+    ↓ static build
+GitHub Pages (Next.js out/)
+```
+
+Domain logic includes chain-dungeon flows (Lost Halls → Void), overlap validation, and pending-run merge for reliable sync.
 
 ## Quick start
 
-1. Open the live link (or run `npm run dev` locally → http://127.0.0.1:3000)
+1. Open the [live demo](https://andreneubauer.github.io/rotmg-dungeon-timer/) (or run locally below)
 2. **Timer** — pick dungeon → **Start** → **End** / **Nexus** / **Died**
-3. Optional after a clear: party/organic, group size, search time
-4. Optional: **Set IGN** — tags your runs; not required to view anything
-
-## Tabs
-
-| Tab | What it shows |
-|-----|----------------|
-| **Overview** | Exalt stats, best/avg times, recent runs |
-| **Times** | Full log, filters, per-dungeon averages |
-| **Board** | Same runs as Times, sorted by fastest time |
-
-Runs save automatically to the shared board on the hosted site.
+3. Check **Overview** for stats and WR comparison, **Leaderboard** for fastest clears
 
 ## Local dev
 
@@ -37,7 +57,15 @@ npm run build
 npm start            # serves the out/ folder
 ```
 
-Without Supabase configured, runs are stored in your browser (`localStorage`).
+Without Supabase configured, runs are stored in your browser (`localStorage`). Use **Load demo data** on the Timer tab to explore with sample runs.
+
+## Tabs
+
+| Tab | What it shows |
+|-----|----------------|
+| **Overview** | Exalt stats, best/avg times vs WR, recent runs |
+| **Times** | Full log, filters, per-dungeon averages |
+| **Leaderboard** | Same runs as Times, sorted by fastest time |
 
 ## Self-hosting
 
@@ -53,8 +81,13 @@ python3 scripts/fetch-wr-times.py          # refresh speedrun.com WR data → wr
 
 Dungeon data lives in `dungeons.json` (served from `public/`).
 
-## Tests
+## Tests & lint
 
 ```bash
 npm test
+npm run lint
 ```
+
+## Author
+
+[Andre Neubauer](https://github.com/AndreNeubauer) — source at [github.com/AndreNeubauer/rotmg-dungeon-timer](https://github.com/AndreNeubauer/rotmg-dungeon-timer)

@@ -1,21 +1,30 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { OUTCOMES, RUN_SOURCES } from "@/lib/constants";
 import { formatDuration } from "@/lib/format";
 import { runsNewestFirst } from "@/lib/run-persistence";
+import { loadWrTimes, type WrDungeonEntry } from "@/lib/wr-times";
 import type { Run } from "@/lib/types";
 import { useRuns } from "@/hooks/RunsContext";
 import { DungeonIcon } from "./DungeonIcon";
+import { WrComparison, wrForDungeon } from "./WrComparison";
 
 interface RecentRunsListProps {
   runs?: Run[];
   emptyText: string;
   limit?: number;
+  showWr?: boolean;
 }
 
-export function RecentRunsList({ runs: propRuns, emptyText, limit = 8 }: RecentRunsListProps) {
+export function RecentRunsList({ runs: propRuns, emptyText, limit = 8, showWr = false }: RecentRunsListProps) {
   const { catalog, getDungeonById, runs: allRuns } = useRuns();
   const runs = runsNewestFirst(propRuns ?? allRuns).slice(0, limit);
+  const [wrMap, setWrMap] = useState<Map<string, WrDungeonEntry>>(new Map());
+
+  useEffect(() => {
+    if (showWr) void loadWrTimes().then(setWrMap);
+  }, [showWr]);
 
   if (runs.length === 0) {
     return <p className="text-[0.85rem] text-muted">{emptyText}</p>;
@@ -36,6 +45,10 @@ export function RecentRunsList({ runs: propRuns, emptyText, limit = 8 }: RecentR
         if (run.groupSize != null) tags.push(`${run.groupSize}p`);
         if (run.hardMode) tags.push("Hard");
         if (run.outcome !== "complete") tags.push(OUTCOMES[run.outcome].label);
+        const wr =
+          showWr && run.outcome === "complete"
+            ? wrForDungeon(wrMap, run.dungeonId, run.runType, run.groupSize)
+            : { seconds: null, display: null, weblink: null };
 
         return (
           <article
@@ -50,8 +63,17 @@ export function RecentRunsList({ runs: propRuns, emptyText, limit = 8 }: RecentR
                 {tags.length ? ` · ${tags.join(" · ")}` : ""}
               </div>
             </div>
-            <div className="shrink-0 tabular-nums text-[0.85rem]">
-              {formatDuration(run.durationSeconds)}
+            <div className="shrink-0 text-right">
+              <div className="tabular-nums text-[0.85rem]">{formatDuration(run.durationSeconds)}</div>
+              {showWr && run.outcome === "complete" && (
+                <WrComparison
+                  clearSeconds={run.durationSeconds}
+                  wrSeconds={wr.seconds}
+                  wrDisplay={wr.display}
+                  wrWeblink={wr.weblink}
+                  compact
+                />
+              )}
             </div>
           </article>
         );

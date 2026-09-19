@@ -1,12 +1,50 @@
+import { LIVE_URL, REPO_URL } from "@/lib/constants";
+
 export function AboutPage() {
   return (
     <article className="prose prose-invert max-w-none text-[0.9rem] leading-relaxed text-text">
       <h2 className="mb-2 text-[1rem] font-semibold">What this is</h2>
       <p className="mb-5 text-muted">
-        A simple dungeon timer for <strong className="text-text">Realm of the Mad God</strong>,
-        built to track how long exalting and other runs actually take. Personal stats stay in your
-        browser; optional shared leaderboard when Supabase is configured.
+        A dungeon timer for <strong className="text-text">Realm of the Mad God</strong> that tracks
+        how long exalting and other runs actually take. Compare your clears against speedrun.com
+        world records, review stats, and compete on a shared leaderboard.
       </p>
+
+      <h2 className="mb-2 text-[1rem] font-semibold">Tech stack</h2>
+      <ul className="mb-5 list-disc space-y-1 pl-5 text-muted">
+        <li>
+          <strong className="text-text">Next.js 15</strong> — App Router, static export for GitHub
+          Pages
+        </li>
+        <li>
+          <strong className="text-text">React 19 + TypeScript</strong> — typed components and domain
+          logic
+        </li>
+        <li>
+          <strong className="text-text">Tailwind CSS 4</strong> — dark/light themes
+        </li>
+        <li>
+          <strong className="text-text">Supabase</strong> — optional shared run log (Postgres +
+          row-level security)
+        </li>
+        <li>
+          <strong className="text-text">GitHub Actions</strong> — test gate + automated deploy
+        </li>
+      </ul>
+
+      <h2 className="mb-2 text-[1rem] font-semibold">Architecture</h2>
+      <p className="mb-3 text-muted">
+        The app is a static site. Runs save to browser storage locally, or sync to Supabase when
+        configured. Times and Leaderboard read from the same data — newest first vs fastest first.
+        WR data is fetched from speedrun.com via a maintenance script and served as static JSON.
+      </p>
+      <pre className="mb-5 overflow-x-auto rounded-md border border-border bg-surface/80 p-3 text-[0.72rem] text-muted">
+        {`Browser (timer + localStorage)
+    ↓ optional sync
+Supabase (shared leaderboard_runs)
+    ↓ static fetch
+GitHub Pages (Next.js export)`}
+      </pre>
 
       <h2 className="mb-2 text-[1rem] font-semibold">How to use</h2>
       <ol className="mb-5 list-decimal space-y-1 pl-5 text-muted">
@@ -16,8 +54,10 @@ export function AboutPage() {
           <strong className="text-text">End</strong> when you finish.
         </li>
         <li>
-          Use <strong className="text-text">Nexus</strong> or{" "}
-          <strong className="text-text">Died</strong> if the run did not clear.
+          Keyboard: <strong className="text-text">Space</strong> or{" "}
+          <strong className="text-text">S</strong> to start/end,{" "}
+          <strong className="text-text">E</strong>/<strong className="text-text">N</strong>/
+          <strong className="text-text">D</strong> for End/Nexus/Died while running.
         </li>
         <li>After a clear, optionally log party/organic, group size, and search time.</li>
       </ol>
@@ -25,36 +65,49 @@ export function AboutPage() {
       <h2 className="mb-2 text-[1rem] font-semibold">Tabs</h2>
       <ul className="mb-5 list-disc space-y-1 pl-5 text-muted">
         <li>
-          <strong className="text-text">Overview</strong> — exalt summary, best/avg times, recent
-          runs at a glance.
+          <strong className="text-text">Overview</strong> — exalt summary, best/avg times vs WR,
+          recent runs.
         </li>
         <li>
           <strong className="text-text">Times</strong> — full log with filters and per-dungeon
           averages.
         </li>
         <li>
-          <strong className="text-text">Board</strong> — same runs as Times, sorted by fastest
-          clear.
+          <strong className="text-text">Leaderboard</strong> — same runs, sorted by fastest clear.
         </li>
       </ul>
 
-      <h2 className="mb-2 text-[1rem] font-semibold">Data</h2>
+      <h2 className="mb-2 text-[1rem] font-semibold">Links</h2>
       <ul className="mb-5 list-disc space-y-1 pl-5 text-muted">
         <li>
-          <strong className="text-text">Hosted site</strong> — runs save to the shared log
-          automatically. Times and Board match.
+          <a href={LIVE_URL} className="text-text underline decoration-border hover:decoration-muted">
+            Live demo
+          </a>
         </li>
         <li>
-          <strong className="text-text">Local dev</strong> (<code className="text-text">npm run dev</code>
-          ) — uses browser storage when no board is configured.
-        </li>
-        <li>
-          <strong className="text-text">IGN</strong> — optional tag on runs you log; not required to
-          view anything.
+          <a
+            href={REPO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-text underline decoration-border hover:decoration-muted"
+          >
+            Source on GitHub
+          </a>
         </li>
       </ul>
 
-      <p className="text-[0.78rem] text-muted">By MeleeOnly with love — for figuring out how long exalting really takes.</p>
+      <p className="text-[0.78rem] text-muted">
+        Built by{" "}
+        <a
+          href="https://github.com/AndreNeubauer"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-text underline decoration-border hover:decoration-muted"
+        >
+          Andre Neubauer
+        </a>{" "}
+        — for figuring out how long exalting really takes.
+      </p>
     </article>
   );
 }

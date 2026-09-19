@@ -1,20 +1,22 @@
 import type { PostEndPromptConfig } from "./types";
 
-export const APP_VERSION = "3.0.1";
+export const APP_VERSION = "3.1.0";
+export const REPO_URL = "https://github.com/AndreNeubauer/rotmg-dungeon-timer";
+export const LIVE_URL = "https://andreneubauer.github.io/rotmg-dungeon-timer/";
 
 export const PAGE_ROUTES = {
-  timer: "Timer",
-  overview: "Overview",
-  times: "Times",
-  leaderboard: "Board",
-  about: "About",
+  timer: "timer",
+  overview: "overview",
+  times: "times",
+  leaderboard: "leaderboard",
+  about: "about",
 } as const;
 
 export const PAGE_TITLES = {
   timer: "Timer",
   overview: "Overview",
   times: "Times",
-  leaderboard: "Board",
+  leaderboard: "Leaderboard",
   about: "About",
 } as const;
 
@@ -22,6 +24,7 @@ export const STORAGE_KEY = "rotmg-dungeon-runs";
 export const IGN_STORAGE_KEY = "rotmg-timer-ign";
 export const SHARED_RUN_IDS_KEY = "rotmg-timer-shared-run-ids";
 export const PENDING_RUNS_KEY = "rotmg-timer-pending-runs";
+export const THEME_STORAGE_KEY = "rotmg-timer-theme";
 
 export const EXALT_CATEGORY = "exalt";
 export const DEFAULT_PLAYER_MAX = 50;

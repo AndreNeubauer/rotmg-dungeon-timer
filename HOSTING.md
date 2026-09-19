@@ -10,7 +10,7 @@ The app uses Next.js static export with `basePath` set to the repo name for GitH
 
 ## Shared run log (Supabase)
 
-The hosted app stores all runs in Supabase. Times and Board read from the same table.
+The hosted app stores all runs in Supabase. Times and Leaderboard read from the same table.
 
 ### Setup (one-time)
 
@@ -35,7 +35,7 @@ The hosted app stores all runs in Supabase. Times and Board read from the same t
 | Problem | Fix |
 |--------|-----|
 | Pages deploy 404 | Enable **Source: GitHub Actions** under Settings → Pages |
-| Board/Times empty | Check `public/leaderboard-config.json`, browser console (F12), schema + grants in SQL |
+| Leaderboard/Times empty | Check `public/leaderboard-config.json`, browser console (F12), schema + grants in SQL |
 | Insert permission denied | Re-run the `grant` lines at the bottom of `supabase-schema.sql` |
 | Assets or links broken | Ensure the repo name matches `basePath` in `next.config.ts` (`rotmg-dungeon-timer`) |
 

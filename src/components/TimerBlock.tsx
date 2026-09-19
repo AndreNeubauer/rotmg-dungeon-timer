@@ -1,7 +1,9 @@
 "use client";
 
 import { useRuns } from "@/hooks/RunsContext";
+import { useTimerKeyboard } from "@/hooks/useTimerKeyboard";
 import { DungeonIcon } from "./DungeonIcon";
+import { KeyboardHints } from "./KeyboardHints";
 import { PostEndPrompt, RunContextForm } from "./RunContextForm";
 
 export function TimerBlock() {
@@ -19,12 +21,23 @@ export function TimerBlock() {
     runContextVisible,
   } = useRuns();
 
+  const canStart = Boolean(selectedDungeon);
+
+  useTimerKeyboard({
+    isRunning,
+    canStart,
+    onStart: () => onStart(),
+    onEnd,
+    onNexus,
+    onDied,
+  });
+
   return (
-    <section className={`timer ${isRunning ? "running" : ""}`}>
+    <section className={`timer ${isRunning ? "running" : ""}`} aria-label="Dungeon timer">
       <div className="mb-3">
         <button
           type="button"
-          disabled={isRunning}
+          disabled={isRunning || !canStart}
           onClick={() => onStart()}
           className="w-full cursor-pointer rounded-md border border-border bg-surface px-4 py-2.5 text-[0.95rem] text-text hover:border-muted disabled:cursor-not-allowed disabled:opacity-50"
         >
@@ -51,12 +64,18 @@ export function TimerBlock() {
         </div>
       </div>
 
-      <div className="timer-display mb-1 text-center text-[2.4rem] font-light tabular-nums tracking-tight">
+      <div
+        className="timer-display mb-1 text-center text-[2.4rem] font-light tabular-nums tracking-tight"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         {timerDisplay}
       </div>
       {statusMessage && (
         <p className={`status mb-3 text-center text-[0.85rem] ${statusKind}`}>{statusMessage}</p>
       )}
+
+      <KeyboardHints />
 
       <div className="mb-3">
         <button

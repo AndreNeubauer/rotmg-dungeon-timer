@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-:root {
+:root,
+html[data-theme="dark"] {
   color-scheme: dark;
   --bg: #0c0c0c;
   --surface: #161616;
@@ -11,6 +12,18 @@
   --green: #3d9a56;
   --red: #b54a4a;
   --content-max: 680px;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f4f4f4;
+  --surface: #ffffff;
+  --border: #d8d8d8;
+  --text: #1a1a1a;
+  --muted: #666666;
+  --accent: #000;
+  --green: #2d7a46;
+  --red: #a33f3f;
 }
 
 @theme inline {
@@ -166,4 +179,43 @@ body {
   display: block;
   height: 100%;
   background: var(--green);
+}
+
+.skeleton {
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--border) 60%, transparent) 25%,
+    color-mix(in srgb, var(--border) 30%, transparent) 50%,
+    color-mix(in srgb, var(--border) 60%, transparent) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+html[data-theme="light"] .bg-layer {
+  filter: brightness(1.05) saturate(0.95);
+}
+
+html[data-theme="light"] .bg-blur {
+  filter: blur(22px) brightness(0.85);
+}
+
+html[data-theme="light"] .bg-scrim {
+  background: radial-gradient(
+    circle at 50% 44%,
+    rgba(244, 244, 244, 0.82) 0%,
+    rgba(244, 244, 244, 0.55) 38%,
+    rgba(244, 244, 244, 0.2) 58%,
+    transparent 78%
+  );
 }

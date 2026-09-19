@@ -5,8 +5,11 @@ import { OUTCOMES, RUN_SOURCES } from "@/lib/constants";
 import { formatDuration } from "@/lib/format";
 import { avgDuration, computeStats, getDungeonSummaries, successRate } from "@/lib/stats";
 import { runsNewestFirst } from "@/lib/run-persistence";
+import { loadWrTimes, type WrDungeonEntry } from "@/lib/wr-times";
 import { useRuns } from "@/hooks/RunsContext";
 import { DungeonIcon } from "./DungeonIcon";
+import { TableSkeleton } from "./LoadingSkeleton";
+import { WrComparison, wrForDungeon } from "./WrComparison";
 
 function formatTimePair(avgClear: number | null, avgAttempt: number | null) {
   const clear = avgClear != null ? formatDuration(avgClear) : "—";
@@ -36,10 +39,17 @@ export function TimesPage() {
     refreshFromBoard,
   } = useRuns();
   const [filterId, setFilterId] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [wrMap, setWrMap] = useState<Map<string, WrDungeonEntry>>(new Map());
   const importRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    void refreshFromBoard();
+    void loadWrTimes().then(setWrMap);
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    void refreshFromBoard().finally(() => setLoading(false));
   }, [refreshFromBoard]);
 
   const filterOptions = useMemo(() => {
@@ -173,6 +183,9 @@ export function TimesPage() {
         </div>
       )}
 
+      {loading ? (
+        <TableSkeleton rows={8} cols={usesBoardStorage ? 4 : 5} />
+      ) : (
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-[0.78rem]">
           <thead>
@@ -233,12 +246,24 @@ export function TimesPage() {
                       </div>
                     </td>
                     <td className="py-2 pr-3 tabular-nums">
-                      {formatDuration(run.durationSeconds)}
+                      <div>{formatDuration(run.durationSeconds)}</div>
                       {run.findTimeSeconds != null && run.findTimeSeconds > 0 && (
-                        <span className="ml-1 text-[0.65rem] text-muted">
+                        <span className="text-[0.65rem] text-muted">
                           +{formatDuration(run.findTimeSeconds)} search
                         </span>
                       )}
+                      {run.outcome === "complete" && (() => {
+                        const wr = wrForDungeon(wrMap, run.dungeonId, run.runType, run.groupSize);
+                        return (
+                          <WrComparison
+                            clearSeconds={run.durationSeconds}
+                            wrSeconds={wr.seconds}
+                            wrDisplay={wr.display}
+                            wrWeblink={wr.weblink}
+                            compact
+                          />
+                        );
+                      })()}
                     </td>
                     {!usesBoardStorage && (
                       <td className="py-2">
@@ -259,6 +284,7 @@ export function TimesPage() {
           </tbody>
         </table>
       </div>
+      )}
     </>
   );
 }
