@@ -153,6 +153,9 @@ export function PostEndPrompt() {
   return (
     <div className="mt-4 rounded-md border border-border bg-surface/80 p-4">
       <p className="mb-3 text-[0.85rem] text-text">{postEndLabel}</p>
+      <p className="mb-3 text-[0.72rem] text-muted">
+        Or pick another dungeon above and press Start.
+      </p>
       <div className="flex flex-wrap gap-2">
         {postEndActions.map((action) => (
           <button

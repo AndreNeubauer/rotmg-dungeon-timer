@@ -76,7 +76,7 @@ interface RunsContextValue {
   timerDisplay: string;
   statusMessage: string;
   statusKind: "idle" | "running" | "saved" | "rejected";
-  onStart: (opts?: { chained?: boolean }) => void;
+  onStart: (opts?: { chained?: boolean; dungeonId?: string }) => void;
   onEnd: () => void;
   onNexus: () => void;
   onDied: () => void;
@@ -126,6 +126,7 @@ export function RunsProvider({ children }: { children: ReactNode }) {
   const [selectedCategoryId, setSelectedCategoryId] = useState(EXALT_CATEGORY);
   const [searchQuery, setSearchQuery] = useState("");
   const [startTime, setStartTime] = useState<number | null>(null);
+  const startTimeRef = useRef<number | null>(null);
   const [timerDisplay, setTimerDisplay] = useState("—");
   const [statusMessage, setStatusMessage] = useState("");
   const [statusKind, setStatusKind] = useState<"idle" | "running" | "saved" | "rejected">("idle");
@@ -499,7 +500,7 @@ export function RunsProvider({ children }: { children: ReactNode }) {
 
   const selectDungeon = useCallback(
     (id: string, { fromPrompt = false } = {}) => {
-      if (startTime != null) return;
+      if (startTimeRef.current != null) return;
       if (pendingFindRunId) dismissRunContext();
       if (!fromPrompt) {
         clearPostEnd(true);
@@ -515,7 +516,6 @@ export function RunsProvider({ children }: { children: ReactNode }) {
       }
     },
     [
-      startTime,
       pendingFindRunId,
       dismissRunContext,
       clearPostEnd,
@@ -533,13 +533,27 @@ export function RunsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const onStart = useCallback(
-    ({ chained = false } = {}) => {
-      if (startTime != null) return;
-      if (pendingFindRunId) dismissRunContext();
-      const dungeon = dungeonById.get(selectedDungeonId);
+    ({ chained = false, dungeonId }: { chained?: boolean; dungeonId?: string } = {}) => {
+      if (startTimeRef.current != null) return;
+      const id = dungeonId || selectedDungeonId;
+      const dungeon = dungeonById.get(id);
       if (!dungeon) return;
+
+      if (pendingFindRunId) dismissRunContext();
+      if (!chained) clearPostEnd(true);
+      if (id !== selectedDungeonId) {
+        setSelectedDungeonId(id);
+        if (
+          dungeon.category !== selectedCategoryId &&
+          !dungeon.alsoIn?.includes(selectedCategoryId)
+        ) {
+          setSelectedCategoryId(dungeon.category);
+        }
+      }
+
       setCurrentRunChained(chained);
       const now = Date.now();
+      startTimeRef.current = now;
       setStartTime(now);
       setStatusMessage("Running");
       setStatusKind("running");
@@ -550,17 +564,26 @@ export function RunsProvider({ children }: { children: ReactNode }) {
         setTimerDisplay(formatDuration((Date.now() - now) / 1000));
       }, 200);
     },
-    [startTime, pendingFindRunId, dismissRunContext, dungeonById, selectedDungeonId, stopTick]
+    [
+      pendingFindRunId,
+      dismissRunContext,
+      clearPostEnd,
+      dungeonById,
+      selectedDungeonId,
+      selectedCategoryId,
+      stopTick,
+    ]
   );
 
   const stopAttempt = useCallback(
     (outcome: Outcome, statusMessage: string) => {
-      if (startTime == null) return;
+      if (startTimeRef.current == null) return;
       const dungeon = dungeonById.get(selectedDungeonId);
       if (!dungeon) return;
-      const startedAt = new Date(startTime).toISOString();
-      const durationSeconds = (Date.now() - startTime) / 1000;
+      const startedAt = new Date(startTimeRef.current).toISOString();
+      const durationSeconds = (Date.now() - startTimeRef.current) / 1000;
       stopTick();
+      startTimeRef.current = null;
       setStartTime(null);
       setPendingEndRun(null);
       const runId = commitRun({
@@ -577,7 +600,6 @@ export function RunsProvider({ children }: { children: ReactNode }) {
       setCurrentRunChained(false);
     },
     [
-      startTime,
       dungeonById,
       selectedDungeonId,
       stopTick,
@@ -588,12 +610,13 @@ export function RunsProvider({ children }: { children: ReactNode }) {
   );
 
   const onEnd = useCallback(() => {
-    if (startTime == null) return;
+    if (startTimeRef.current == null) return;
     const dungeon = dungeonById.get(selectedDungeonId);
     if (!dungeon) return;
-    const startedAt = new Date(startTime).toISOString();
-    const durationSeconds = (Date.now() - startTime) / 1000;
+    const startedAt = new Date(startTimeRef.current).toISOString();
+    const durationSeconds = (Date.now() - startTimeRef.current) / 1000;
     stopTick();
+    startTimeRef.current = null;
     setStartTime(null);
     setTimerDisplay(formatDuration(durationSeconds));
     setStatusMessage(formatDuration(durationSeconds));
@@ -643,7 +666,6 @@ export function RunsProvider({ children }: { children: ReactNode }) {
     else readyForNextRun();
     setCurrentRunChained(false);
   }, [
-    startTime,
     dungeonById,
     selectedDungeonId,
     stopTick,
@@ -678,8 +700,7 @@ export function RunsProvider({ children }: { children: ReactNode }) {
 
       if (action.kind === "next" && action.nextId) {
         clearPostEnd(false);
-        selectDungeon(action.nextId, { fromPrompt: true });
-        onStart({ chained: true });
+        onStart({ chained: true, dungeonId: action.nextId });
         if (runId) void maybeShareRun(runId);
         return;
       }
@@ -695,7 +716,6 @@ export function RunsProvider({ children }: { children: ReactNode }) {
       clearPostEnd,
       readyForNextRun,
       updateRun,
-      selectDungeon,
       onStart,
       maybeShareRun,
       finishRunFlow,
@@ -838,7 +858,7 @@ export function RunsProvider({ children }: { children: ReactNode }) {
       selectedDungeonId,
       selectedCategoryId,
       setSelectedCategoryId: (id: string) => {
-        if (startTime != null) return;
+        if (startTimeRef.current != null) return;
         setSelectedCategoryId(id);
         setSearchQuery("");
       },
