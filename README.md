@@ -13,11 +13,11 @@ Log dungeon clear times. **Times** and **Board** show the same shared run log (f
 
 ## Tabs
 
-| Tab | What it shows |
-|-----|----------------|
-| **Overview** | Exalt stats, best/avg times, recent runs |
-| **Times** | Full log, filters, per-dungeon averages |
-| **Board** | Same runs as Times, sorted by fastest time |
+| Tab          | What it shows                              |
+| ------------ | ------------------------------------------ |
+| **Overview** | Exalt stats, best/avg times, recent runs   |
+| **Times**    | Full log, filters, per-dungeon averages    |
+| **Board**    | Same runs as Times, sorted by fastest time |
 
 Runs save automatically to the shared board on the hosted site.
 
@@ -28,6 +28,18 @@ python3 serve.py
 ```
 
 Without Supabase configured, runs go to `runs.json` on your machine (`runs.json` is gitignored).
+
+### Quality checks
+
+```bash
+npm install
+npm run lint          # ESLint
+npm run format:check  # Prettier
+npm test              # Playwright (starts serve.py automatically)
+npm run check         # all of the above
+```
+
+Pure helpers and enum constants live under `lib/` (`constants.js`, `run-utils.js`, `enum-validation.js`). The browser app imports them as ES modules from `app.js`.
 
 ## Self-hosting
 

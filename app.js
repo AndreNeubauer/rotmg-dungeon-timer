@@ -1,100 +1,41 @@
-const APP_VERSION = "2.8.1";
-
-const PAGE_ROUTE_SEGMENTS = {
-  timer: "Timer",
-  overview: "Overview",
-  times: "Times",
-  leaderboard: "Board",
-  about: "About",
-};
-
-const ROUTE_SEGMENT_TO_PAGE = {
-  Timer: "timer",
-  Overview: "overview",
-  Times: "times",
-  Board: "leaderboard",
-  About: "about",
-};
-
-const PAGE_TITLES = {
-  timer: "Timer",
-  overview: "Overview",
-  times: "Times",
-  leaderboard: "Board",
-  about: "About",
-};
-const STORAGE_KEY = "rotmg-dungeon-runs";
-const IGN_STORAGE_KEY = "rotmg-timer-ign";
-const SHARED_RUN_IDS_KEY = "rotmg-timer-shared-run-ids";
-const RUNS_API = "/api/runs";
-const EXALT_CATEGORY = "exalt";
-const DUPLICATE_WINDOW_MS = 120_000;
-const OVERLAP_TOLERANCE_MS = 3_000;
-const GLOBAL_MIN_SECONDS = 3;
-
-/**
- * After End — optional follow-ups.
- * LH: cult path (no Colossus) vs boss clear; boss clear can chain to Void.
- * Fungal → Crystal always.
- */
-const POST_END_PROMPTS = {
-  "lost-halls": {
-    hint: "Which path? Time is saved — pick below.",
-    deferSave: true,
-    actions: [
-      {
-        label: "→ Cult (no boss)",
-        kind: "next",
-        nextId: "cultist-hideout",
-        runName: "Lost Halls (to Cult)",
-        primary: true,
-      },
-      {
-        label: "Colossus → Void",
-        kind: "next",
-        nextId: "the-void",
-        runName: "Lost Halls",
-        primary: true,
-      },
-      { label: "Colossus clear", kind: "done", runName: "Lost Halls" },
-      { label: "Discard", kind: "discard" },
-    ],
-  },
-  "fungal-cavern": {
-    actions: [
-      { label: "→ Crystal Cavern", kind: "next", nextId: "crystal-cavern", primary: true },
-      { label: "Done", kind: "done" },
-    ],
-  },
-};
-
-const LEGACY_NAME_TO_ID = {
-  "Lost Halls complex": "lost-halls",
-  "Lost Halls (to Cult)": "lost-halls",
-  "Kogbold Steamworks": "kogbold-steamworks",
-  "Moonlight Village": "moonlight-village",
-  Shatters: "the-shatters",
-  "The Shatters": "the-shatters",
-};
+import {
+  APP_VERSION,
+  CATEGORY_TAB_LABELS,
+  CHAIN_SPAWN_DUNGEONS,
+  DEFAULT_PLAYER_MAX,
+  EXALT_CATEGORY,
+  FIND_PRESETS_MIN,
+  HARD_MODE_DUNGEONS,
+  IGN_STORAGE_KEY,
+  LEGACY_NAME_TO_ID,
+  OUTCOMES,
+  PAGE_ROUTE_SEGMENTS,
+  PAGE_TITLES,
+  POST_END_PROMPTS,
+  RUNS_API,
+  RUN_SOURCES,
+  SHARED_RUN_IDS_KEY,
+  STORAGE_KEY,
+} from "./lib/constants.js";
+import {
+  avgDuration,
+  buildPageUrl as resolvePageUrl,
+  computeStats,
+  formatDuration,
+  normalizeRun as normalizeRunBase,
+  pageFromPath as resolvePageFromPath,
+  validateRun,
+  parseFindTimeInput,
+  parseGroupSizeInput,
+  successRate,
+} from "./lib/run-utils.js";
 
 const categoryTabs = document.getElementById("category-tabs");
 const dungeonGrid = document.getElementById("dungeon-grid");
 const searchInput = document.getElementById("dungeon-search");
 
-const CATEGORY_TAB_LABELS = {
-  exalt: "Exalt",
-  realm: "Realm",
-  advanced: "Advanced",
-  oryx: "Oryx",
-  wormhole: "Wormholes",
-  "wormhole-adv": "Adv. WH",
-  special: "Special",
-  heroic: "Heroic",
-  other: "Other",
-};
 const timerSelectionIcon = document.getElementById("timer-selection-icon");
 const dungeonName = document.getElementById("dungeon-name");
-const dungeonMeta = document.getElementById("dungeon-meta");
 const timerEl = document.getElementById("timer");
 const statusEl = document.getElementById("status");
 const startBtn = document.getElementById("start-btn");
@@ -117,11 +58,6 @@ const leaderboardStatus = document.getElementById("leaderboard-status");
 const leaderboardDungeonFilter = document.getElementById("leaderboard-dungeon-filter");
 const leaderboardBody = document.getElementById("leaderboard-body");
 
-const OUTCOMES = {
-  complete: { label: "Complete", short: "✓" },
-  nexus: { label: "Nexus", short: "Nexus" },
-  died: { label: "Died", short: "Died" },
-};
 const pageTimer = document.getElementById("page-timer");
 const pageOverview = document.getElementById("page-overview");
 const pageTimes = document.getElementById("page-times");
@@ -151,19 +87,9 @@ let pendingFindRunId = null;
 let findTimeAfterDone = null;
 let selectedRunType = null;
 
-const RUN_SOURCES = {
-  party: { label: "Party", title: "Organised run — portal ready" },
-  organic: { label: "Organic", title: "Realm / nexus search" },
-};
 /** Run id saved on End before chain prompt (e.g. Fungal). */
 let savedRunIdForPrompt = null;
 
-const FIND_PRESETS_MIN = [3, 5, 10, 15];
-const DEFAULT_PLAYER_MAX = 50;
-/** Spawn from another dungeon — no search-time field (Void, Crystal). */
-const CHAIN_SPAWN_DUNGEONS = new Set(["the-void", "crystal-cavern"]);
-/** Dungeons that offer a hard-mode checkbox after End. */
-const HARD_MODE_DUNGEONS = new Set(["the-shatters", "spectral-penitentiary"]);
 /** True when this run started via LH/Fungal chain (→ Cult, → Void, → Crystal). */
 let currentRunChained = false;
 /** In-memory run list — source of truth while the app is open. */
@@ -173,17 +99,23 @@ let fileStorageReady = false;
 /** Resolved icon URLs — local icons/ first, then CDN fallback. */
 const iconCache = new Map();
 /** Supabase leaderboard — loaded from leaderboard-config.json */
-let leaderboardConfig = { enabled: false, supabaseUrl: "", supabaseAnonKey: "", table: "leaderboard_runs" };
+let leaderboardConfig = {
+  enabled: false,
+  supabaseUrl: "",
+  supabaseAnonKey: "",
+  table: "leaderboard_runs",
+};
 
-function formatDuration(seconds) {
-  const total = Math.round(seconds);
-  const hours = Math.floor(total / 3600);
-  const minutes = Math.floor((total % 3600) / 60);
-  const secs = total % 60;
-  if (hours > 0) {
-    return `${hours}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-  }
-  return `${minutes}:${String(secs).padStart(2, "0")}`;
+function normalizeRun(run) {
+  return normalizeRunBase(run, getDungeon);
+}
+
+function buildPageUrl(pageName) {
+  return resolvePageUrl(pageName, window.location.pathname);
+}
+
+function pageFromPath(pathname = window.location.pathname) {
+  return resolvePageFromPath(pathname);
 }
 
 function iconUrlCdn(dungeon) {
@@ -249,31 +181,6 @@ function getDungeon(idOrName) {
   return null;
 }
 
-function normalizeRun(run) {
-  const id = run.dungeonId || LEGACY_NAME_TO_ID[run.dungeon] || run.dungeon;
-  const dungeon = getDungeon(id);
-  const outcome = run.outcome && OUTCOMES[run.outcome] ? run.outcome : "complete";
-  const findTimeSeconds =
-    run.findTimeSeconds != null && Number.isFinite(run.findTimeSeconds) ? run.findTimeSeconds : null;
-  const runType = run.runType && RUN_SOURCES[run.runType] ? run.runType : null;
-  const groupSize =
-    run.groupSize != null && Number.isFinite(run.groupSize) && run.groupSize >= 1
-      ? Math.round(run.groupSize)
-      : null;
-  return {
-    ...run,
-    id: run.id || crypto.randomUUID(),
-    dungeonId: dungeon?.id || id,
-    dungeonName: dungeon?.name || run.dungeonName || run.dungeon || id,
-    outcome,
-    findTimeSeconds,
-    runType,
-    groupSize,
-    hardMode: run.hardMode === true ? true : null,
-    ign: typeof run.ign === "string" && run.ign.trim() ? run.ign.trim() : null,
-  };
-}
-
 function getIgn() {
   try {
     const value = localStorage.getItem(IGN_STORAGE_KEY);
@@ -333,9 +240,7 @@ function markRunShared(runId) {
 
 function isLeaderboardReady() {
   return Boolean(
-    leaderboardConfig.enabled &&
-      leaderboardConfig.supabaseUrl &&
-      leaderboardConfig.supabaseAnonKey
+    leaderboardConfig.enabled && leaderboardConfig.supabaseUrl && leaderboardConfig.supabaseAnonKey
   );
 }
 
@@ -411,9 +316,7 @@ async function fetchBoardClientRunIds() {
     if (!res.ok) return new Set();
     const rows = await res.json();
     return new Set(
-      (Array.isArray(rows) ? rows : [])
-        .map((row) => row.client_run_id)
-        .filter(Boolean)
+      (Array.isArray(rows) ? rows : []).map((row) => row.client_run_id).filter(Boolean)
     );
   } catch {
     return new Set();
@@ -537,7 +440,9 @@ function formatRunTagsHtml(row, { includeIgn = false } = {}) {
     pills.push(`<span class="outcome-pill ign-tag">${row.ign}</span>`);
   }
   if (row.run_type && RUN_SOURCES[row.run_type]) {
-    pills.push(`<span class="outcome-pill source-${row.run_type}">${RUN_SOURCES[row.run_type].label}</span>`);
+    pills.push(
+      `<span class="outcome-pill source-${row.run_type}">${RUN_SOURCES[row.run_type].label}</span>`
+    );
   }
   if (row.group_size != null) {
     pills.push(`<span class="outcome-pill group-size">${row.group_size}p</span>`);
@@ -689,42 +594,11 @@ function deleteRun(runId) {
   saveRuns(loadRuns().filter((r) => r.id !== runId));
 }
 
-function runStartMs(run) {
-  return new Date(run.startedAt).getTime();
-}
-
-function runEndMs(run) {
-  return runStartMs(run) + run.durationSeconds * 1000;
-}
-
 function validationPeerRuns(proposedRun) {
   const all = loadRuns();
   if (!usesBoardStorage()) return all;
   const tag = (proposedRun.ign || getIgn() || "Anonymous").toLowerCase();
   return all.filter((run) => (run.ign || "Anonymous").toLowerCase() === tag);
-}
-
-function validateRun(run, existingRuns) {
-  const duration = run.durationSeconds;
-  if (!Number.isFinite(duration) || duration < GLOBAL_MIN_SECONDS) {
-    return `Too short (${formatDuration(Math.max(0, duration))}) — not saved`;
-  }
-
-  const startMs = runStartMs(run);
-  for (const other of existingRuns) {
-    if (startMs + OVERLAP_TOLERANCE_MS < runEndMs(other) - OVERLAP_TOLERANCE_MS) {
-      return `Time travel — overlaps ${other.dungeonName} (${formatDuration(other.durationSeconds)}) — not saved`;
-    }
-    if (
-      other.dungeonId === run.dungeonId &&
-      Math.round(other.durationSeconds) === Math.round(duration) &&
-      Math.abs(startMs - runStartMs(other)) <= DUPLICATE_WINDOW_MS
-    ) {
-      return `Duplicate ${run.dungeonName} (${formatDuration(duration)}) — not saved`;
-    }
-  }
-
-  return null;
 }
 
 function showRunRejected(message) {
@@ -797,63 +671,6 @@ function getRunPlayerMax(runId) {
   return run ? getDungeonPlayerMax(getDungeon(run.dungeonId)) : DEFAULT_PLAYER_MAX;
 }
 
-function parseGroupSizeInput(raw, maxPlayers) {
-  const text = raw.trim();
-  if (!text) return null;
-  const size = Math.round(Number(text));
-  if (!Number.isFinite(size) || size < 1 || size > maxPlayers) return null;
-  return size;
-}
-
-function parseFindTimeInput(raw) {
-  const text = raw.trim();
-  if (!text) return null;
-  if (text.includes(":")) {
-    const [mins, secs] = text.split(":").map((part) => Number(part));
-    if (Number.isFinite(mins) && Number.isFinite(secs) && mins >= 0 && secs >= 0) {
-      return mins * 60 + secs;
-    }
-    return null;
-  }
-  const minutes = Number(text);
-  if (Number.isFinite(minutes) && minutes > 0) return Math.round(minutes * 60);
-  return null;
-}
-
-function emptyOutcomeCounts() {
-  return { complete: 0, nexus: 0, died: 0, total: 0 };
-}
-
-function addOutcome(counts, outcome) {
-  counts[outcome] += 1;
-  counts.total += 1;
-}
-
-function successRate(counts) {
-  if (counts.total === 0) return null;
-  return Math.round((counts.complete / counts.total) * 100);
-}
-
-function emptyTiming() {
-  return { attemptDuration: 0, clearDuration: 0, clearCount: 0, findDuration: 0, findCount: 0 };
-}
-
-function emptySourceBuckets() {
-  return { party: emptyTiming(), organic: emptyTiming() };
-}
-
-function addRunToSourceBucket(bucket, run) {
-  bucket.attemptDuration += run.durationSeconds;
-  if (run.outcome === "complete") {
-    bucket.clearDuration += run.durationSeconds;
-    bucket.clearCount += 1;
-  }
-  if (run.findTimeSeconds != null && run.findTimeSeconds > 0) {
-    bucket.findDuration += run.findTimeSeconds;
-    bucket.findCount += 1;
-  }
-}
-
 function getTimesFilterId() {
   return timesDungeonFilter?.value || "";
 }
@@ -863,53 +680,6 @@ function getFilteredTimesRuns() {
   const runs = loadRuns();
   if (!filterId) return runs;
   return runs.filter((run) => run.dungeonId === filterId);
-}
-
-function computeStats(runs = loadRuns()) {
-  const overall = { ...emptyOutcomeCounts(), ...emptyTiming(), bySource: emptySourceBuckets() };
-  const byDungeon = new Map();
-
-  for (const run of runs) {
-    addOutcome(overall, run.outcome);
-    overall.attemptDuration += run.durationSeconds;
-    if (run.outcome === "complete") {
-      overall.clearDuration += run.durationSeconds;
-      overall.clearCount += 1;
-    }
-
-    if (!byDungeon.has(run.dungeonId)) {
-      byDungeon.set(run.dungeonId, {
-        ...emptyOutcomeCounts(),
-        ...emptyTiming(),
-        bySource: emptySourceBuckets(),
-        name: run.dungeonName,
-        id: run.dungeonId,
-      });
-    }
-    const entry = byDungeon.get(run.dungeonId);
-    addOutcome(entry, run.outcome);
-    entry.attemptDuration += run.durationSeconds;
-    if (run.outcome === "complete") {
-      entry.clearDuration += run.durationSeconds;
-      entry.clearCount += 1;
-    }
-    if (run.findTimeSeconds != null && run.findTimeSeconds > 0) {
-      overall.findDuration += run.findTimeSeconds;
-      overall.findCount += 1;
-      entry.findDuration += run.findTimeSeconds;
-      entry.findCount += 1;
-    }
-    if (run.runType === "party" || run.runType === "organic") {
-      addRunToSourceBucket(overall.bySource[run.runType], run);
-      addRunToSourceBucket(entry.bySource[run.runType], run);
-    }
-  }
-
-  return { overall, byDungeon };
-}
-
-function avgDuration(total, count) {
-  return count > 0 ? total / count : null;
 }
 
 function getExaltDungeonIds() {
@@ -976,7 +746,9 @@ function formatGroupClearStats(runs) {
   if (bySize.size === 0) return "";
   const parts = [...bySize.entries()]
     .sort((a, b) => a[0] - b[0])
-    .map(([size, { total, count }]) => `${size}p ${formatDuration(total / count)} clear (${count}×)`);
+    .map(
+      ([size, { total, count }]) => `${size}p ${formatDuration(total / count)} clear (${count}×)`
+    );
   return `<span class="source-compare">By group: ${parts.join(" · ")}</span>`;
 }
 
@@ -1446,9 +1218,7 @@ function renderStatsSummary() {
   }
 
   const filterDungeon = filterId ? getDungeon(filterId) : null;
-  const filterTitle = filterDungeon
-    ? filterDungeon.shortName || filterDungeon.name
-    : null;
+  const filterTitle = filterDungeon ? filterDungeon.shortName || filterDungeon.name : null;
   const rate = successRate(overall);
   const avgClear = avgDuration(overall.clearDuration, overall.clearCount);
   const avgAttempt = avgDuration(overall.attemptDuration, overall.total);
@@ -1529,7 +1299,17 @@ function renderAverages() {
   `;
   averagesList.appendChild(header);
 
-  for (const { name, avgClear, avgAttempt, avgFind, findCount, clearCount, dungeon, stats, bySource } of summaries) {
+  for (const {
+    name,
+    avgClear,
+    avgAttempt,
+    avgFind,
+    findCount,
+    clearCount,
+    dungeon,
+    stats,
+    bySource,
+  } of summaries) {
     const row = document.createElement("div");
     row.className = "average-row";
     const img = document.createElement("img");
@@ -1585,12 +1365,8 @@ function renderRunsTable() {
       ? `<span class="outcome-pill source-${run.runType}">${RUN_SOURCES[run.runType].label}</span>`
       : "";
     const groupPill =
-      run.groupSize != null
-        ? `<span class="outcome-pill group-size">${run.groupSize}p</span>`
-        : "";
-    const hardPill = run.hardMode
-      ? `<span class="outcome-pill hard-mode">Hard</span>`
-      : "";
+      run.groupSize != null ? `<span class="outcome-pill group-size">${run.groupSize}p</span>` : "";
+    const hardPill = run.hardMode ? `<span class="outcome-pill hard-mode">Hard</span>` : "";
     const ignPill = run.ign ? `<span class="outcome-pill ign-tag">${run.ign}</span>` : "";
     const findNote =
       run.findTimeSeconds != null && run.findTimeSeconds > 0
@@ -1950,31 +1726,6 @@ function onEnd() {
   finishRunFlow(runId);
 }
 
-function getAppBase() {
-  const path = window.location.pathname.replace(/\/$/, "");
-  const parts = path.split("/").filter(Boolean);
-  if (parts.length === 0) return "";
-  const last = parts[parts.length - 1];
-  if (ROUTE_SEGMENT_TO_PAGE[last] || last === "index.html") {
-    return parts.length > 1 ? `/${parts.slice(0, -1).join("/")}` : "";
-  }
-  return path.startsWith("/") ? path : `/${path}`;
-}
-
-function buildPageUrl(pageName) {
-  const segment = PAGE_ROUTE_SEGMENTS[pageName] || "Timer";
-  const base = getAppBase().replace(/\/$/, "");
-  return `${base}/${segment}`;
-}
-
-function pageFromPath(pathname = window.location.pathname) {
-  const parts = pathname.replace(/\/$/, "").split("/").filter(Boolean);
-  if (parts.length === 0) return "timer";
-  const last = parts[parts.length - 1];
-  if (last === "index.html") return "timer";
-  return ROUTE_SEGMENT_TO_PAGE[last] || "timer";
-}
-
 function showPage(name, { replace = false, skipHistory = false } = {}) {
   const valid = Object.keys(PAGE_ROUTE_SEGMENTS);
   if (!valid.includes(name)) name = "timer";
@@ -1996,10 +1747,14 @@ function showPage(name, { replace = false, skipHistory = false } = {}) {
     name === "timer" ? "RotMG Timer" : `RotMG Timer — ${PAGE_TITLES[name] || "Timer"}`;
 
   if (name === "times") {
-    void (usesBoardStorage() ? refreshRunsFromBoard() : Promise.resolve()).then(() => renderTimesPage());
+    void (usesBoardStorage() ? refreshRunsFromBoard() : Promise.resolve()).then(() =>
+      renderTimesPage()
+    );
   }
   if (name === "overview") {
-    void (usesBoardStorage() ? refreshRunsFromBoard() : Promise.resolve()).then(() => renderOverviewPage());
+    void (usesBoardStorage() ? refreshRunsFromBoard() : Promise.resolve()).then(() =>
+      renderOverviewPage()
+    );
   }
   if (name === "leaderboard") void renderLeaderboardPage();
 }
@@ -2045,15 +1800,6 @@ async function init() {
   }
   dungeonById = new Map(catalog.dungeons.map((d) => [d.id, d]));
 
-  await loadLeaderboardConfig();
-  if (isLeaderboardReady()) {
-    await initRunsStorage();
-    await syncAllRunsToBoard({ quiet: true });
-    await refreshRunsFromBoard();
-  } else {
-    await initRunsStorage();
-  }
-  void initBackground();
   renderIgnProfile();
   if (appVersionEl) appVersionEl.textContent = `v${APP_VERSION}`;
 
@@ -2094,6 +1840,16 @@ async function init() {
 
   renderDungeonPicker();
   updateSelectedDisplay();
+  void initBackground();
+
+  await loadLeaderboardConfig();
+  if (isLeaderboardReady()) {
+    await initRunsStorage();
+    await syncAllRunsToBoard({ quiet: true });
+    await refreshRunsFromBoard();
+  } else {
+    await initRunsStorage();
+  }
 }
 
 init();

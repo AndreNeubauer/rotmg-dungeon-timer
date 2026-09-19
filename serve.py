@@ -10,6 +10,7 @@ from pathlib import Path
 PORT = 8765
 DIR = Path(__file__).resolve().parent
 RUNS_FILE = DIR / "runs.json"
+# Keep in sync with lib/constants.js TAB_ROUTE_SEGMENTS
 TAB_ROUTES = frozenset({"Timer", "Overview", "Times", "Board", "About"})
 
 

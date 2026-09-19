@@ -1,5 +1,7 @@
-__pycache__/
+404.html
+dungeons.js
+wr-times.js
+style.css
 node_modules/
 playwright-report/
 test-results/
-runs.json

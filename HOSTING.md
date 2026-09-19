@@ -30,10 +30,10 @@ The hosted app stores all runs in Supabase. Times and Board read from the same t
 
 ### Troubleshooting
 
-| Problem | Fix |
-|--------|-----|
-| Pages deploy 404 | Enable **Source: GitHub Actions** under Settings → Pages |
-| Board/Times empty | Check `leaderboard-config.json`, browser console (F12), schema + grants in SQL |
-| Insert permission denied | Re-run the `grant` lines at the bottom of `supabase-schema.sql` |
+| Problem                  | Fix                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------ |
+| Pages deploy 404         | Enable **Source: GitHub Actions** under Settings → Pages                       |
+| Board/Times empty        | Check `leaderboard-config.json`, browser console (F12), schema + grants in SQL |
+| Insert permission denied | Re-run the `grant` lines at the bottom of `supabase-schema.sql`                |
 
 Bad rows can be removed in Supabase **Table Editor**.
