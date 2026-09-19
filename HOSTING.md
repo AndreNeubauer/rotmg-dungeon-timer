@@ -14,7 +14,7 @@ Personal runs still stay in each person’s browser. Only **clears you opt in to
 2. Under **Build and deployment** → **Source**, choose **GitHub Actions** (not “Deploy from a branch”)
 3. Save
 
-If the repo is **private**, you need a GitHub plan that includes Pages for private repos. Otherwise make the repo public or use another host (Netlify/Cloudflare — same static files).
+If the repo is **private**, you need **GitHub Pro** (personal) or **Team** (org) for Pages to keep working. On **GitHub Free**, Pages only works from **public** repos — making the repo private unpublishes the site. With Pro+, the **website stays public** for everyone even if the repo is private (only the source code is hidden).
 
 ### 2. Deploy
 
