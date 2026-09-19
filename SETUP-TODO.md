@@ -1,6 +1,6 @@
 # Setup checklist — what’s left to do
 
-Last updated: **2026-09-18**
+Last updated: **2026-09-19**
 
 Use this as a single list. Details live in [HOSTING.md](./HOSTING.md), [PUSH-TO-NEW-REPO.md](./PUSH-TO-NEW-REPO.md).
 
