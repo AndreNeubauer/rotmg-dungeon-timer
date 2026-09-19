@@ -1,6 +1,6 @@
 import type { PostEndPromptConfig } from "./types";
 
-export const APP_VERSION = "3.0.0";
+export const APP_VERSION = "3.0.1";
 
 export const PAGE_ROUTES = {
   timer: "Timer",
@@ -60,7 +60,7 @@ export const LEGACY_NAME_TO_ID: Record<string, string> = {
 
 export const POST_END_PROMPTS: Record<string, PostEndPromptConfig> = {
   "lost-halls": {
-    hint: "Which path? Time is saved — pick below.",
+    hint: "Which path? Or pick another dungeon above and Start.",
     deferSave: true,
     actions: [
       {
