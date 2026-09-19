@@ -44,3 +44,7 @@ create policy "Public insert clears"
   );
 
 -- No updates/deletes from the app (admin via Supabase dashboard if needed)
+
+-- Required when "Automatically expose new tables" is OFF in project settings
+grant usage on schema public to anon, authenticated;
+grant select, insert on public.leaderboard_runs to anon, authenticated;

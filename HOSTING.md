@@ -58,8 +58,8 @@ The app talks to Supabase directly from the browser (anon key + Row Level Securi
 
 1. **Project Settings** (gear) → **API**
 2. Copy:
-   - **Project URL** → `supabaseUrl`
-   - **anon public** key → `supabaseAnonKey` (safe to ship in the static app; RLS limits what it can do)
+   - **Project URL** → `supabaseUrl` — built as `https://YOUR_PROJECT_ID.supabase.co` (find **Project ID** under Settings → General, e.g. `fwyhpqigtrjdgamdhvwg`)
+   - **Publishable key** or **legacy anon** key → `supabaseAnonKey` (safe in the static app; RLS limits what it can do)
 
 ### 4. Configure the app
 

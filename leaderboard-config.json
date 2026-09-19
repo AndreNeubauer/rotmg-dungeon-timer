@@ -1,6 +1,6 @@
 {
-  "enabled": false,
-  "supabaseUrl": "",
-  "supabaseAnonKey": "",
+  "enabled": true,
+  "supabaseUrl": "https://fwyhpqigtrjdgamdhvwg.supabase.co",
+  "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3eWhwcWlndHJqZGdhbWRodndnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4MDI5NDgsImV4cCI6MjEwNTM3ODk0OH0.o6G8wzpSzcXV2gIo1xGIGLAFd98y2ub7ouj71qXk2A8",
   "table": "leaderboard_runs"
 }
