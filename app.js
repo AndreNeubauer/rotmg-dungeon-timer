@@ -1,4 +1,4 @@
-const APP_VERSION = "2.1";
+const APP_VERSION = "2.2";
 const STORAGE_KEY = "rotmg-dungeon-runs";
 const IGN_STORAGE_KEY = "rotmg-timer-ign";
 const SHARE_LEADERBOARD_KEY = "rotmg-timer-share-leaderboard";
@@ -369,8 +369,7 @@ async function shareRunToLeaderboard(run, { manual = false } = {}) {
   if (!isLeaderboardReady()) return { ok: false, reason: "not-configured" };
   if (!manual && !getShareLeaderboardEnabled()) return { ok: false, reason: "sharing-off" };
   if (run.outcome !== "complete") return { ok: false, reason: "not-complete" };
-  const ign = getIgn();
-  if (!ign) return { ok: false, reason: "no-ign" };
+  const ign = getIgn() || run.ign || "Anonymous";
   if (getSharedRunIds().includes(run.id)) return { ok: true, reason: "already-shared" };
 
   const table = leaderboardConfig.table || "leaderboard_runs";
@@ -411,12 +410,6 @@ async function syncLocalClearsToLeaderboard() {
     updateLeaderboardStatus("Leaderboard is not configured.", { error: true });
     return;
   }
-  const ign = getIgn();
-  if (!ign) {
-    updateLeaderboardStatus("Set your IGN at the top before uploading.", { error: true });
-    return;
-  }
-
   const clears = loadRuns().filter((run) => run.outcome === "complete");
   const pending = clears.filter((run) => !getSharedRunIds().includes(run.id));
   if (pending.length === 0) {
@@ -617,6 +610,18 @@ async function importRunsFromFile(file) {
   saveRuns(next);
   renderTimesPage();
   if (!pageOverview.classList.contains("hidden")) renderOverviewPage();
+
+  if (isLeaderboardReady()) {
+    const importedClears = normalized.filter((run) => run.outcome === "complete").length;
+    if (
+      importedClears > 0 &&
+      window.confirm(
+        `Import done. Upload ${importedClears} complete run(s) to the shared Board now? (Uses your IGN if set, otherwise "Anonymous".)`
+      )
+    ) {
+      await syncLocalClearsToLeaderboard();
+    }
+  }
 }
 
 async function persistRuns(runs) {
@@ -1632,17 +1637,9 @@ async function renderLeaderboardPage() {
 
   const ign = getIgn();
   const sharing = getShareLeaderboardEnabled();
-  if (sharing && !ign) {
-    updateLeaderboardStatus("Set your IGN at the top to share clears.");
-  } else if (sharing) {
-    updateLeaderboardStatus(
-      "New completes upload automatically. Use Upload local clears for runs logged before sharing was on."
-    );
-  } else {
-    updateLeaderboardStatus(
-      "Turn on sharing for new runs, or use Upload local clears once. Only runs in this browser are uploaded."
-    );
-  }
+  updateLeaderboardStatus(
+    "Your times live in this browser until you upload. Board tab → Upload local clears sends them to the shared database. IGN is optional (shows your name on the board)."
+  );
 
   try {
     leaderboardRows = await fetchLeaderboardRows();
