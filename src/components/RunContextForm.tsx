@@ -32,7 +32,7 @@ export function RunContextForm() {
     : "Chain spawn — no search time.";
 
   return (
-    <div className="mt-4 rounded-md border border-border bg-surface/80 p-4">
+    <div className="mt-4 rounded-md border border-border bg-panel p-4">
       <p className="mb-3 text-[0.85rem] leading-snug text-text">
         Run details <span className="text-muted">(optional)</span>
         <span className="mt-1 block text-[0.72rem] text-muted">{chainNote}</span>
@@ -151,7 +151,7 @@ export function PostEndPrompt() {
   if (!postEndPromptVisible || !postEndActions) return null;
 
   return (
-    <div className="mt-4 rounded-md border border-border bg-surface/80 p-4">
+    <div className="mt-4 rounded-md border border-border bg-panel p-4">
       <p className="mb-3 text-[0.85rem] text-text">{postEndLabel}</p>
       <p className="mb-3 text-[0.72rem] text-muted">
         Or pick another dungeon above and press Start.

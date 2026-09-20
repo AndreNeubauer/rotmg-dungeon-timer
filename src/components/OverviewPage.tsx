@@ -63,7 +63,7 @@ export function OverviewPage() {
       ) : (
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {stats.map((stat) => (
-            <div key={stat.label} className="rounded-md border border-border bg-surface/70 p-3 text-center">
+            <div key={stat.label} className="rounded-md border border-border bg-panel p-3 text-center">
               <div className="text-[1.25rem] font-semibold tabular-nums">{stat.value}</div>
               <div className="text-[0.68rem] text-muted">{stat.label}</div>
             </div>
@@ -88,7 +88,7 @@ export function OverviewPage() {
             return (
               <article
                 key={entry.id}
-                className="flex items-center gap-3 rounded-md border border-border bg-surface/70 p-3"
+                className="flex items-center gap-3 rounded-md border border-border bg-panel p-3"
               >
                 <DungeonIcon dungeon={entry.dungeon} catalog={catalog} width={36} height={36} />
                 <div className="min-w-0 flex-1">

@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { BackgroundLayer } from "@/components/BackgroundLayer";
 import { AppFooter, AppHeader } from "@/components/AppHeader";
 import { IgnModal } from "@/components/IgnModal";
 import { RunsProvider } from "@/hooks/RunsContext";
-import { LIVE_URL, REPO_URL } from "@/lib/constants";
+import { LIVE_URL, REPO_URL, THEME_STORAGE_KEY } from "@/lib/constants";
 import "./globals.css";
 
 const siteTitle = "RotMG Dungeon Timer";
@@ -41,7 +42,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   colorScheme: "dark light",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f4f4" },
+    { media: "(prefers-color-scheme: light)", color: "#efebe3" },
     { media: "(prefers-color-scheme: dark)", color: "#0c0c0c" },
   ],
 };
@@ -50,6 +51,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
+        <Script id="theme-boot" strategy="beforeInteractive">
+          {`(function(){
+            try {
+              var stored = localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)}) || "dark";
+              var resolved = stored === "system"
+                ? (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")
+                : stored;
+              if (resolved !== "light" && resolved !== "dark") resolved = "dark";
+              document.documentElement.dataset.theme = resolved;
+              document.documentElement.style.colorScheme = resolved;
+            } catch (e) {}
+          })();`}
+        </Script>
         <RunsProvider>
           <BackgroundLayer />
           <main className="relative z-0 mx-auto max-w-[var(--content-max)] px-[1.15rem] pt-7 pb-5">

@@ -25,7 +25,7 @@ export function StatCardsSkeleton({ count = 4 }: { count?: number }) {
   return (
     <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4" aria-busy="true" aria-label="Loading">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="rounded-md border border-border bg-surface/70 p-3 text-center">
+        <div key={i} className="rounded-md border border-border bg-panel p-3 text-center">
           <div className="skeleton mx-auto mb-2 h-6 w-12" />
           <div className="skeleton mx-auto h-3 w-16" />
         </div>

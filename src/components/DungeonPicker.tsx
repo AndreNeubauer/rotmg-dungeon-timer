@@ -33,7 +33,7 @@ export function DungeonPicker() {
             onClick={() => setSelectedCategoryId(category.id)}
             className={`cursor-pointer rounded-md border px-3 py-1.5 text-[0.8rem] leading-tight whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-45 ${
               selectedCategoryId === category.id
-                ? "border-[#555] bg-[#1f1f1f] font-medium text-text"
+                ? "border-raised-border bg-raised font-medium text-text"
                 : "border-border bg-surface text-muted"
             }`}
           >
@@ -64,7 +64,7 @@ export function DungeonPicker() {
                 onClick={() => selectDungeon(dungeon.id)}
                 className={`flex min-h-[84px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-md border px-1 py-2.5 disabled:cursor-not-allowed disabled:opacity-40 ${
                   selected
-                    ? "border-green bg-[color-mix(in_srgb,var(--green)_12%,#1c1c1c)] shadow-[0_0_0_1px_color-mix(in_srgb,var(--green)_55%,transparent)]"
+                    ? "border-green bg-[color-mix(in_srgb,var(--green)_14%,var(--surface))] shadow-[0_0_0_1px_color-mix(in_srgb,var(--green)_50%,transparent)]"
                     : "border-transparent bg-surface hover:border-border"
                 }`}
               >

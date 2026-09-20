@@ -8,7 +8,7 @@ export function DemoRunsBanner() {
   if (usesBoardStorage || runs.length > 0) return null;
 
   return (
-    <div className="mb-5 rounded-md border border-border bg-surface/80 px-3 py-2.5 text-[0.82rem]">
+    <div className="mb-5 rounded-md border border-border bg-panel px-3 py-2.5 text-[0.82rem]">
       <span className="text-muted">No runs yet. </span>
       <button
         type="button"

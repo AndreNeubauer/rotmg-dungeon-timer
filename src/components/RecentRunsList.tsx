@@ -53,7 +53,7 @@ export function RecentRunsList({ runs: propRuns, emptyText, limit = 8, showWr = 
         return (
           <article
             key={run.id}
-            className="flex items-center gap-2.5 rounded-md border border-border/60 bg-surface/60 px-2.5 py-2"
+            className="flex items-center gap-2.5 rounded-md border border-border/60 bg-panel px-2.5 py-2"
           >
             <DungeonIcon dungeon={dungeon} catalog={catalog} width={28} height={28} />
             <div className="min-w-0 flex-1">

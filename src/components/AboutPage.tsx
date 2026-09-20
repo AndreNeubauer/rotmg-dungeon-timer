@@ -2,7 +2,7 @@ import { LIVE_URL, REPO_URL } from "@/lib/constants";
 
 export function AboutPage() {
   return (
-    <article className="prose prose-invert max-w-none text-[0.9rem] leading-relaxed text-text">
+    <article className="max-w-none text-[0.9rem] leading-relaxed text-text">
       <h2 className="mb-2 text-[1rem] font-semibold">What this is</h2>
       <p className="mb-5 text-muted">
         A dungeon timer for <strong className="text-text">Realm of the Mad God</strong> that tracks
@@ -38,7 +38,7 @@ export function AboutPage() {
         configured. Times and Leaderboard read from the same data — newest first vs fastest first.
         WR data is fetched from speedrun.com via a maintenance script and served as static JSON.
       </p>
-      <pre className="mb-5 overflow-x-auto rounded-md border border-border bg-surface/80 p-3 text-[0.72rem] text-muted">
+      <pre className="mb-5 overflow-x-auto rounded-md border border-border bg-panel p-3 text-[0.72rem] text-muted">
         {`Browser (timer + localStorage)
     ↓ optional sync
 Supabase (shared leaderboard_runs)
