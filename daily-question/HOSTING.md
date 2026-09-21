@@ -120,9 +120,98 @@ This is a personal journal app, not a public multi-user product.
 - Anyone who can open the URL can submit answers and read `answers.txt`
 - If you want it private, use Cloudflare Access, HTTP basic auth in Caddy, or firewall the VM to your IP only
 
-## Even cheaper: skip the VM
+## Host on your home PC (free)
 
-If you already have any always-on computer (home PC, Raspberry Pi, old laptop), run `python3 server.py` there and use Cloudflare Tunnel for the URL. Total cost can be **$0/month**.
+Yes — this app is small enough to run on any home computer. **Cost: $0/month** (just electricity).
+
+### What you need
+
+- Python 3 installed ([python.org](https://www.python.org/downloads/))
+- The `daily-question/` folder on your PC
+- Your PC on when you want the app reachable (or leave it on)
+
+### Step 1 — Start the app locally
+
+**Windows (PowerShell or Command Prompt):**
+
+```bat
+cd path\to\daily-question
+python server.py
+```
+
+**Mac / Linux:**
+
+```bash
+cd ~/daily-question
+python3 server.py
+```
+
+Open `http://localhost:8080` on that same PC. It works.
+
+Only you can use it until you expose it to the internet (step 2).
+
+### Step 2 — Get a public URL (pick one)
+
+#### Option A — Cloudflare Tunnel (recommended, no router config)
+
+Best for home hosting. You do **not** open ports on your router.
+
+1. Install [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation/)
+2. With `server.py` already running, open a second terminal:
+
+```bash
+cloudflared tunnel --url http://localhost:8080
+```
+
+3. Cloudflare prints a URL like `https://random-words.trycloudflare.com`
+4. Open that URL on your phone or any device — it hits your home PC
+
+Free, HTTPS included, works behind any home router/NAT.
+
+For a **fixed URL**, create a free Cloudflare account and set up a [named tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/).
+
+#### Option B — Port forwarding (harder, not recommended)
+
+1. In your router, forward external port `8080` → your PC’s local IP (`192.168.x.x:8080`)
+2. Find your public IP at [whatismyip.com](https://whatismyip.com)
+3. Visit `http://YOUR_PUBLIC_IP:8080`
+
+Downsides: home IP changes often, no HTTPS by default, exposes your home network. Use Cloudflare Tunnel instead.
+
+#### Option C — Local only (no internet)
+
+Just use `http://localhost:8080` on your PC. Fine if only you answer on that machine.
+
+### Step 3 — Run it on boot (optional)
+
+**Windows:** Task Scheduler → run `python C:\path\to\daily-question\server.py` at login.
+
+**Mac/Linux:** use the included systemd unit (edit paths for your home folder):
+
+```bash
+# Edit User= and paths in deploy/daily-question.service, then:
+sudo cp deploy/daily-question.service /etc/systemd/system/
+sudo systemctl enable --now daily-question
+```
+
+Pair with a Cloudflare Tunnel service if you want the public URL whenever the PC is on.
+
+### Home PC trade-offs
+
+| Pros | Cons |
+|------|------|
+| Free | PC must stay on |
+| Your data stays at home (`answers.txt` on your disk) | Power outage = site down |
+| No VPS bill | Upload speed limits how fast others load it |
+| Easy to edit `questions.txt` locally | Public URL means anyone with the link can read/write |
+
+### Privacy tip
+
+If the URL is public, anyone can submit answers and read `answers.txt`. For a personal journal:
+
+- Use Cloudflare Tunnel but **don’t share the URL**, or
+- Add a simple password in front with Cloudflare Access (free tier), or
+- Keep it local-only (`localhost`)
 
 ## Crypto payments + “lifetime” URL
 
