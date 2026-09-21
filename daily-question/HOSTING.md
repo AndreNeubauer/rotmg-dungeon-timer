@@ -123,3 +123,97 @@ This is a personal journal app, not a public multi-user product.
 ## Even cheaper: skip the VM
 
 If you already have any always-on computer (home PC, Raspberry Pi, old laptop), run `python3 server.py` there and use Cloudflare Tunnel for the URL. Total cost can be **$0/month**.
+
+## Crypto payments + “lifetime” URL
+
+### The honest truth about “lifetime” domains
+
+Real `.com` / `.xyz` / `.site` domains (the kind that work in every browser) **must be renewed**. There is no true forever registration from ICANN registrars anymore. Epik’s “Forever” product is effectively discontinued.
+
+Your practical “lifetime” options:
+
+| Approach | How long it lasts | Crypto? | Rough cost |
+|----------|-------------------|---------|------------|
+| **Prepay 10 years** on a cheap TLD | 10 years, one payment | Yes | ~$25–40 total |
+| **Cloudflare Tunnel** free subdomain | Free as long as Cloudflare exists | N/A (hosting only) | $0 for URL |
+| **Web3 domains** (`.crypto`, etc.) | One-time purchase | Yes | $5–50 one-time |
+
+For this app, **prepay 10 years + pay hosting with BTC** is the closest thing to “lifetime” with a normal URL.
+
+### Recommended stack (crypto, cheap, normal URL)
+
+**Domain — NameSilo (accepts BTC, ETH, LTC, BCH, USDC)**
+
+1. Go to [namesilo.com](https://www.namesilo.com)
+2. Search for something like `yourname.xyz` (often ~$2–3/year)
+3. At checkout, set registration length to **10 years**
+4. Pay with crypto (fund account with Bitcoin, or pay at checkout via BitPay/Nicky)
+5. Point an `A` record at your VPS IP
+
+One crypto payment ≈ **10 years of domain** (~$25–40 for a `.xyz`).
+
+**Hosting — Cloudzy or BitLaunch (accept Bitcoin directly)**
+
+| Provider | Crypto | Smallest plan | Notes |
+|----------|--------|---------------|-------|
+| [Cloudzy](https://cloudzy.com/bitcoin-vps) | BTC, ETH, USDT | ~$2.50/mo | Simple checkout, Linux VPS |
+| [BitLaunch](https://bitlaunch.io) | BTC + others | ~$5/mo | Privacy-focused, hourly billing |
+| [Bacloud](https://www.bacloud.com/bitcoin-vps) | BTC, ETH, LTC | ~$5/mo | Instant deploy after confirmation |
+
+Pick Ubuntu 24.04, 1 GB RAM. Deploy the app the same way as above.
+
+**HTTPS — Caddy** (free, auto SSL once DNS points to the VM)
+
+```bash
+sudo apt install -y caddy
+sudo nano /etc/caddy/Caddyfile   # set your domain
+sudo systemctl reload caddy
+```
+
+**Total:** ~$25–40 once (domain for 10 years) + ~$3/mo in BTC for the VM.
+
+### Cheapest crypto option (no custom domain)
+
+If you only care about a working URL, not a branded name:
+
+1. Rent a VPS from **Cloudzy** or **BitLaunch** — pay in BTC
+2. Run the app + **Cloudflare Tunnel** for a free `*.trycloudflare.com` URL
+3. **No domain purchase at all**
+
+Cost: **~$3/mo in crypto only**.
+
+The tunnel URL is free forever; you just keep paying the tiny VPS bill.
+
+### All-crypto + privacy (more expensive)
+
+**Njalla** ([njal.la](https://njal.la)) accepts Bitcoin, Monero, Ethereum, Litecoin:
+
+- Domains from ~€15/year (Njalla holds legal ownership; you control it)
+- VPS from ~€15/month
+- No real name required
+
+Good if privacy matters more than price. Everything in one place, all crypto.
+
+### Web3 “lifetime” domains (usually not worth it here)
+
+Services like Unstoppable Domains, Freename, or `.crypto` names sell **one-time** domains paid in crypto. Catch: they do not behave like normal websites out of the box. You would need IPFS or special browser extensions. Skip these unless you specifically want a Web3 identity.
+
+### Step-by-step: crypto deploy checklist
+
+```bash
+# 1. On your laptop — copy app to the VPS
+scp -r daily-question/ user@YOUR_VM_IP:~/
+
+# 2. On the VPS — install and start
+cd ~/daily-question
+python3 server.py &   # or use the systemd service from deploy/
+
+# 3. Point your NameSilo domain A record → VPS IP
+
+# 4. Install Caddy for HTTPS (after DNS propagates)
+sudo apt install -y caddy
+echo 'yourname.xyz { reverse_proxy 127.0.0.1:8080 }' | sudo tee /etc/caddy/Caddyfile
+sudo systemctl reload caddy
+```
+
+Done. You now have `https://yourname.xyz` paid mostly upfront in crypto.
