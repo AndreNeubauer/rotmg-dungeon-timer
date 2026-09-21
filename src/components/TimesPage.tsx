@@ -36,6 +36,8 @@ export function TimesPage() {
     exportRuns,
     importRuns,
     refreshFromBoard,
+    leaderboardStatus,
+    leaderboardStatusError,
   } = useRuns();
   const [filterId, setFilterId] = useState("");
   const [loading, setLoading] = useState(true);
@@ -70,6 +72,14 @@ export function TimesPage() {
 
   return (
     <>
+      {leaderboardStatus && (
+        <p
+          className={`mb-3 text-[0.72rem] ${leaderboardStatusError ? "text-red" : "text-muted"}`}
+        >
+          {leaderboardStatus}
+        </p>
+      )}
+
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <label className="text-[0.78rem] text-muted" htmlFor="times-dungeon-filter">
           Dungeon

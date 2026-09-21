@@ -42,6 +42,17 @@ function supabaseHeaders(config: LeaderboardConfig, adminDeleteKey = "") {
   return headers;
 }
 
+/** PostgREST sends deleted row count in Content-Range (e.g. `* / 1`). 204 with `* / 0` means RLS blocked delete. */
+export function parseSupabaseDeleteCount(contentRange: string | null): number | null {
+  if (!contentRange) return null;
+  const slash = contentRange.lastIndexOf("/");
+  if (slash < 0) return null;
+  const tail = contentRange.slice(slash + 1).trim();
+  if (tail === "*") return null;
+  const n = Number(tail);
+  return Number.isFinite(n) ? n : null;
+}
+
 export async function deleteRunFromLeaderboard(
   config: LeaderboardConfig,
   clientRunId: string,
@@ -55,9 +66,11 @@ export async function deleteRunFromLeaderboard(
       `${config.supabaseUrl}/rest/v1/${table}?client_run_id=eq.${encodeURIComponent(clientRunId)}`,
       {
         method: "DELETE",
-        headers: { ...supabaseHeaders(config, adminDeleteKey), Prefer: "return=minimal" },
+        headers: { ...supabaseHeaders(config, adminDeleteKey), Prefer: "count=exact" },
       }
     );
+    const deleted = parseSupabaseDeleteCount(res.headers.get("content-range"));
+    if (res.ok && deleted === 0) return { ok: false, reason: "forbidden" };
     if (res.ok) return { ok: true, reason: "deleted" };
     if (res.status === 401 || res.status === 403) return { ok: false, reason: "forbidden" };
     return { ok: false, reason: `http-${res.status}` };
