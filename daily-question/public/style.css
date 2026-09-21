@@ -105,13 +105,58 @@ button {
   cursor: pointer;
 }
 
+button.secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
 button:hover {
   background: var(--accent-dark);
+}
+
+button.secondary:hover {
+  background: rgba(196, 92, 38, 0.08);
+  color: var(--accent-dark);
 }
 
 button:disabled {
   opacity: 0.65;
   cursor: wait;
+}
+
+.answers-panel {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
+
+.answers-panel h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+.answers-panel pre {
+  margin: 0;
+  padding: 1rem;
+  border-radius: 12px;
+  background: #faf7f1;
+  border: 1px solid var(--line);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  max-height: 24rem;
+  overflow: auto;
+}
+
+.hint {
+  margin: 0.75rem 0 0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  color: var(--muted);
+  font-size: 0.88rem;
 }
 
 a {

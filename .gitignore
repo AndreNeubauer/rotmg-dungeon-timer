@@ -1,5 +1,6 @@
 __pycache__/
 daily-question/answers.txt
+daily-question/.secret
 runs.json
 node_modules/
 .next/

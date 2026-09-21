@@ -15,10 +15,7 @@ python3 server.py
 
 Open `http://localhost:8080`
 
-Raw files:
-
-- `http://localhost:8080/questions.txt`
-- `http://localhost:8080/answers.txt`
+Data files (`questions.txt`, `answers.txt`) are **not** served over the web. Only you can read them on disk (SSH, file explorer). The site shows today's question only; past answers unlock after submitting today's answer.
 
 ## Cheapest real hosting (~$4/month)
 
@@ -117,8 +114,11 @@ scp user@YOUR_VM_IP:~/daily-question/answers.txt ./answers-backup.txt
 
 This is a personal journal app, not a public multi-user product.
 
-- Anyone who can open the URL can submit answers and read `answers.txt`
-- If you want it private, use Cloudflare Access, HTTP basic auth in Caddy, or firewall the VM to your IP only
+- The full question list and answer log are **not** publicly downloadable
+- Past answers only appear after submitting **today's** answer (cookie resets each day)
+- Someone with SSH/disk access to the PC can still read the text files directly
+- For stronger privacy: don't share the URL, use Cloudflare Access, or firewall to your IP only
+- Optional: set `DAILY_QUESTION_SECRET` env var so unlock cookies survive server restarts predictably
 
 ## Host on your home PC (free)
 

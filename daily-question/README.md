@@ -5,6 +5,8 @@ Super simple daily journal app.
 - One question per day
 - Cycles through every line in `questions.txt`
 - Saves answers to `answers.txt`
+- Question bank is never exposed publicly — only today's question
+- Past answers unlock only after you submit today's answer (per day, per browser)
 - No database, no npm, no framework
 
 ## Run locally

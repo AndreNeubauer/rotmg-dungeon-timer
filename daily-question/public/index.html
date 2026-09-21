@@ -24,11 +24,19 @@
         ></textarea>
         <div class="actions">
           <button type="submit" id="submit">Save answer</button>
-          <a href="/answers.txt" target="_blank" rel="noopener">View all answers</a>
+          <button type="button" id="view-answers" class="secondary" hidden>
+            View past answers
+          </button>
         </div>
       </form>
 
+      <section id="answers-panel" class="answers-panel" hidden>
+        <h2>Past answers</h2>
+        <pre id="answers-content"></pre>
+      </section>
+
       <p class="status" id="status" aria-live="polite"></p>
+      <p class="hint" id="hint">Past answers unlock after you submit today's answer.</p>
     </main>
 
     <script>
@@ -38,12 +46,37 @@
       const answerEl = document.getElementById("answer");
       const statusEl = document.getElementById("status");
       const submitBtn = document.getElementById("submit");
+      const viewAnswersBtn = document.getElementById("view-answers");
+      const answersPanel = document.getElementById("answers-panel");
+      const answersContent = document.getElementById("answers-content");
+      const hintEl = document.getElementById("hint");
+
+      function setUnlocked(unlocked) {
+        viewAnswersBtn.hidden = !unlocked;
+        hintEl.hidden = unlocked;
+      }
 
       async function loadToday() {
         const res = await fetch("/api/today");
         const data = await res.json();
         questionEl.textContent = data.question;
-        metaEl.textContent = `${data.date} · question ${data.index} of ${data.total}`;
+        metaEl.textContent = data.date;
+      }
+
+      async function loadStatus() {
+        const res = await fetch("/api/status");
+        const data = await res.json();
+        setUnlocked(data.unlocked);
+      }
+
+      async function loadAnswers() {
+        const res = await fetch("/api/answers");
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          throw new Error(data.error || "Could not load answers");
+        }
+        answersContent.textContent = data.content.trim() || "No answers yet.";
+        answersPanel.hidden = false;
       }
 
       form.addEventListener("submit", async (event) => {
@@ -61,8 +94,9 @@
           if (!res.ok || !data.ok) {
             throw new Error(data.error || "Could not save answer");
           }
-          statusEl.textContent = "Saved to answers.txt";
+          statusEl.textContent = "Saved. You can now view past answers.";
           answerEl.value = "";
+          setUnlocked(true);
         } catch (error) {
           statusEl.textContent = error.message;
         } finally {
@@ -70,7 +104,17 @@
         }
       });
 
-      loadToday().catch(() => {
+      viewAnswersBtn.addEventListener("click", async () => {
+        statusEl.textContent = "Loading answers…";
+        try {
+          await loadAnswers();
+          statusEl.textContent = "";
+        } catch (error) {
+          statusEl.textContent = error.message;
+        }
+      });
+
+      Promise.all([loadToday(), loadStatus()]).catch(() => {
         questionEl.textContent = "Could not load today’s question.";
       });
     </script>
