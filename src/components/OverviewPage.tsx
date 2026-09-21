@@ -11,21 +11,14 @@ import {
   totalClearHours,
 } from "@/lib/stats";
 import { getExaltDungeonIds } from "@/lib/dungeons";
-import { loadWrTimes, type WrDungeonEntry } from "@/lib/wr-times";
 import { useRuns } from "@/hooks/RunsContext";
 import { DungeonIcon } from "./DungeonIcon";
 import { RecentRunsList } from "./RecentRunsList";
 import { StatCardsSkeleton } from "./LoadingSkeleton";
-import { WrComparison, wrForDungeon } from "./WrComparison";
 
 export function OverviewPage() {
   const { runs, catalog, getDungeonById, refreshFromBoard, usesBoardStorage } = useRuns();
-  const [wrMap, setWrMap] = useState<Map<string, WrDungeonEntry>>(new Map());
   const [loading, setLoading] = useState(usesBoardStorage);
-
-  useEffect(() => {
-    void loadWrTimes().then(setWrMap);
-  }, []);
 
   useEffect(() => {
     if (!usesBoardStorage) {
@@ -77,14 +70,8 @@ export function OverviewPage() {
         ) : (
           exaltSummaries.map((entry) => {
             const dungeonRuns = runs.filter((run) => run.dungeonId === entry.id);
-            const bestRun = dungeonRuns
-              .filter((r) => r.outcome === "complete")
-              .sort((a, b) => a.durationSeconds - b.durationSeconds)[0];
             const best = bestClearSeconds(dungeonRuns);
             const entryRate = successRate(entry.stats);
-            const wr = bestRun
-              ? wrForDungeon(wrMap, entry.id, bestRun.runType, bestRun.groupSize)
-              : wrForDungeon(wrMap, entry.id, null, null);
             return (
               <article
                 key={entry.id}
@@ -109,14 +96,6 @@ export function OverviewPage() {
                   <div className="text-[0.68rem] text-muted">
                     {entry.avgClear != null ? `${formatDuration(entry.avgClear)} avg` : "—"}
                   </div>
-                  {best != null && (
-                    <WrComparison
-                      clearSeconds={best}
-                      wrSeconds={wr.seconds}
-                      wrDisplay={wr.display}
-                      wrWeblink={wr.weblink}
-                    />
-                  )}
                 </div>
               </article>
             );
@@ -126,7 +105,7 @@ export function OverviewPage() {
 
       <section>
         <h2 className="mb-3 text-[0.95rem] font-medium">Recent runs</h2>
-        <RecentRunsList runs={runs} emptyText="Nothing logged yet." limit={8} showWr />
+        <RecentRunsList runs={runs} emptyText="Nothing logged yet." limit={8} />
       </section>
     </>
   );

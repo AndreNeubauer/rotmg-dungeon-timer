@@ -9,7 +9,7 @@ import "./globals.css";
 
 const siteTitle = "RotMG Dungeon Timer";
 const siteDescription =
-  "Track Realm of the Mad God dungeon clear times, compare against speedrun WRs, and compete on a shared leaderboard.";
+  "Track Realm of the Mad God dungeon clear times and compete on a shared leaderboard.";
 
 export const metadata: Metadata = {
   title: {

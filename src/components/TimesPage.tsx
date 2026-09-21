@@ -5,11 +5,9 @@ import { OUTCOMES, RUN_SOURCES } from "@/lib/constants";
 import { formatDuration } from "@/lib/format";
 import { avgDuration, computeStats, getDungeonSummaries, successRate } from "@/lib/stats";
 import { runsNewestFirst } from "@/lib/run-persistence";
-import { loadWrTimes, type WrDungeonEntry } from "@/lib/wr-times";
 import { useRuns } from "@/hooks/RunsContext";
 import { DungeonIcon } from "./DungeonIcon";
 import { TableSkeleton } from "./LoadingSkeleton";
-import { WrComparison, wrForDungeon } from "./WrComparison";
 
 function formatTimePair(avgClear: number | null, avgAttempt: number | null) {
   const clear = avgClear != null ? formatDuration(avgClear) : "—";
@@ -40,12 +38,7 @@ export function TimesPage() {
   } = useRuns();
   const [filterId, setFilterId] = useState("");
   const [loading, setLoading] = useState(true);
-  const [wrMap, setWrMap] = useState<Map<string, WrDungeonEntry>>(new Map());
   const importRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    void loadWrTimes().then(setWrMap);
-  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -252,18 +245,6 @@ export function TimesPage() {
                           +{formatDuration(run.findTimeSeconds)} search
                         </span>
                       )}
-                      {run.outcome === "complete" && (() => {
-                        const wr = wrForDungeon(wrMap, run.dungeonId, run.runType, run.groupSize);
-                        return (
-                          <WrComparison
-                            clearSeconds={run.durationSeconds}
-                            wrSeconds={wr.seconds}
-                            wrDisplay={wr.display}
-                            wrWeblink={wr.weblink}
-                            compact
-                          />
-                        );
-                      })()}
                     </td>
                     {!usesBoardStorage && (
                       <td className="py-2">

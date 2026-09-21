@@ -6,8 +6,8 @@ export function AboutPage() {
       <h2 className="mb-2 text-[1rem] font-semibold">What this is</h2>
       <p className="mb-5 text-muted">
         A dungeon timer for <strong className="text-text">Realm of the Mad God</strong> that tracks
-        how long exalting and other runs actually take. Compare your clears against speedrun.com
-        world records, review stats, and compete on a shared leaderboard.
+        how long exalting and other runs actually take. Review stats and compete on a shared
+        leaderboard.
       </p>
 
       <h2 className="mb-2 text-[1rem] font-semibold">Tech stack</h2>
@@ -36,7 +36,6 @@ export function AboutPage() {
       <p className="mb-3 text-muted">
         The app is a static site. Runs save to browser storage locally, or sync to Supabase when
         configured. Times and Leaderboard read from the same data — newest first vs fastest first.
-        WR data is fetched from speedrun.com via a maintenance script and served as static JSON.
       </p>
       <pre className="mb-5 overflow-x-auto rounded-md border border-border bg-panel p-3 text-[0.72rem] text-muted">
         {`Browser (timer + localStorage)
@@ -65,8 +64,8 @@ GitHub Pages (Next.js export)`}
       <h2 className="mb-2 text-[1rem] font-semibold">Tabs</h2>
       <ul className="mb-5 list-disc space-y-1 pl-5 text-muted">
         <li>
-          <strong className="text-text">Overview</strong> — exalt summary, best/avg times vs WR,
-          recent runs.
+          <strong className="text-text">Overview</strong> — exalt summary, best/avg times, recent
+          runs.
         </li>
         <li>
           <strong className="text-text">Times</strong> — full log with filters and per-dungeon
