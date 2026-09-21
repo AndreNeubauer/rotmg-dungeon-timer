@@ -54,4 +54,4 @@ on conflict (key) do update set value = excluded.value;
 
 3. In the app header, click **Admin delete**, enter the same passphrase, then use **Delete** on Times. The passphrase is kept in **session storage** for that browser tab only (not in `leaderboard-config.json`).
 
-Wrong passphrase or missing SQL setup shows an error and nothing is deleted. You can still remove rows in Supabase **Table Editor** with the service role.
+Wrong passphrase shows a red message on **Times** and nothing is deleted (Supabase returns success even when 0 rows are removed). The passphrase in **Admin delete** must match `app_settings` exactly — use **Lock admin** and unlock again after changing it in SQL. You can still remove rows in Supabase **Table Editor** with the service role.

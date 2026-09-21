@@ -412,7 +412,9 @@ export function RunsProvider({ children }: { children: ReactNode }) {
         if (!result.ok) {
           setLeaderboardStatusError(true);
           if (result.reason === "forbidden" || result.reason === "no-admin-key") {
-            setLeaderboardStatus("Wrong passphrase or admin delete not set up in Supabase.");
+            setLeaderboardStatus(
+              "Delete blocked — wrong passphrase or admin SQL not applied. Lock admin, unlock again with the exact Supabase passphrase."
+            );
           } else {
             setLeaderboardStatus(`Could not delete run (${result.reason}).`);
           }
@@ -420,6 +422,7 @@ export function RunsProvider({ children }: { children: ReactNode }) {
         }
         setLeaderboardStatusError(false);
         setLeaderboardStatus("Run deleted.");
+        setRuns((prev) => prev.filter((r) => r.id !== runId));
         await refreshFromBoard();
         return;
       }
