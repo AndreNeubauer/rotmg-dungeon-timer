@@ -1,4 +1,5 @@
 __pycache__/
+daily-question/answers.txt
 runs.json
 node_modules/
 .next/

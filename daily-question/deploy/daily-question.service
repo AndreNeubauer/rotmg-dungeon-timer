@@ -1,0 +1,16 @@
+[Unit]
+Description=Daily Question app
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/daily-question
+ExecStart=/usr/bin/python3 /home/ubuntu/daily-question/server.py
+Restart=always
+RestartSec=3
+Environment=HOST=127.0.0.1
+Environment=PORT=8080
+
+[Install]
+WantedBy=multi-user.target

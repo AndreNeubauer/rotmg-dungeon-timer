@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Daily Question</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="card">
+      <p class="eyebrow">One question. Every day.</p>
+      <h1 id="question">Loading…</h1>
+      <p class="meta" id="meta"></p>
+
+      <form id="form">
+        <label for="answer">Your answer</label>
+        <textarea
+          id="answer"
+          name="answer"
+          rows="5"
+          maxlength="2000"
+          placeholder="Write whatever comes to mind."
+          required
+        ></textarea>
+        <div class="actions">
+          <button type="submit" id="submit">Save answer</button>
+          <a href="/answers.txt" target="_blank" rel="noopener">View all answers</a>
+        </div>
+      </form>
+
+      <p class="status" id="status" aria-live="polite"></p>
+    </main>
+
+    <script>
+      const questionEl = document.getElementById("question");
+      const metaEl = document.getElementById("meta");
+      const form = document.getElementById("form");
+      const answerEl = document.getElementById("answer");
+      const statusEl = document.getElementById("status");
+      const submitBtn = document.getElementById("submit");
+
+      async function loadToday() {
+        const res = await fetch("/api/today");
+        const data = await res.json();
+        questionEl.textContent = data.question;
+        metaEl.textContent = `${data.date} · question ${data.index} of ${data.total}`;
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        submitBtn.disabled = true;
+        statusEl.textContent = "Saving…";
+
+        try {
+          const res = await fetch("/api/answer", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ answer: answerEl.value.trim() }),
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            throw new Error(data.error || "Could not save answer");
+          }
+          statusEl.textContent = "Saved to answers.txt";
+          answerEl.value = "";
+        } catch (error) {
+          statusEl.textContent = error.message;
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+
+      loadToday().catch(() => {
+        questionEl.textContent = "Could not load today’s question.";
+      });
+    </script>
+  </body>
+</html>

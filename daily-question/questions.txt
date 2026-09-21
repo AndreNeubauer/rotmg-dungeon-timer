@@ -1,0 +1,428 @@
+# One question per line. Lines starting with # are ignored.
+# The app picks one question per calendar day and cycles through the list.
+
+What are you grateful for today?
+What surprised you today?
+What would you tell your past self from one year ago?
+What small win did you have today?
+What are you looking forward to tomorrow?
+What made you laugh recently?
+What habit do you want to keep?
+What habit do you want to drop?
+What did you learn this week?
+Who made your day better?
+What is something you want to try this month?
+What is draining your energy right now?
+What is giving you energy right now?
+What is one thing you are proud of?
+What would make today feel complete?
+What is a memory you keep coming back to?
+What are you curious about right now?
+What is one kind thing you can do tomorrow?
+What is harder than it looks?
+What is easier than you expected?
+What song matches your mood today?
+What place do you want to visit next?
+What meal would make today better?
+What book, show, or game are you into?
+What skill do you want to improve?
+What do you need more of?
+What do you need less of?
+What is one boundary you want to hold?
+What is one apology you owe?
+What is one thank-you you owe?
+What would your ideal morning look like?
+What would your ideal evening look like?
+What are you procrastinating on?
+What is worth the effort?
+What felt peaceful today?
+What felt chaotic today?
+What is a risk worth taking?
+What is a risk not worth taking?
+What advice would you give a friend in your situation?
+What question do you wish people asked you more?
+What answer are you avoiding?
+What changed your mind recently?
+What do you believe that most people do not?
+What do most people believe that you do not?
+What is your favorite way to reset?
+What is one thing you want to remember about today?
+What is one thing you want to forget about today?
+What would you do with an extra hour?
+What would you do with an extra hundred dollars?
+What would you do with an extra free day?
+What is something you used to love?
+What is something you love now?
+What is a compliment you still remember?
+What is a mistake that taught you something?
+What is a tradition you want to start?
+What is a tradition you want to keep?
+What makes you feel at home?
+What makes you feel alive?
+What is your current biggest question?
+What is one thing you can simplify?
+What is one thing you can celebrate?
+What do you want your next chapter to feel like?
+What are you building, even slowly?
+What are you protecting?
+What are you releasing?
+What would "enough" look like for you?
+What is one promise you want to keep to yourself?
+What is one thing you want to say out loud?
+What is one thing you want to keep private?
+What did you notice that others missed?
+What do you wish you had more time for?
+What do you wish you had more courage for?
+What do you wish you had more patience for?
+What is beautiful in an ordinary way today?
+What is one thing you would repeat tomorrow?
+What is one thing you would never repeat?
+What does rest mean to you right now?
+What does success mean to you right now?
+What does freedom mean to you right now?
+What does love mean to you right now?
+What is a problem you solved recently?
+What is a problem you are still sitting with?
+What is one conversation you want to have?
+What is one conversation you want to avoid?
+What is your body asking for?
+What is your mind asking for?
+What is your heart asking for?
+What would make you feel proud at the end of this week?
+What would make you feel proud at the end of this year?
+What is something you are better at than you give yourself credit for?
+What is something you are worse at than you admit?
+What is one thing you want to finish?
+What is one thing you want to begin?
+What is one thing you want to continue?
+What is your favorite recent discovery?
+What is your least favorite recent discovery?
+What is a fear that is smaller than it used to be?
+What is a fear that is bigger than it used to be?
+What would you do if nobody could judge you?
+What would you do if you knew you could not fail?
+What would you do if you knew you might fail?
+What is one thing you want to be known for?
+What is one thing you do not want to be known for?
+What is a moment you want to recreate?
+What is a moment you want to leave behind?
+What is your current theme song for life?
+What is one thing you want to learn by next month?
+What is one thing you want to unlearn?
+What is one thing you want to forgive?
+What is one thing you want to repair?
+What is one thing you want to protect your peace from?
+What is one thing that always helps you think clearly?
+What is one thing that always clouds your judgment?
+What is a dream you have not said out loud?
+What is a dream you are actively chasing?
+What is a dream you are ready to let go of?
+What would your future self thank you for doing today?
+What would your future self wish you had not done today?
+What is one detail you want to pay attention to tomorrow?
+What is one detail you want to ignore tomorrow?
+What is your favorite kind of weather and why?
+What is your favorite time of day and why?
+What is one thing that always makes you feel seen?
+What is one thing that always makes you feel alone?
+What is a question you want to ask the world?
+What is a question the world seems to be asking you?
+What is one thing you want to write down before you forget?
+What is one thing you already forgot that you wish you had not?
+What is one thing you are waiting for?
+What is one thing you are no longer waiting for?
+What is one thing you want to share?
+What is one thing you want to keep for yourself?
+What is one thing you want to improve by 1%?
+What is one thing that is already good enough?
+What is one thing you want to notice on your next walk?
+What is one thing you want to notice on your next call?
+What is one thing you want to notice about yourself?
+What is one thing you want to notice about someone else?
+What is one thing you want to stop overthinking?
+What is one thing you want to think about more deeply?
+What is one thing you want to say yes to?
+What is one thing you want to say no to?
+What is one thing you want to ask for help with?
+What is one thing you want to offer help with?
+What is one thing you want to celebrate quietly?
+What is one thing you want to celebrate loudly?
+What is one thing you want to keep doing on hard days?
+What is one thing you want to stop doing on hard days?
+What is one thing you want to remember when you feel stuck?
+What is one thing you want to remember when you feel confident?
+What is one thing you want to remember when you feel tired?
+What is one thing you want to remember when you feel excited?
+What is one thing you want to remember when you feel uncertain?
+What is one thing you want to remember when you feel certain?
+What is one thing you want to remember when you feel lonely?
+What is one thing you want to remember when you feel connected?
+What is one thing you want to remember when you feel angry?
+What is one thing you want to remember when you feel calm?
+What is one thing you want to remember when you feel sad?
+What is one thing you want to remember when you feel happy?
+What is one thing you want to remember when you feel bored?
+What is one thing you want to remember when you feel inspired?
+What is one thing you want to remember when you feel overwhelmed?
+What is one thing you want to remember when you feel underwhelmed?
+What is one thing you want to remember when you feel grateful?
+What is one thing you want to remember when you feel resentful?
+What is one thing you want to remember when you feel hopeful?
+What is one thing you want to remember when you feel hopeless?
+What is one thing you want to remember when you feel brave?
+What is one thing you want to remember when you feel afraid?
+What is one thing you want to remember when you feel patient?
+What is one thing you want to remember when you feel impatient?
+What is one thing you want to remember when you feel focused?
+What is one thing you want to remember when you feel distracted?
+What is one thing you want to remember when you feel healthy?
+What is one thing you want to remember when you feel unwell?
+What is one thing you want to remember when you feel loved?
+What is one thing you want to remember when you feel unloved?
+What is one thing you want to remember when you feel useful?
+What is one thing you want to remember when you feel useless?
+What is one thing you want to remember when you feel creative?
+What is one thing you want to remember when you feel blocked?
+What is one thing you want to remember when you feel curious?
+What is one thing you want to remember when you feel indifferent?
+What is one thing you want to remember when you feel proud?
+What is one thing you want to remember when you feel ashamed?
+What is one thing you want to remember when you feel free?
+What is one thing you want to remember when you feel trapped?
+What is one thing you want to remember when you feel peaceful?
+What is one thing you want to remember when you feel restless?
+What is one thing you want to remember when you feel strong?
+What is one thing you want to remember when you feel weak?
+What is one thing you want to remember when you feel clear?
+What is one thing you want to remember when you feel confused?
+What is one thing you want to remember when you feel open?
+What is one thing you want to remember when you feel closed off?
+What is one thing you want to remember when you feel generous?
+What is one thing you want to remember when you feel stingy?
+What is one thing you want to remember when you feel honest?
+What is one thing you want to remember when you feel dishonest?
+What is one thing you want to remember when you feel present?
+What is one thing you want to remember when you feel absent?
+What is one thing you want to remember when you feel flexible?
+What is one thing you want to remember when you feel rigid?
+What is one thing you want to remember when you feel playful?
+What is one thing you want to remember when you feel serious?
+What is one thing you want to remember when you feel mature?
+What is one thing you want to remember when you feel childish?
+What is one thing you want to remember when you feel independent?
+What is one thing you want to remember when you feel dependent?
+What is one thing you want to remember when you feel understood?
+What is one thing you want to remember when you feel misunderstood?
+What is one thing you want to remember when you feel respected?
+What is one thing you want to remember when you feel disrespected?
+What is one thing you want to remember when you feel trusted?
+What is one thing you want to remember when you feel distrusted?
+What is one thing you want to remember when you feel supported?
+What is one thing you want to remember when you feel unsupported?
+What is one thing you want to remember when you feel prepared?
+What is one thing you want to remember when you feel unprepared?
+What is one thing you want to remember when you feel lucky?
+What is one thing you want to remember when you feel unlucky?
+What is one thing you want to remember when you feel satisfied?
+What is one thing you want to remember when you feel unsatisfied?
+What is one thing you want to remember when you feel content?
+What is one thing you want to remember when you feel discontent?
+What is one thing you want to remember when you feel motivated?
+What is one thing you want to remember when you feel unmotivated?
+What is one thing you want to remember when you feel disciplined?
+What is one thing you want to remember when you feel undisciplined?
+What is one thing you want to remember when you feel organized?
+What is one thing you want to remember when you feel disorganized?
+What is one thing you want to remember when you feel efficient?
+What is one thing you want to remember when you feel inefficient?
+What is one thing you want to remember when you feel productive?
+What is one thing you want to remember when you feel unproductive?
+What is one thing you want to remember when you feel balanced?
+What is one thing you want to remember when you feel unbalanced?
+What is one thing you want to remember when you feel grounded?
+What is one thing you want to remember when you feel ungrounded?
+What is one thing you want to remember when you feel centered?
+What is one thing you want to remember when you feel off-center?
+What is one thing you want to remember when you feel aligned?
+What is one thing you want to remember when you feel misaligned?
+What is one thing you want to remember when you feel authentic?
+What is one thing you want to remember when you feel inauthentic?
+What is one thing you want to remember when you feel whole?
+What is one thing you want to remember when you feel broken?
+What is one thing you want to remember when you feel complete?
+What is one thing you want to remember when you feel incomplete?
+What is one thing you want to remember when you feel enough?
+What is one thing you want to remember when you feel not enough?
+What is one thing you want to remember when you feel worthy?
+What is one thing you want to remember when you feel unworthy?
+What is one thing you want to remember when you feel valuable?
+What is one thing you want to remember when you feel worthless?
+What is one thing you want to remember when you feel important?
+What is one thing you want to remember when you feel unimportant?
+What is one thing you want to remember when you feel significant?
+What is one thing you want to remember when you feel insignificant?
+What is one thing you want to remember when you feel meaningful?
+What is one thing you want to remember when you feel meaningless?
+What is one thing you want to remember when you feel purposeful?
+What is one thing you want to remember when you feel purposeless?
+What is one thing you want to remember when you feel intentional?
+What is one thing you want to remember when you feel unintentional?
+What is one thing you want to remember when you feel deliberate?
+What is one thing you want to remember when you feel accidental?
+What is one thing you want to remember when you feel chosen?
+What is one thing you want to remember when you feel unchosen?
+What is one thing you want to remember when you feel selected?
+What is one thing you want to remember when you feel rejected?
+What is one thing you want to remember when you feel accepted?
+What is one thing you want to remember when you feel excluded?
+What is one thing you want to remember when you feel included?
+What is one thing you want to remember when you feel welcomed?
+What is one thing you want to remember when you feel unwelcome?
+What is one thing you want to remember when you feel invited?
+What is one thing you want to remember when you feel uninvited?
+What is one thing you want to remember when you feel belonging?
+What is one thing you want to remember when you feel not belonging?
+What is one thing you want to remember when you feel at ease?
+What is one thing you want to remember when you feel ill at ease?
+What is one thing you want to remember when you feel comfortable?
+What is one thing you want to remember when you feel uncomfortable?
+What is one thing you want to remember when you feel safe?
+What is one thing you want to remember when you feel unsafe?
+What is one thing you want to remember when you feel secure?
+What is one thing you want to remember when you feel insecure?
+What is one thing you want to remember when you feel stable?
+What is one thing you want to remember when you feel unstable?
+What is one thing you want to remember when you feel steady?
+What is one thing you want to remember when you feel unsteady?
+What is one thing you want to remember when you feel settled?
+What is one thing you want to remember when you feel unsettled?
+What is one thing you want to remember when you feel anchored?
+What is one thing you want to remember when you feel adrift?
+What is one thing you want to remember when you feel rooted?
+What is one thing you want to remember when you feel uprooted?
+What is one thing you want to remember when you feel connected to your body?
+What is one thing you want to remember when you feel disconnected from your body?
+What is one thing you want to remember when you feel connected to your mind?
+What is one thing you want to remember when you feel disconnected from your mind?
+What is one thing you want to remember when you feel connected to your heart?
+What is one thing you want to remember when you feel disconnected from your heart?
+What is one thing you want to remember when you feel connected to your community?
+What is one thing you want to remember when you feel disconnected from your community?
+What is one thing you want to remember when you feel connected to nature?
+What is one thing you want to remember when you feel disconnected from nature?
+What is one thing you want to remember when you feel connected to your work?
+What is one thing you want to remember when you feel disconnected from your work?
+What is one thing you want to remember when you feel connected to your creativity?
+What is one thing you want to remember when you feel disconnected from your creativity?
+What is one thing you want to remember when you feel connected to your values?
+What is one thing you want to remember when you feel disconnected from your values?
+What is one thing you want to remember when you feel connected to your goals?
+What is one thing you want to remember when you feel disconnected from your goals?
+What is one thing you want to remember when you feel connected to your past?
+What is one thing you want to remember when you feel disconnected from your past?
+What is one thing you want to remember when you feel connected to your future?
+What is one thing you want to remember when you feel disconnected from your future?
+What is one thing you want to remember when you feel connected to your present?
+What is one thing you want to remember when you feel disconnected from your present?
+What is one thing you want to remember when you feel connected to your story?
+What is one thing you want to remember when you feel disconnected from your story?
+What is one thing you want to remember when you feel connected to your identity?
+What is one thing you want to remember when you feel disconnected from your identity?
+What is one thing you want to remember when you feel connected to your purpose?
+What is one thing you want to remember when you feel disconnected from your purpose?
+What is one thing you want to remember when you feel connected to your intuition?
+What is one thing you want to remember when you feel disconnected from your intuition?
+What is one thing you want to remember when you feel connected to your instincts?
+What is one thing you want to remember when you feel disconnected from your instincts?
+What is one thing you want to remember when you feel connected to your dreams?
+What is one thing you want to remember when you feel disconnected from your dreams?
+What is one thing you want to remember when you feel connected to your fears?
+What is one thing you want to remember when you feel disconnected from your fears?
+What is one thing you want to remember when you feel connected to your joys?
+What is one thing you want to remember when you feel disconnected from your joys?
+What is one thing you want to remember when you feel connected to your sorrows?
+What is one thing you want to remember when you feel disconnected from your sorrows?
+What is one thing you want to remember when you feel connected to your anger?
+What is one thing you want to remember when you feel disconnected from your anger?
+What is one thing you want to remember when you feel connected to your calm?
+What is one thing you want to remember when you feel disconnected from your calm?
+What is one thing you want to remember when you feel connected to your hope?
+What is one thing you want to remember when you feel disconnected from your hope?
+What is one thing you want to remember when you feel connected to your faith?
+What is one thing you want to remember when you feel disconnected from your faith?
+What is one thing you want to remember when you feel connected to your doubt?
+What is one thing you want to remember when you feel disconnected from your doubt?
+What is one thing you want to remember when you feel connected to your trust?
+What is one thing you want to remember when you feel disconnected from your trust?
+What is one thing you want to remember when you feel connected to your skepticism?
+What is one thing you want to remember when you feel disconnected from your skepticism?
+What is one thing you want to remember when you feel connected to your wonder?
+What is one thing you want to remember when you feel disconnected from your wonder?
+What is one thing you want to remember when you feel connected to your boredom?
+What is one thing you want to remember when you feel disconnected from your boredom?
+What is one thing you want to remember when you feel connected to your excitement?
+What is one thing you want to remember when you feel disconnected from your excitement?
+What is one thing you want to remember when you feel connected to your apathy?
+What is one thing you want to remember when you feel disconnected from your apathy?
+What is one thing you want to remember when you feel connected to your passion?
+What is one thing you want to remember when you feel disconnected from your passion?
+What is one thing you want to remember when you feel connected to your indifference?
+What is one thing you want to remember when you feel disconnected from your indifference?
+What is one thing you want to remember when you feel connected to your ambition?
+What is one thing you want to remember when you feel disconnected from your ambition?
+What is one thing you want to remember when you feel connected to your contentment?
+What is one thing you want to remember when you feel disconnected from your contentment?
+What is one thing you want to remember when you feel connected to your restlessness?
+What is one thing you want to remember when you feel disconnected from your restlessness?
+What is one thing you want to remember when you feel connected to your peace?
+What is one thing you want to remember when you feel disconnected from your peace?
+What is one thing you want to remember when you feel connected to your chaos?
+What is one thing you want to remember when you feel disconnected from your chaos?
+What is one thing you want to remember when you feel connected to your order?
+What is one thing you want to remember when you feel disconnected from your order?
+What is one thing you want to remember when you feel connected to your mess?
+What is one thing you want to remember when you feel disconnected from your mess?
+What is one thing you want to remember when you feel connected to your clarity?
+What is one thing you want to remember when you feel disconnected from your clarity?
+What is one thing you want to remember when you feel connected to your confusion?
+What is one thing you want to remember when you feel disconnected from your confusion?
+What is one thing you want to remember when you feel connected to your certainty?
+What is one thing you want to remember when you feel disconnected from your certainty?
+What is one thing you want to remember when you feel connected to your uncertainty?
+What is one thing you want to remember when you feel disconnected from your uncertainty?
+What is one thing you want to remember when you feel connected to your confidence?
+What is one thing you want to remember when you feel disconnected from your confidence?
+What is one thing you want to remember when you feel connected to your insecurity?
+What is one thing you want to remember when you feel disconnected from your insecurity?
+What is one thing you want to remember when you feel connected to your pride?
+What is one thing you want to remember when you feel disconnected from your pride?
+What is one thing you want to remember when you feel connected to your shame?
+What is one thing you want to remember when you feel disconnected from your shame?
+What is one thing you want to remember when you feel connected to your guilt?
+What is one thing you want to remember when you feel disconnected from your guilt?
+What is one thing you want to remember when you feel connected to your innocence?
+What is one thing you want to remember when you feel disconnected from your innocence?
+What is one thing you want to remember when you feel connected to your responsibility?
+What is one thing you want to remember when you feel disconnected from your responsibility?
+What is one thing you want to remember when you feel connected to your freedom?
+What is one thing you want to remember when you feel disconnected from your freedom?
+What is one thing you want to remember when you feel connected to your constraints?
+What is one thing you want to remember when you feel disconnected from your constraints?
+What is one thing you want to remember when you feel connected to your limits?
+What is one thing you want to remember when you feel disconnected from your limits?
+What is one thing you want to remember when you feel connected to your possibilities?
+What is one thing you want to remember when you feel disconnected from your possibilities?
+What is one thing you want to remember when you feel connected to your reality?
+What is one thing you want to remember when you feel disconnected from your reality?
+What is one thing you want to remember when you feel connected to your imagination?
+What is one thing you want to remember when you feel disconnected from your imagination?
+What is one thing you want to remember when you feel connected to your logic?
+What is one thing you want to remember when you feel disconnected from your logic?
+What is one thing you want to remember when you feel connected to your emotion?
+What is one thing you want to remember when you feel disconnected from your emotion?
+What is one thing you want to remember when you feel connected to your reason?
+What is one thing you want to remember when you feel disconnected from your reason?
+What is one thing you want to remember when you feel connected to your intuition again?
+What is one thing you want to remember when you feel disconnected from your intuition again?
+What is one thing you want to remember when you feel connected to your whole self?
+What is one thing you want to remember when you feel disconnected from your whole self?
