@@ -3,27 +3,28 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
     <title>Daily Question</title>
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
     <main class="card">
-      <p class="eyebrow">One question. Every day.</p>
+      <p class="eyebrow">Anonymous · one question per day</p>
       <h1 id="question">Loading…</h1>
       <p class="meta" id="meta"></p>
 
       <form id="form">
-        <label for="answer">Your answer</label>
+        <label for="answer">Answer</label>
         <textarea
           id="answer"
           name="answer"
           rows="5"
           maxlength="2000"
-          placeholder="Write whatever comes to mind."
+          placeholder="Write whatever comes to mind. Nothing you submit is linked to you."
           required
         ></textarea>
         <div class="actions">
-          <button type="submit" id="submit">Save answer</button>
+          <button type="submit" id="submit">Submit anonymously</button>
           <button type="button" id="view-answers" class="secondary" hidden>
             View past answers
           </button>
@@ -36,10 +37,12 @@
       </section>
 
       <p class="status" id="status" aria-live="polite"></p>
-      <p class="hint" id="hint">Past answers unlock after you submit today's answer.</p>
+      <p class="hint" id="hint">Past answers unlock after you submit today's answer. No names, IPs, or timestamps are stored.</p>
     </main>
 
     <script>
+      const fetchOptions = { referrerPolicy: "no-referrer", credentials: "same-origin" };
+
       const questionEl = document.getElementById("question");
       const metaEl = document.getElementById("meta");
       const form = document.getElementById("form");
@@ -57,20 +60,20 @@
       }
 
       async function loadToday() {
-        const res = await fetch("/api/today");
+        const res = await fetch("/api/today", fetchOptions);
         const data = await res.json();
         questionEl.textContent = data.question;
         metaEl.textContent = data.date;
       }
 
       async function loadStatus() {
-        const res = await fetch("/api/status");
+        const res = await fetch("/api/status", fetchOptions);
         const data = await res.json();
         setUnlocked(data.unlocked);
       }
 
       async function loadAnswers() {
-        const res = await fetch("/api/answers");
+        const res = await fetch("/api/answers", fetchOptions);
         const data = await res.json();
         if (!res.ok || !data.ok) {
           throw new Error(data.error || "Could not load answers");
@@ -86,6 +89,7 @@
 
         try {
           const res = await fetch("/api/answer", {
+            ...fetchOptions,
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ answer: answerEl.value.trim() }),
@@ -94,7 +98,7 @@
           if (!res.ok || !data.ok) {
             throw new Error(data.error || "Could not save answer");
           }
-          statusEl.textContent = "Saved. You can now view past answers.";
+          statusEl.textContent = "Saved anonymously. You can now view past answers.";
           answerEl.value = "";
           setUnlocked(true);
         } catch (error) {

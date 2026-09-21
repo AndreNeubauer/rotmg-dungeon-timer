@@ -12,5 +12,9 @@ RestartSec=3
 Environment=HOST=127.0.0.1
 Environment=PORT=8080
 
+# No access logs — the app also disables its own request logging.
+StandardOutput=journal
+StandardError=journal
+
 [Install]
 WantedBy=multi-user.target

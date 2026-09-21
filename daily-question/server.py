@@ -8,7 +8,7 @@ import hmac
 import json
 import os
 import secrets
-from datetime import date, datetime, timezone
+from datetime import date
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -23,6 +23,13 @@ HOST = os.environ.get("HOST", "0.0.0.0")
 PORT = int(os.environ.get("PORT", "8080"))
 UNLOCK_COOKIE = "dq_unlock"
 
+PRIVACY_HEADERS = (
+    ("Referrer-Policy", "no-referrer"),
+    ("Cache-Control", "no-store"),
+    ("X-Content-Type-Options", "nosniff"),
+    ("Permissions-Policy", "interest-cohort=()"),
+)
+
 
 def get_secret() -> bytes:
     env = os.environ.get("DAILY_QUESTION_SECRET")
@@ -35,19 +42,21 @@ def get_secret() -> bytes:
     return secret
 
 
-def unlock_token(day: str | None = None) -> str:
-    day = day or date.today().isoformat()
-    digest = hmac.new(get_secret(), day.encode("utf-8"), hashlib.sha256).hexdigest()
-    return f"{day}.{digest}"
+def make_unlock_cookie() -> str:
+    session_id = secrets.token_hex(16)
+    payload = f"{session_id}:{date.today().isoformat()}".encode("utf-8")
+    digest = hmac.new(get_secret(), payload, hashlib.sha256).hexdigest()
+    return f"{session_id}.{digest}"
 
 
-def token_is_valid(token: str | None) -> bool:
+def unlock_cookie_is_valid(token: str | None) -> bool:
     if not token or "." not in token:
         return False
-    day, digest = token.rsplit(".", 1)
-    if day != date.today().isoformat():
+    session_id, digest = token.rsplit(".", 1)
+    if not session_id or len(session_id) != 32:
         return False
-    expected = hmac.new(get_secret(), day.encode("utf-8"), hashlib.sha256).hexdigest()
+    payload = f"{session_id}:{date.today().isoformat()}".encode("utf-8")
+    expected = hmac.new(get_secret(), payload, hashlib.sha256).hexdigest()
     return hmac.compare_digest(digest, expected)
 
 
@@ -58,30 +67,50 @@ def load_questions() -> list[str]:
     return [line.strip() for line in lines if line.strip() and not line.strip().startswith("#")]
 
 
-def question_for_today() -> tuple[str, int]:
+def question_for_today() -> str:
     questions = load_questions()
     index = (date.today() - EPOCH).days % len(questions)
-    return questions[index], index
+    return questions[index]
+
+
+def sanitize_answer(text: str) -> str:
+    return text.replace("\t", " ").replace("\n", " ").replace("\r", " ").strip()
 
 
 def append_answer(text: str) -> None:
-    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    day = date.today().isoformat()
-    _, index = question_for_today()
-    line = f"{stamp}\t{day}\tq{index + 1}\t{text.replace(chr(9), ' ').replace(chr(10), ' ')}\n"
+    line = f"{sanitize_answer(text)}\n"
     with ANSWERS_FILE.open("a", encoding="utf-8") as handle:
         handle.write(line)
 
 
-def read_answers() -> str:
+def read_answers_public() -> str:
     if not ANSWERS_FILE.exists():
         return ""
-    return ANSWERS_FILE.read_text(encoding="utf-8")
+    lines: list[str] = []
+    for raw in ANSWERS_FILE.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "\t" in line:
+            line = line.split("\t")[-1].strip()
+        if line:
+            lines.append(line)
+    return "\n\n".join(lines)
+
+
+class AnonymousHTTPServer(HTTPServer):
+    def server_bind(self) -> None:
+        self.server_name = "localhost"
+        self.server_port = PORT
+        super().server_bind()
 
 
 class Handler(BaseHTTPRequestHandler):
-    def log_message(self, fmt: str, *args) -> None:
-        print(f"{self.address_string()} - {fmt % args}")
+    server_version = ""
+    sys_version = ""
+
+    def log_message(self, _fmt: str, *_args) -> None:
+        return
 
     def _cookie_value(self, name: str) -> str | None:
         raw = self.headers.get("Cookie", "")
@@ -92,17 +121,21 @@ class Handler(BaseHTTPRequestHandler):
         return None
 
     def _is_unlocked(self) -> bool:
-        return token_is_valid(self._cookie_value(UNLOCK_COOKIE))
+        return unlock_cookie_is_valid(self._cookie_value(UNLOCK_COOKIE))
 
-    def _set_unlock_cookie(self) -> None:
-        token = unlock_token()
-        self.send_header(
-            "Set-Cookie",
-            f"{UNLOCK_COOKIE}={token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=86400",
-        )
+    def _set_unlock_cookie(self, token: str) -> None:
+        flags = "Path=/; HttpOnly; SameSite=Strict; Max-Age=86400"
+        if os.environ.get("COOKIE_SECURE", "").lower() in ("1", "true"):
+            flags += "; Secure"
+        self.send_header("Set-Cookie", f"{UNLOCK_COOKIE}={token}; {flags}")
+
+    def _begin_response(self, status: int) -> None:
+        self.send_response(status)
+        for key, value in PRIVACY_HEADERS:
+            self.send_header(key, value)
 
     def _send_bytes(self, status: int, body: bytes, content_type: str) -> None:
-        self.send_response(status)
+        self._begin_response(status)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
@@ -113,11 +146,11 @@ class Handler(BaseHTTPRequestHandler):
 
     def _send_json(self, status: int, payload: dict, *, set_unlock: bool = False) -> None:
         body = json.dumps(payload).encode("utf-8")
-        self.send_response(status)
+        self._begin_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         if set_unlock:
-            self._set_unlock_cookie()
+            self._set_unlock_cookie(make_unlock_cookie())
         self.end_headers()
         self.wfile.write(body)
 
@@ -146,12 +179,11 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/today":
-            question, _ = question_for_today()
             self._send_json(
                 200,
                 {
                     "date": date.today().isoformat(),
-                    "question": question,
+                    "question": question_for_today(),
                 },
             )
             return
@@ -160,7 +192,7 @@ class Handler(BaseHTTPRequestHandler):
             if not self._is_unlocked():
                 self._deny_private()
                 return
-            self._send_json(200, {"ok": True, "content": read_answers()})
+            self._send_json(200, {"ok": True, "content": read_answers_public()})
             return
 
         if path in ("/", "/index.html"):
@@ -210,13 +242,11 @@ class Handler(BaseHTTPRequestHandler):
 def main() -> None:
     if not ANSWERS_FILE.exists():
         ANSWERS_FILE.write_text(
-            "# timestamp\tdate\tquestion#\tanswer\n",
+            "# Anonymous answers — one per line. No names, IPs, times, or devices stored.\n",
             encoding="utf-8",
         )
-    server = HTTPServer((HOST, PORT), Handler)
-    print(f"Daily question app running on http://{HOST}:{PORT}")
-    print(f"Questions: {QUESTIONS_FILE}")
-    print(f"Answers:   {ANSWERS_FILE}")
+    server = AnonymousHTTPServer((HOST, PORT), Handler)
+    print(f"Daily question app listening on {HOST}:{PORT} (no access logs)")
     server.serve_forever()
 
 

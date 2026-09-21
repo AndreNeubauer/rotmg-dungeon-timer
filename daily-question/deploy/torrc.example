@@ -1,0 +1,8 @@
+# Example Tor hidden service for daily-question.
+# Copy to /etc/tor/torrc (or a torrc.d snippet) and restart tor.
+#
+# HiddenServiceDir /var/lib/tor/daily_question/
+# HiddenServicePort 80 127.0.0.1:8080
+#
+# After restart: sudo cat /var/lib/tor/daily_question/hostname
+# Share that .onion address. Visitors need Tor Browser.

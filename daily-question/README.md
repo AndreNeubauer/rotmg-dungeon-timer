@@ -7,6 +7,7 @@ Super simple daily journal app.
 - Saves answers to `answers.txt`
 - Question bank is never exposed publicly — only today's question
 - Past answers unlock only after you submit today's answer (per day, per browser)
+- **Anonymous by design** — no IPs, names, timestamps, or devices stored (see `PRIVACY.md`)
 - No database, no npm, no framework
 
 ## Run locally

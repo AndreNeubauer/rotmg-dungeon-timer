@@ -110,15 +110,16 @@ Answers are just text:
 scp user@YOUR_VM_IP:~/daily-question/answers.txt ./answers-backup.txt
 ```
 
-## Security notes
+## Security & anonymity
 
-This is a personal journal app, not a public multi-user product.
+See **`PRIVACY.md`** for the full picture. Summary:
 
-- The full question list and answer log are **not** publicly downloadable
-- Past answers only appear after submitting **today's** answer (cookie resets each day)
-- Someone with SSH/disk access to the PC can still read the text files directly
-- For stronger privacy: don't share the URL, use Cloudflare Access, or firewall to your IP only
-- Optional: set `DAILY_QUESTION_SECRET` env var so unlock cookies survive server restarts predictably
+- Answers store **text only** — no IP, name, time, or device
+- Server writes **no access logs**
+- Question list is not public; past answers need today's submission first
+- For real anonymity: use a **Tor hidden service** (`.onion`) or crypto VPS — **avoid Cloudflare** (they see visitor IPs)
+- Set `COOKIE_SECURE=1` when serving over HTTPS
+- Set `DAILY_QUESTION_SECRET` so unlock cookies survive restarts
 
 ## Host on your home PC (free)
 
