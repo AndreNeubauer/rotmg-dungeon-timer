@@ -1,5 +1,6 @@
-export type Outcome = "complete" | "nexus" | "died";
-export type RunType = "party" | "organic";
+import type { Outcome, PostEndActionKind, RunType } from "./enums";
+
+export type { Outcome, PageId, PostEndActionKind, RunType } from "./enums";
 
 export interface Run {
   id: string;
@@ -42,7 +43,7 @@ export interface LeaderboardConfig {
 
 export interface PostEndAction {
   label: string;
-  kind: "next" | "done" | "discard";
+  kind: PostEndActionKind;
   nextId?: string;
   runName?: string;
   primary?: boolean;
@@ -53,5 +54,3 @@ export interface PostEndPromptConfig {
   deferSave?: boolean;
   actions: PostEndAction[];
 }
-
-export type PageId = "timer" | "overview" | "times" | "leaderboard" | "about";

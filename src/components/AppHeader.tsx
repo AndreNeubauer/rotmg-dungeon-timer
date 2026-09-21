@@ -3,22 +3,23 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { APP_VERSION, LIVE_URL, PAGE_ROUTES, REPO_URL } from "@/lib/constants";
+import { PageId } from "@/lib/enums";
 import { useRuns } from "@/hooks/RunsContext";
 import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_ITEMS = [
-  { id: "timer", href: "/timer", label: "Timer" },
-  { id: "overview", href: "/overview", label: "Overview" },
-  { id: "times", href: "/times", label: "Times" },
-  { id: "leaderboard", href: "/leaderboard", label: "Leaderboard" },
-  { id: "about", href: "/about", label: "About" },
+  { id: PageId.Timer, href: "/timer", label: "Timer" },
+  { id: PageId.Overview, href: "/overview", label: "Overview" },
+  { id: PageId.Times, href: "/times", label: "Times" },
+  { id: PageId.Leaderboard, href: "/leaderboard", label: "Leaderboard" },
+  { id: PageId.About, href: "/about", label: "About" },
 ] as const;
 
-function resolveActivePage(pathname: string): string {
+function resolveActivePage(pathname: string): PageId {
   const clean = pathname.replace(/\/$/, "") || "/";
-  if (clean === "/" || clean.endsWith("/timer")) return "timer";
+  if (clean === "/" || clean.endsWith("/timer")) return PageId.Timer;
   const match = NAV_ITEMS.find((item) => clean.endsWith(`/${PAGE_ROUTES[item.id]}`));
-  return match?.id ?? "timer";
+  return match?.id ?? PageId.Timer;
 }
 
 export function AppHeader() {

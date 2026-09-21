@@ -7,8 +7,10 @@
     "prebuild": "node scripts/sync-public-data.mjs",
     "build": "next build",
     "start": "npx --yes serve@latest out -p 3000",
-    "lint": "next lint",
-    "test": "tsx tests/test-run-persistence.ts && tsx tests/test-stats.ts && tsx tests/test-wr-times.ts"
+    "lint": "eslint . --max-warnings 0",
+    "test": "tsx tests/test-run-persistence.ts && tsx tests/test-stats.ts && tsx tests/test-wr-times.ts",
+    "test:e2e": "playwright test",
+    "test:all": "npm test && npm run test:e2e"
   },
   "dependencies": {
     "next": "^15.5.3",
@@ -17,6 +19,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",
+    "@playwright/test": "^1.55.0",
     "@tailwindcss/postcss": "^4.1.13",
     "@types/node": "^24.5.2",
     "@types/react": "^19.1.13",

@@ -1,5 +1,6 @@
-import { LEGACY_NAME_TO_ID, OUTCOMES, RUN_SOURCES } from "./constants";
-import type { Dungeon, DungeonCatalog, Outcome, Run, RunType } from "./types";
+import { LEGACY_NAME_TO_ID } from "./constants";
+import { Outcome, isOutcome, isRunType } from "./enums";
+import type { Dungeon, DungeonCatalog, Run } from "./types";
 
 export function buildDungeonMap(catalog: DungeonCatalog): Map<string, Dungeon> {
   return new Map(catalog.dungeons.map((d) => [d.id, d]));
@@ -26,14 +27,12 @@ export function normalizeRun(
 ): Run {
   const id = run.dungeonId || LEGACY_NAME_TO_ID[run.dungeon ?? ""] || run.dungeon || "";
   const dungeon = getDungeon(catalog, dungeonById, id);
-  const outcome =
-    run.outcome && run.outcome in OUTCOMES ? (run.outcome as Outcome) : "complete";
+  const outcome = isOutcome(run.outcome) ? run.outcome : Outcome.Complete;
   const findTimeSeconds =
     run.findTimeSeconds != null && Number.isFinite(run.findTimeSeconds)
       ? run.findTimeSeconds
       : null;
-  const runType =
-    run.runType && run.runType in RUN_SOURCES ? (run.runType as RunType) : null;
+  const runType = isRunType(run.runType) ? run.runType : null;
   const groupSize =
     run.groupSize != null && Number.isFinite(run.groupSize) && run.groupSize >= 1
       ? Math.round(run.groupSize)

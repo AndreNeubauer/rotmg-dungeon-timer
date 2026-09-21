@@ -1,4 +1,5 @@
-import { OUTCOMES, RUN_SOURCES, SHARED_RUN_IDS_KEY } from "./constants";
+import { RUN_SOURCES, SHARED_RUN_IDS_KEY } from "./constants";
+import { Outcome, isOutcome, isRunType } from "./enums";
 import { publicUrl } from "./assets";
 import type { LeaderboardConfig, Run } from "./types";
 
@@ -69,7 +70,7 @@ export function boardRowToRun(row: BoardRow): Partial<Run> {
 }
 
 export function leaderboardWriteBody(run: Run, ign: string) {
-  const outcome = run.outcome && OUTCOMES[run.outcome] ? run.outcome : "complete";
+  const outcome = isOutcome(run.outcome) ? run.outcome : Outcome.Complete;
   return {
     client_run_id: run.id,
     ign: ign || run.ign || "Anonymous",
@@ -215,10 +216,10 @@ export function formatRunTags(
 ): { type: string; label: string }[] {
   const pills: { type: string; label: string }[] = [];
   if (includeIgn && row.ign) pills.push({ type: "ign-tag", label: row.ign });
-  if (row.runType && RUN_SOURCES[row.runType as keyof typeof RUN_SOURCES]) {
+  if (isRunType(row.runType)) {
     pills.push({
       type: `source-${row.runType}`,
-      label: RUN_SOURCES[row.runType as keyof typeof RUN_SOURCES].label,
+      label: RUN_SOURCES[row.runType].label,
     });
   }
   if (row.groupSize != null) pills.push({ type: "group-size", label: `${row.groupSize}p` });

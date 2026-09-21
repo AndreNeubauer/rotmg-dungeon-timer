@@ -1,3 +1,11 @@
+import {
+  Outcome,
+  PageId,
+  RunType,
+  type Outcome as OutcomeId,
+  type PageId as PageIdType,
+  type RunType as RunTypeId,
+} from "./enums";
 import type { PostEndPromptConfig } from "./types";
 
 export const APP_VERSION = "3.1.0";
@@ -5,20 +13,20 @@ export const REPO_URL = "https://github.com/AndreNeubauer/rotmg-dungeon-timer";
 export const LIVE_URL = "https://andreneubauer.github.io/rotmg-dungeon-timer/";
 
 export const PAGE_ROUTES = {
-  timer: "timer",
-  overview: "overview",
-  times: "times",
-  leaderboard: "leaderboard",
-  about: "about",
-} as const;
+  [PageId.Timer]: PageId.Timer,
+  [PageId.Overview]: PageId.Overview,
+  [PageId.Times]: PageId.Times,
+  [PageId.Leaderboard]: PageId.Leaderboard,
+  [PageId.About]: PageId.About,
+} as const satisfies Record<PageIdType, PageIdType>;
 
-export const PAGE_TITLES = {
-  timer: "Timer",
-  overview: "Overview",
-  times: "Times",
-  leaderboard: "Leaderboard",
-  about: "About",
-} as const;
+export const PAGE_TITLES: Record<PageIdType, string> = {
+  [PageId.Timer]: "Timer",
+  [PageId.Overview]: "Overview",
+  [PageId.Times]: "Times",
+  [PageId.Leaderboard]: "Leaderboard",
+  [PageId.About]: "About",
+};
 
 export const STORAGE_KEY = "rotmg-dungeon-runs";
 export const IGN_STORAGE_KEY = "rotmg-timer-ign";
@@ -29,16 +37,16 @@ export const THEME_STORAGE_KEY = "rotmg-timer-theme";
 export const EXALT_CATEGORY = "exalt";
 export const DEFAULT_PLAYER_MAX = 50;
 
-export const OUTCOMES = {
-  complete: { label: "Complete", short: "✓" },
-  nexus: { label: "Nexus", short: "Nexus" },
-  died: { label: "Died", short: "Died" },
-} as const;
+export const OUTCOMES: Record<OutcomeId, { label: string; short: string }> = {
+  [Outcome.Complete]: { label: "Complete", short: "✓" },
+  [Outcome.Nexus]: { label: "Nexus", short: "Nexus" },
+  [Outcome.Died]: { label: "Died", short: "Died" },
+};
 
-export const RUN_SOURCES = {
-  party: { label: "Party", title: "Organised run — portal ready" },
-  organic: { label: "Organic", title: "Realm / nexus search" },
-} as const;
+export const RUN_SOURCES: Record<RunTypeId, { label: string; title: string }> = {
+  [RunType.Party]: { label: "Party", title: "Organised run — portal ready" },
+  [RunType.Organic]: { label: "Organic", title: "Realm / nexus search" },
+};
 
 export const CATEGORY_TAB_LABELS: Record<string, string> = {
   exalt: "Exalt",

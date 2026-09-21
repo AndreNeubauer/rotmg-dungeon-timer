@@ -1,3 +1,4 @@
+import { isOutcome, Outcome, RunType } from "./enums";
 import type { Run, Dungeon } from "./types";
 
 function emptyOutcomeCounts() {
@@ -8,12 +9,18 @@ function emptyTiming() {
   return { attemptDuration: 0, clearDuration: 0, clearCount: 0, findDuration: 0, findCount: 0 };
 }
 
-function emptySourceBuckets() {
-  return { party: emptyTiming(), organic: emptyTiming() };
+function emptySourceBuckets(): Record<
+  RunType,
+  ReturnType<typeof emptyTiming>
+> {
+  return {
+    [RunType.Party]: emptyTiming(),
+    [RunType.Organic]: emptyTiming(),
+  };
 }
 
 function addOutcome(counts: ReturnType<typeof emptyOutcomeCounts>, outcome: string) {
-  if (outcome === "complete" || outcome === "nexus" || outcome === "died") {
+  if (isOutcome(outcome)) {
     counts[outcome] += 1;
   }
   counts.total += 1;
@@ -24,7 +31,7 @@ function addRunToSourceBucket(
   run: Run
 ) {
   bucket.attemptDuration += run.durationSeconds;
-  if (run.outcome === "complete") {
+  if (run.outcome === Outcome.Complete) {
     bucket.clearDuration += run.durationSeconds;
     bucket.clearCount += 1;
   }
@@ -62,7 +69,7 @@ export function computeStats(runs: Run[]) {
   for (const run of runs) {
     addOutcome(overall, run.outcome);
     overall.attemptDuration += run.durationSeconds;
-    if (run.outcome === "complete") {
+    if (run.outcome === Outcome.Complete) {
       overall.clearDuration += run.durationSeconds;
       overall.clearCount += 1;
     }
@@ -79,7 +86,7 @@ export function computeStats(runs: Run[]) {
     const entry = byDungeon.get(run.dungeonId)!;
     addOutcome(entry, run.outcome);
     entry.attemptDuration += run.durationSeconds;
-    if (run.outcome === "complete") {
+    if (run.outcome === Outcome.Complete) {
       entry.clearDuration += run.durationSeconds;
       entry.clearCount += 1;
     }
@@ -89,7 +96,7 @@ export function computeStats(runs: Run[]) {
       entry.findDuration += run.findTimeSeconds;
       entry.findCount += 1;
     }
-    if (run.runType === "party" || run.runType === "organic") {
+    if (run.runType === RunType.Party || run.runType === RunType.Organic) {
       addRunToSourceBucket(overall.bySource[run.runType], run);
       addRunToSourceBucket(entry.bySource[run.runType], run);
     }
@@ -127,7 +134,7 @@ export function getDungeonSummaries(
 export function bestClearSeconds(runs: Run[]): number | null {
   let best: number | null = null;
   for (const run of runs) {
-    if (run.outcome !== "complete") continue;
+    if (run.outcome !== Outcome.Complete) continue;
     if (best == null || run.durationSeconds < best) best = run.durationSeconds;
   }
   return best;
@@ -136,7 +143,7 @@ export function bestClearSeconds(runs: Run[]): number | null {
 export function totalClearHours(runs: Run[]): number {
   let total = 0;
   for (const run of runs) {
-    if (run.outcome === "complete") total += run.durationSeconds;
+    if (run.outcome === Outcome.Complete) total += run.durationSeconds;
   }
   return total / 3600;
 }

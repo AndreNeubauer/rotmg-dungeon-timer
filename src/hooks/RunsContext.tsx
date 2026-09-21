@@ -803,9 +803,11 @@ export function RunsProvider({ children }: { children: ReactNode }) {
   );
 
   const selectedDungeon = dungeonById.get(selectedDungeonId) ?? null;
-  const filteredDungeons = catalog
-    ? getDungeonsForCategory(catalog, selectedCategoryId, searchQuery)
-    : [];
+  const filteredDungeons = useMemo(
+    () =>
+      catalog ? getDungeonsForCategory(catalog, selectedCategoryId, searchQuery) : [],
+    [catalog, selectedCategoryId, searchQuery]
+  );
 
   const postEndConfig = postEndPromptConfig ? POST_END_PROMPTS[postEndPromptConfig] : null;
   const postEndLabel = postEndConfig

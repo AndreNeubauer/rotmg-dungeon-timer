@@ -9,7 +9,6 @@ import type { RunType } from "@/lib/types";
 export function RunContextForm() {
   const {
     finishRunContext,
-    dismissRunContext,
     selectedRunType,
     setSelectedRunType,
     showSearchTimeForContext,

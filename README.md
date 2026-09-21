@@ -84,8 +84,10 @@ Dungeon data lives in `dungeons.json` (served from `public/`).
 ## Tests & lint
 
 ```bash
-npm test
-npm run lint
+npm run lint          # ESLint (flat config, zero warnings)
+npm test              # Node unit tests (stats, persistence, WR times)
+npm run test:e2e      # Playwright (enum checks + app smoke tests)
+npm run test:all      # unit + Playwright
 ```
 
 ## Author
