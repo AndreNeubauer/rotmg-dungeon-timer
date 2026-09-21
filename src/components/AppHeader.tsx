@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { APP_VERSION, LIVE_URL, PAGE_ROUTES, REPO_URL } from "@/lib/constants";
 import { PageId } from "@/lib/enums";
 import { useRuns } from "@/hooks/RunsContext";
+import { BoardAdminUnlock } from "./BoardAdminUnlock";
 import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_ITEMS = [
@@ -41,6 +42,7 @@ export function AppHeader() {
         <div className="flex max-w-[58%] flex-col items-end gap-1.5">
           <ThemeToggle />
           <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-1 text-[0.75rem] text-muted">
+            <BoardAdminUnlock />
             <span className="text-[0.62rem] uppercase tracking-wide">IGN</span>
             <span className="max-w-36 truncate font-medium text-text">{ign || "—"}</span>
             <button

@@ -25,7 +25,9 @@ import {
   POST_END_PROMPTS,
 } from "@/lib/constants";
 import { formatDuration } from "@/lib/format";
+import { isBoardAdminUnlocked } from "@/lib/board-admin";
 import {
+  deleteRunFromLeaderboard,
   fetchBoardClientRunIds,
   isLeaderboardReady,
   loadLeaderboardConfig,
@@ -106,7 +108,9 @@ interface RunsContextValue {
   showSearchTimeForContext: boolean;
   runContextPlayerMax: number;
   runContextShowHardMode: boolean;
-  deleteRun: (runId: string) => void;
+  deleteRun: (runId: string) => Promise<void>;
+  boardAdminUnlocked: boolean;
+  setBoardAdminUnlocked: (unlocked: boolean) => void;
   refreshFromBoard: () => Promise<void>;
   syncAllRunsToBoard: (opts?: { quiet?: boolean }) => Promise<string>;
   leaderboardStatus: string;
@@ -159,6 +163,7 @@ export function RunsProvider({ children }: { children: ReactNode }) {
   const [showSearchTimeForContext, setShowSearchTimeForContext] = useState(true);
   const [leaderboardStatus, setLeaderboardStatus] = useState("");
   const [leaderboardStatusError, setLeaderboardStatusError] = useState(false);
+  const [boardAdminUnlocked, setBoardAdminUnlocked] = useState(false);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const initialized = useRef(false);
 
@@ -400,11 +405,34 @@ export function RunsProvider({ children }: { children: ReactNode }) {
   );
 
   const deleteRun = useCallback(
-    (runId: string) => {
+    async (runId: string) => {
       forgetPendingRun(runId);
+      if (usesBoardStorage) {
+        const result = await deleteRunFromLeaderboard(leaderboardConfig, runId);
+        if (!result.ok) {
+          setLeaderboardStatusError(true);
+          if (result.reason === "forbidden" || result.reason === "no-admin-key") {
+            setLeaderboardStatus("Wrong passphrase or admin delete not set up in Supabase.");
+          } else {
+            setLeaderboardStatus(`Could not delete run (${result.reason}).`);
+          }
+          return;
+        }
+        setLeaderboardStatusError(false);
+        setLeaderboardStatus("Run deleted.");
+        await refreshFromBoard();
+        return;
+      }
       persistLocalRuns(runs.filter((r) => r.id !== runId));
     },
-    [forgetPendingRun, persistLocalRuns, runs]
+    [
+      forgetPendingRun,
+      persistLocalRuns,
+      runs,
+      usesBoardStorage,
+      leaderboardConfig,
+      refreshFromBoard,
+    ]
   );
 
   const clearPostEnd = useCallback(
@@ -771,6 +799,7 @@ export function RunsProvider({ children }: { children: ReactNode }) {
       }
 
       loadStoredIgn();
+      setBoardAdminUnlocked(isBoardAdminUnlocked());
 
       const config = await loadLeaderboardConfig();
       setLeaderboardConfig(config);
@@ -877,6 +906,8 @@ export function RunsProvider({ children }: { children: ReactNode }) {
         runContextRun && HARD_MODE_DUNGEONS.has(runContextRun.dungeonId)
       ),
       deleteRun,
+      boardAdminUnlocked,
+      setBoardAdminUnlocked,
       refreshFromBoard,
       syncAllRunsToBoard,
       leaderboardStatus,
@@ -924,6 +955,7 @@ export function RunsProvider({ children }: { children: ReactNode }) {
       runContextRun,
       runContextPlayerMax,
       deleteRun,
+      boardAdminUnlocked,
       refreshFromBoard,
       syncAllRunsToBoard,
       leaderboardStatus,
