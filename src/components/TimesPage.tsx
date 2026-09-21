@@ -31,6 +31,7 @@ export function TimesPage() {
     catalog,
     getDungeonById,
     usesBoardStorage,
+    boardAdminUnlocked,
     deleteRun,
     exportRuns,
     importRuns,
@@ -39,6 +40,7 @@ export function TimesPage() {
   const [filterId, setFilterId] = useState("");
   const [loading, setLoading] = useState(true);
   const importRef = useRef<HTMLInputElement>(null);
+  const showDeleteColumn = !usesBoardStorage || boardAdminUnlocked;
 
   useEffect(() => {
     setLoading(true);
@@ -177,7 +179,7 @@ export function TimesPage() {
       )}
 
       {loading ? (
-        <TableSkeleton rows={8} cols={usesBoardStorage ? 4 : 5} />
+        <TableSkeleton rows={8} cols={showDeleteColumn ? 5 : 4} />
       ) : (
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-[0.78rem]">
@@ -187,13 +189,13 @@ export function TimesPage() {
               <th className="py-2 pr-3">Dungeon</th>
               <th className="py-2 pr-3">Result</th>
               <th className="py-2 pr-3">Time</th>
-              {!usesBoardStorage && <th className="py-2" />}
+              {showDeleteColumn && <th className="py-2" />}
             </tr>
           </thead>
           <tbody>
             {tableRuns.length === 0 ? (
               <tr>
-                <td colSpan={usesBoardStorage ? 4 : 5} className="py-4 text-muted">
+                <td colSpan={showDeleteColumn ? 5 : 4} className="py-4 text-muted">
                   {filterId ? "No attempts for this dungeon." : "No attempts yet."}
                 </td>
               </tr>
@@ -246,12 +248,12 @@ export function TimesPage() {
                         </span>
                       )}
                     </td>
-                    {!usesBoardStorage && (
+                    {showDeleteColumn && (
                       <td className="py-2">
                         <button
                           type="button"
                           aria-label="Delete run"
-                          onClick={() => deleteRun(run.id)}
+                          onClick={() => void deleteRun(run.id)}
                           className="cursor-pointer text-[0.68rem] text-red hover:underline"
                         >
                           Delete

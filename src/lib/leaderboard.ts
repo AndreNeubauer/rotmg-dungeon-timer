@@ -1,5 +1,6 @@
 import { OUTCOMES, RUN_SOURCES, SHARED_RUN_IDS_KEY } from "./constants";
 import { publicUrl } from "./assets";
+import { getAdminDeleteKey } from "./board-admin";
 import type { LeaderboardConfig, Run } from "./types";
 
 export async function loadLeaderboardConfig(): Promise<LeaderboardConfig> {
@@ -29,13 +30,39 @@ export function isLeaderboardReady(config: LeaderboardConfig): boolean {
   return Boolean(config.enabled && config.supabaseUrl && config.supabaseAnonKey);
 }
 
-function supabaseHeaders(config: LeaderboardConfig) {
+function supabaseHeaders(config: LeaderboardConfig, adminDeleteKey = "") {
   const key = config.supabaseAnonKey;
-  return {
+  const headers: Record<string, string> = {
     apikey: key,
     Authorization: `Bearer ${key}`,
     "Content-Type": "application/json",
   };
+  if (adminDeleteKey) headers["x-admin-key"] = adminDeleteKey;
+  return headers;
+}
+
+export async function deleteRunFromLeaderboard(
+  config: LeaderboardConfig,
+  clientRunId: string,
+  adminDeleteKey = getAdminDeleteKey()
+): Promise<{ ok: boolean; reason: string }> {
+  if (!isLeaderboardReady(config)) return { ok: false, reason: "not-configured" };
+  if (!adminDeleteKey) return { ok: false, reason: "no-admin-key" };
+  const table = config.table || "leaderboard_runs";
+  try {
+    const res = await fetch(
+      `${config.supabaseUrl}/rest/v1/${table}?client_run_id=eq.${encodeURIComponent(clientRunId)}`,
+      {
+        method: "DELETE",
+        headers: { ...supabaseHeaders(config, adminDeleteKey), Prefer: "return=minimal" },
+      }
+    );
+    if (res.ok) return { ok: true, reason: "deleted" };
+    if (res.status === 401 || res.status === 403) return { ok: false, reason: "forbidden" };
+    return { ok: false, reason: `http-${res.status}` };
+  } catch {
+    return { ok: false, reason: "network" };
+  }
 }
 
 export interface BoardRow {

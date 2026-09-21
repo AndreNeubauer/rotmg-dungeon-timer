@@ -59,3 +59,48 @@ create policy "Public update runs"
     and duration_seconds >= 3
     and char_length(trim(ign)) between 1 and 32
   );
+
+-- Admin delete (passphrase in DB — no Supabase Auth / login UI)
+create table if not exists public.app_settings (
+  key text primary key,
+  value text not null
+);
+
+alter table public.app_settings enable row level security;
+
+create or replace function public.admin_delete_allowed()
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  hdr text;
+  expected text;
+begin
+  hdr := coalesce(current_setting('request.headers', true)::json->>'x-admin-key', '');
+  select value into expected from public.app_settings where key = 'admin_delete_key' limit 1;
+  if expected is null or expected = '' then
+    return false;
+  end if;
+  return hdr <> '' and hdr = expected;
+end;
+$$;
+
+revoke all on function public.admin_delete_allowed() from public;
+grant execute on function public.admin_delete_allowed() to anon, authenticated;
+
+drop policy if exists "Admin delete runs" on public.leaderboard_runs;
+create policy "Admin delete runs"
+  on public.leaderboard_runs
+  for delete
+  to anon, authenticated
+  using (public.admin_delete_allowed());
+
+grant delete on public.leaderboard_runs to anon, authenticated;
+
+-- One-time: pick a long random passphrase (only you should know it).
+-- insert into public.app_settings (key, value)
+-- values ('admin_delete_key', 'replace-with-a-long-random-secret')
+-- on conflict (key) do update set value = excluded.value;
