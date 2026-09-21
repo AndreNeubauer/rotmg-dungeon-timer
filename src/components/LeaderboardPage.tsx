@@ -23,16 +23,26 @@ export function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function load() {
       setLoading(true);
-      if (usesBoardStorage) {
-        await syncAllRunsToBoard({ quiet: true });
-        await refreshFromBoard();
+      try {
+        if (usesBoardStorage) {
+          await syncAllRunsToBoard({ quiet: true });
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setLoading(false);
     }
+
     void load();
-  }, [usesBoardStorage, syncAllRunsToBoard, refreshFromBoard]);
+    return () => {
+      cancelled = true;
+    };
+    // syncAllRunsToBoard changes when `runs` updates; only load when board mode toggles.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usesBoardStorage]);
 
   const dungeonOptions = useMemo(() => {
     if (!catalog) return [];

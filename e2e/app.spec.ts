@@ -16,6 +16,12 @@ test.describe("RotMG Dungeon Timer", () => {
     await expect(page.getByRole("heading", { name: "What this is" })).toBeVisible();
   });
 
+  test("leaderboard finishes loading", async ({ page }) => {
+    await page.goto("/leaderboard/");
+    await expect(page.getByText("Loading leaderboard…")).toBeHidden({ timeout: 20_000 });
+    await expect(page.getByRole("table")).toBeVisible();
+  });
+
   test("overview and times pages render", async ({ page }) => {
     await page.goto("/overview/");
     await expect(page.getByText("Exalt attempts")).toBeVisible();
